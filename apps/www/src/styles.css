@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+:root {
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+code,
+pre,
+.font-mono {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* sugar-high token colours for the code view (dark) */
+.sh {
+  --sh-class: #7dd3fc;
+  --sh-identifier: #e4e4e7;
+  --sh-sign: #71717a;
+  --sh-string: #86efac;
+  --sh-keyword: #f0abfc;
+  --sh-comment: #71717a;
+  --sh-jsxliterals: #c4b5fd;
+  --sh-property: #fca5a5;
+  --sh-entity: #fcd34d;
+}

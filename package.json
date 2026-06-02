@@ -4,7 +4,11 @@
   "type": "module",
   "scripts": {
     "build": "turbo build",
+    "build:lib": "pnpm --filter peculiar-charts build",
+    "build:www": "pnpm --filter @peculiar-charts/www build",
     "dev": "turbo dev",
+    "dev:www": "pnpm --filter @peculiar-charts/www dev",
+    "deploy": "pnpm run build:www && pnpm --filter @peculiar-charts/www deploy",
     "lint": "biome check",
     "lint:fix": "biome check --fix",
     "typecheck": "turbo typecheck"

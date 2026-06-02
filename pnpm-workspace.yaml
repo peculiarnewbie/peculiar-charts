@@ -2,10 +2,13 @@
 # they keep their own toolchains and are read-only inspiration.
 packages:
   - packages/*
-  - dev
+  - apps/*
 allowBuilds:
   '@biomejs/biome': true
   esbuild: true
+  sharp: false
+  workerd: true
 onlyBuiltDependencies:
   - '@biomejs/biome'
   - esbuild
+  - workerd

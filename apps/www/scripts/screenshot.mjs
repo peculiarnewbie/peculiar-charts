@@ -1,6 +1,7 @@
 import { chromium } from 'playwright-core'
 
-const URL = process.env.PC_URL ?? 'http://localhost:5371/'
+// `/?all` renders every demo in a flat grid (the verification view).
+const URL = process.env.PC_URL ?? 'http://localhost:5371/?all'
 const OUT = process.env.PC_OUT ?? '/tmp/pc-lab.png'
 const EXECUTABLE =
   process.env.PC_CHROME ??

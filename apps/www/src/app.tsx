@@ -1,0 +1,465 @@
+import { For, Show, createMemo, createSignal } from 'solid-js'
+import { Dynamic } from 'solid-js/web'
+import { highlight } from 'sugar-high'
+
+import Annotations from './demos/annotations'
+import annotationsCode from './demos/annotations?raw'
+import Basic from './demos/basic'
+import basicCode from './demos/basic?raw'
+import Biaxial from './demos/biaxial'
+import biaxialCode from './demos/biaxial?raw'
+import CustomDots from './demos/custom-dots'
+import customDotsCode from './demos/custom-dots?raw'
+import CustomLabels from './demos/custom-labels'
+import customLabelsCode from './demos/custom-labels?raw'
+import DataLabels from './demos/data-labels'
+import dataLabelsCode from './demos/data-labels?raw'
+import Datetime from './demos/datetime'
+import datetimeCode from './demos/datetime?raw'
+import Donut from './demos/donut'
+import donutCode from './demos/donut?raw'
+import Gaps from './demos/gaps'
+import gapsCode from './demos/gaps?raw'
+import Gradient from './demos/gradient'
+import gradientCode from './demos/gradient?raw'
+import GroupedBars from './demos/grouped-bars'
+import groupedBarsCode from './demos/grouped-bars?raw'
+import Negative from './demos/negative'
+import negativeCode from './demos/negative?raw'
+import PieDemo from './demos/pie'
+import pieCode from './demos/pie?raw'
+import StackedArea from './demos/stacked-area'
+import stackedAreaCode from './demos/stacked-area?raw'
+import Stepline from './demos/stepline'
+import steplineCode from './demos/stepline?raw'
+
+type Demo = {
+  id: string
+  group: string
+  title: string
+  desc: string
+  Comp: () => any
+  code: string
+  tall?: boolean
+}
+
+const DEMOS: Demo[] = [
+  {
+    id: 'basic',
+    group: 'Line',
+    title: 'Line + points + tooltip',
+    desc: 'A line series with hover points, a crosshair, and an HTML tooltip portaled out of the SVG.',
+    Comp: Basic,
+    code: basicCode,
+  },
+  {
+    id: 'datetime',
+    group: 'Line',
+    title: 'Datetime x-axis',
+    desc: 'A real time axis — points sit at their actual date, so irregular spacing just works. Crosshair + tooltip snap to the nearest sample.',
+    Comp: Datetime,
+    code: datetimeCode,
+  },
+  {
+    id: 'stepline',
+    group: 'Line',
+    title: 'Stepline + dashed',
+    desc: 'Any d3 curve via the `curve` prop (here `curveStepAfter`); dashed strokes are just `stroke-dasharray` passthrough.',
+    Comp: Stepline,
+    code: steplineCode,
+  },
+  {
+    id: 'gradient',
+    group: 'Line',
+    title: 'Gradient + forecast tail',
+    desc: 'A gradient stroke (`stroke="url(#id)"`) for actuals, then a dashed projected tail — two line series sharing the seam.',
+    Comp: Gradient,
+    code: gradientCode,
+  },
+  {
+    id: 'biaxial',
+    group: 'Line',
+    title: 'Biaxial',
+    desc: 'Two value axes with independent domains — bind each series to a different `yAxisId`.',
+    Comp: Biaxial,
+    code: biaxialCode,
+  },
+  {
+    id: 'stacked-area',
+    group: 'Area',
+    title: 'Stacked area',
+    desc: 'Series sharing a `stackId` stack together. The legend toggles each one on click.',
+    Comp: StackedArea,
+    code: stackedAreaCode,
+  },
+  {
+    id: 'negative',
+    group: 'Area',
+    title: 'Fill by value',
+    desc: 'Set `positiveFill` / `negativeFill` and the area splits at the zero baseline.',
+    Comp: Negative,
+    code: negativeCode,
+  },
+  {
+    id: 'gaps',
+    group: 'Area',
+    title: 'Curves + null gaps',
+    desc: 'Missing values break the line and area; a value-line marks a threshold on a pinned axis range.',
+    Comp: Gaps,
+    code: gapsCode,
+  },
+  {
+    id: 'data-labels',
+    group: 'Markers',
+    title: 'Data labels',
+    desc: '`<SeriesLabel>` renders a label at each point — `format` it or take over with a render-prop.',
+    Comp: DataLabels,
+    code: dataLabelsCode,
+  },
+  {
+    id: 'custom-dots',
+    group: 'Markers',
+    title: 'Custom dots',
+    desc: '`<Point>` takes a children render-prop — render an emoji, an image, anything, with access to the active state.',
+    Comp: CustomDots,
+    code: customDotsCode,
+  },
+  {
+    id: 'custom-labels',
+    group: 'Markers',
+    title: 'Custom tick labels',
+    desc: 'Axis `<AxisLabel>` takes a render-prop too — swatches, images, styled markup per tick.',
+    Comp: CustomLabels,
+    code: customLabelsCode,
+  },
+  {
+    id: 'annotations',
+    group: 'Annotations',
+    title: 'Reference shapes',
+    desc: '`<ReferenceArea>`, `<ReferenceLine>` and `<ReferenceDot>` — each resolves against the axis scales, with optional labels.',
+    Comp: Annotations,
+    code: annotationsCode,
+  },
+  {
+    id: 'grouped-bars',
+    group: 'Bar',
+    title: 'Grouped bars + line',
+    desc: 'Multiple bar series group side by side; a line series overlays on the same categorical axis.',
+    Comp: GroupedBars,
+    code: groupedBarsCode,
+  },
+  {
+    id: 'pie',
+    group: 'Pie',
+    title: 'Pie',
+    desc: 'Self-contained — no axes needed. Each slice registers into the legend and can be toggled.',
+    Comp: PieDemo,
+    code: pieCode,
+  },
+  {
+    id: 'donut',
+    group: 'Pie',
+    title: 'Donut',
+    desc: 'A pie with `innerRadius` — plus `padAngle` and `cornerRadius` for the gaps and rounding.',
+    Comp: Donut,
+    code: donutCode,
+  },
+]
+
+const GROUPS = [...new Set(DEMOS.map((d) => d.group))]
+const INSTALL = 'npm i peculiar-charts'
+
+const FEATURES = [
+  {
+    claim: 'Headless, unstyled SVG.',
+    line: 'Every component is a plain SVG element with your classes and props passed straight through. Style it with Tailwind, CSS, anything.',
+    chip: 'data-pc-* hooks',
+  },
+  {
+    claim: 'One scale primitive, every axis.',
+    line: 'Axes and series share the same scale. Positioning is value-based — project an x through the axis scale — so numeric, time and categorical axes all work the same way.',
+    chip: 'linear · log · time · band · point',
+  },
+  {
+    claim: 'Components register themselves.',
+    line: 'Series report their identity, extent and stack membership into the chart via effects. The legend, domains and tooltips fall out of that registry.',
+    chip: 'fine-grained reactivity',
+  },
+  {
+    claim: 'Render-props everywhere.',
+    line: 'Custom dots, custom tick labels, tooltip bodies, data labels — take over the markup whenever the default is not enough.',
+    chip: '<Point>{(d) => …}</Point>',
+  },
+]
+
+function InstallCommand() {
+  const [copied, setCopied] = createSignal(false)
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(INSTALL)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      /* clipboard needs https */
+    }
+  }
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      class="inline-flex items-center gap-3 rounded-lg border border-zinc-300 bg-white px-4 py-2 font-mono text-sm shadow-sm transition hover:border-zinc-400"
+    >
+      <span class="text-zinc-400">$</span>
+      <code>{INSTALL}</code>
+      <span class="rounded bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500">
+        {copied() ? 'Copied!' : 'Copy'}
+      </span>
+    </button>
+  )
+}
+
+function ChartFrame(props: { tall?: boolean; children: any }) {
+  return (
+    <div
+      class="relative w-full rounded-lg border border-zinc-200 bg-white p-4"
+      classList={{ 'h-[420px]': props.tall, 'h-[320px]': !props.tall }}
+    >
+      {props.children}
+    </div>
+  )
+}
+
+function Playground() {
+  const [group, setGroup] = createSignal(GROUPS[0]!)
+  const inGroup = createMemo(() => DEMOS.filter((d) => d.group === group()))
+  const [id, setId] = createSignal(inGroup()[0]!.id)
+  const [mode, setMode] = createSignal<'live' | 'code'>('live')
+  const demo = createMemo(() => DEMOS.find((d) => d.id === id()) ?? DEMOS[0]!)
+
+  const selectGroup = (g: string) => {
+    setGroup(g)
+    setId(DEMOS.find((d) => d.group === g)!.id)
+    setMode('live')
+  }
+
+  return (
+    <section id="demos" class="mx-auto max-w-5xl px-6 py-16">
+      <h2 class="mb-6 text-2xl font-semibold tracking-tight">Try it out</h2>
+
+      <div class="mb-3 flex flex-wrap gap-1.5">
+        <For each={GROUPS}>
+          {(g) => (
+            <button
+              type="button"
+              onClick={() => selectGroup(g)}
+              class="rounded-full px-3 py-1 text-sm font-medium transition"
+              classList={{
+                'bg-zinc-900 text-white': group() === g,
+                'bg-zinc-100 text-zinc-600 hover:bg-zinc-200': group() !== g,
+              }}
+            >
+              {g}
+            </button>
+          )}
+        </For>
+      </div>
+
+      <div class="mb-5 flex flex-wrap gap-1.5">
+        <For each={inGroup()}>
+          {(d) => (
+            <button
+              type="button"
+              onClick={() => {
+                setId(d.id)
+                setMode('live')
+              }}
+              class="rounded-md px-2.5 py-1 text-xs transition"
+              classList={{
+                'bg-zinc-200 text-zinc-900': id() === d.id,
+                'text-zinc-500 hover:bg-zinc-100': id() !== d.id,
+              }}
+            >
+              {d.title}
+            </button>
+          )}
+        </For>
+      </div>
+
+      <div class="mb-3 flex items-start justify-between gap-4">
+        <div>
+          <h3 class="text-lg font-semibold">{demo().title}</h3>
+          <p class="mt-1 max-w-2xl text-sm text-zinc-500">{demo().desc}</p>
+        </div>
+        <div class="flex shrink-0 rounded-lg border border-zinc-200 p-0.5 text-sm">
+          <button
+            type="button"
+            onClick={() => setMode('live')}
+            class="rounded-md px-3 py-1 font-medium transition"
+            classList={{
+              'bg-zinc-900 text-white': mode() === 'live',
+              'text-zinc-500': mode() !== 'live',
+            }}
+          >
+            Live
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('code')}
+            class="rounded-md px-3 py-1 font-mono transition"
+            classList={{
+              'bg-zinc-900 text-white': mode() === 'code',
+              'text-zinc-500': mode() !== 'code',
+            }}
+          >
+            {'</>'}
+          </button>
+        </div>
+      </div>
+
+      <Show
+        when={mode() === 'live'}
+        fallback={
+          <div class="overflow-auto rounded-lg bg-zinc-950 p-4 text-[13px] leading-relaxed">
+            <pre>
+              <code class="sh" innerHTML={highlight(demo().code)} />
+            </pre>
+          </div>
+        }
+      >
+        <ChartFrame tall={demo().tall}>
+          <Dynamic component={demo().Comp} />
+        </ChartFrame>
+      </Show>
+    </section>
+  )
+}
+
+function Landing() {
+  return (
+    <div class="min-h-screen bg-zinc-50 text-zinc-900">
+      <header class="border-b border-zinc-200 bg-white/80 backdrop-blur">
+        <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
+          <span class="font-semibold">peculiar-charts</span>
+          <nav class="flex items-center gap-4 text-sm text-zinc-600">
+            <a href="#demos" class="hover:text-zinc-900">
+              Demos
+            </a>
+            <a href="#features" class="hover:text-zinc-900">
+              Features
+            </a>
+            <a href="#start" class="hover:text-zinc-900">
+              Quick start
+            </a>
+          </nav>
+        </div>
+      </header>
+
+      <section class="mx-auto max-w-5xl px-6 pt-20 pb-12 text-center">
+        <p class="mb-3 text-sm font-medium text-zinc-400">peculiar-charts</p>
+        <h1 class="mx-auto max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">
+          Composable charts,{' '}
+          <span class="text-blue-600">built on signals.</span>
+        </h1>
+        <p class="mx-auto mt-5 max-w-xl text-zinc-500">
+          A headless SolidJS charting library — lines, areas, bars, pies,
+          annotations and more, every element unstyled and yours to compose.
+        </p>
+        <div class="mt-8 flex justify-center">
+          <InstallCommand />
+        </div>
+      </section>
+
+      <Playground />
+
+      <section id="features" class="border-t border-zinc-200 bg-white">
+        <div class="mx-auto max-w-5xl px-6 py-16">
+          <h2 class="mb-8 text-2xl font-semibold tracking-tight">
+            What makes it peculiar
+          </h2>
+          <ol class="divide-y divide-zinc-100">
+            <For each={FEATURES}>
+              {(f, i) => (
+                <li class="grid grid-cols-[auto_1fr] gap-x-5 py-5 sm:grid-cols-[auto_1fr_auto] sm:items-center">
+                  <span class="font-mono text-sm text-zinc-300">
+                    {String(i() + 1).padStart(2, '0')}
+                  </span>
+                  <div>
+                    <h3 class="font-semibold">{f.claim}</h3>
+                    <p class="mt-1 text-sm text-zinc-500">{f.line}</p>
+                  </div>
+                  <code class="col-span-2 mt-2 rounded bg-zinc-100 px-2 py-1 font-mono text-xs text-zinc-500 sm:col-span-1 sm:mt-0">
+                    {f.chip}
+                  </code>
+                </li>
+              )}
+            </For>
+          </ol>
+        </div>
+      </section>
+
+      <section id="start" class="mx-auto max-w-5xl px-6 py-16">
+        <h2 class="mb-6 text-2xl font-semibold tracking-tight">Get started</h2>
+        <div class="overflow-hidden rounded-lg border border-zinc-200">
+          <div class="border-b border-zinc-800 bg-zinc-900 px-4 py-2 font-mono text-xs text-zinc-400">
+            App.tsx
+          </div>
+          <div class="bg-zinc-950 p-4 text-[13px] leading-relaxed">
+            <pre>
+              <code class="sh" innerHTML={highlight(QUICKSTART)} />
+            </pre>
+          </div>
+        </div>
+      </section>
+
+      <footer class="border-t border-zinc-200 py-8 text-center text-sm text-zinc-400">
+        peculiar-charts · headless charts for SolidJS
+      </footer>
+    </div>
+  )
+}
+
+const QUICKSTART = `import { Chart, Axis, AxisLabel, Line } from "peculiar-charts";
+
+const data = [
+  { day: "Mon", sales: 42 },
+  { day: "Tue", sales: 55 },
+  { day: "Wed", sales: 38 },
+];
+
+export default () => (
+  <Chart data={data}>
+    <Axis axis="y" position="left">
+      <AxisLabel />
+    </Axis>
+    <Axis dataKey="day" axis="x" position="bottom">
+      <AxisLabel />
+    </Axis>
+    <Line dataKey="sales" class="text-blue-500" stroke-width={2} />
+  </Chart>
+);`
+
+/** A flat grid of every demo — used by the screenshot harness (visit `/?all`). */
+function AllDemos() {
+  return (
+    <div class="min-h-screen bg-zinc-50 p-6 text-sm text-zinc-800">
+      <div class="mx-auto grid max-w-6xl grid-cols-1 gap-4 md:grid-cols-2">
+        <For each={DEMOS}>
+          {(d) => (
+            <div class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+              <p class="mb-2 text-xs font-medium text-zinc-500">{d.title}</p>
+              <div class="relative h-[240px]">
+                <Dynamic component={d.Comp} />
+              </div>
+            </div>
+          )}
+        </For>
+      </div>
+    </div>
+  )
+}
+
+export default function App() {
+  const all =
+    typeof location !== 'undefined' && location.search.includes('all')
+  return <Show when={all} fallback={<Landing />}>{<AllDemos />}</Show>
+}
