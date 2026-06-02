@@ -1,0 +1,11 @@
+# Reference clones (solid-charts/, ag-charts/) are intentionally NOT listed here —
+# they keep their own toolchains and are read-only inspiration.
+packages:
+  - packages/*
+  - dev
+allowBuilds:
+  '@biomejs/biome': true
+  esbuild: true
+onlyBuiltDependencies:
+  - '@biomejs/biome'
+  - esbuild

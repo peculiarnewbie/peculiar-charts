@@ -1,0 +1,48 @@
+{
+  "name": "peculiar-charts",
+  "version": "0.0.0",
+  "private": false,
+  "description": "Composable, unstyled, headless charts for SolidJS — aiming for AG Charts breadth",
+  "keywords": ["solid", "solidjs", "charts", "svg", "d3", "headless"],
+  "license": "MIT",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "solid": "./dist/index.jsx",
+      "default": "./dist/index.js"
+    },
+    "./curves": {
+      "types": "./dist/curves.d.ts",
+      "solid": "./dist/curves.jsx",
+      "default": "./dist/curves.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc --noEmit && tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf .turbo dist node_modules"
+  },
+  "dependencies": {
+    "@corvu/utils": "^0.4.2",
+    "@solid-primitives/memo": "^1.4.2",
+    "d3-scale": "^4.0.2",
+    "d3-shape": "^3.2.0"
+  },
+  "devDependencies": {
+    "@types/d3-scale": "^4.0.9",
+    "@types/d3-shape": "^3.1.7",
+    "esbuild-plugin-solid": "^0.6.0",
+    "solid-js": "^1.9.6",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "solid-js": "^1.8"
+  }
+}
