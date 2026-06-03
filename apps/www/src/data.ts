@@ -33,5 +33,12 @@ export const forecast = Array.from({ length: 12 }, (_, i) => {
   }
 })
 
+/** Scatter / bubble points: x = price, y = rating, z = sales volume. */
+export const bubbles = Array.from({ length: 18 }, (_, i) => ({
+  price: Math.round(10 + ((i * 53) % 90)),
+  rating: Math.round((30 + Math.abs(Math.sin(i / 1.6) * 65)) * 10) / 10,
+  volume: Math.round(50 + ((i * 137) % 950)),
+}))
+
 export const monthLabel = (t: Date) =>
   new Date(t).toLocaleDateString('en', { month: 'short' })

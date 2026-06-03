@@ -4,6 +4,7 @@ import createClosestTick from '@src/lib/createClosestTick'
 import createPoints from '@src/lib/createPoints'
 import createScale from '@src/lib/createScale'
 import createSeries from '@src/lib/createSeries'
+import { type PointEvents, pointEvents } from '@src/lib/markers'
 import type { OverrideProps } from '@src/lib/types'
 import { accessData, axisValues, pointDefined } from '@src/lib/utils'
 import {
@@ -43,7 +44,7 @@ export type PointProps = OverrideProps<
     /** Render a custom marker per point (e.g. an image or emoji) instead of a
      * `<circle>`. Receives the point's pixel position, value and active state. */
     children?: (datum: PointDatum) => JSX.Element
-  }
+  } & PointEvents
 >
 
 /** Point (marker) series.
@@ -57,15 +58,19 @@ const Point = (props: PointProps) => {
     { xAxisId: 'x', yAxisId: 'y', r: 4, fill: 'currentColor' },
     props,
   )
-  const [localProps, otherProps] = splitProps(defaultedProps, [
-    'dataKey',
-    'name',
-    'xAxisId',
-    'yAxisId',
-    'stackId',
-    'activeProps',
-    'children',
-  ])
+  const [localProps, eventProps, otherProps] = splitProps(
+    defaultedProps,
+    [
+      'dataKey',
+      'name',
+      'xAxisId',
+      'yAxisId',
+      'stackId',
+      'activeProps',
+      'children',
+    ],
+    ['onPointClick', 'onPointEnter', 'onPointLeave'],
+  )
   const chartContext = useChartContext()
 
   const data = createMemo(() =>
@@ -127,6 +132,11 @@ const Point = (props: PointProps) => {
                   data-active={dataIf(isActive(index()))}
                   data-pc-point=""
                   {...circleProps(index())}
+                  {...pointEvents(eventProps, () => ({
+                    value: data()[index()] as number,
+                    index: index(),
+                    point,
+                  }))}
                 />
               }
             >

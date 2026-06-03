@@ -1,4 +1,11 @@
-import { Axis, AxisGrid, AxisLabel, AxisLine, Chart, Line } from 'peculiar-charts'
+import {
+  Axis,
+  AxisGrid,
+  AxisLabel,
+  AxisLine,
+  Chart,
+  Line,
+} from 'peculiar-charts'
 import { forecast } from '../data'
 
 export default function GradientForecast() {

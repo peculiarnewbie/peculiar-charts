@@ -1,4 +1,12 @@
-import { Axis, AxisGrid, AxisLabel, AxisLine, Chart, Line, Point } from 'peculiar-charts'
+import {
+  Axis,
+  AxisGrid,
+  AxisLabel,
+  AxisLine,
+  Chart,
+  Line,
+  Point,
+} from 'peculiar-charts'
 import { curveNatural } from 'peculiar-charts/curves'
 import { sales } from '../data'
 
@@ -12,7 +20,12 @@ export default function CustomDots() {
         <AxisLabel />
         <AxisLine class="stroke-black" />
       </Axis>
-      <Line dataKey="coffee" curve={curveNatural} class="text-violet-400" stroke-width={2} />
+      <Line
+        dataKey="coffee"
+        curve={curveNatural}
+        class="text-violet-400"
+        stroke-width={2}
+      />
       {/* render anything per point via the children render-prop */}
       <Point dataKey="coffee">
         {(d) => (
@@ -21,7 +34,7 @@ export default function CustomDots() {
             y={d.point[1]}
             text-anchor="middle"
             dominant-baseline="central"
-            font-size={d.active ? 20 : 15}
+            font-size={d.active ? '20' : '15'}
           >
             {d.value > 60 ? '😀' : '😟'}
           </text>

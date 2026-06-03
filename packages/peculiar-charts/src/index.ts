@@ -22,14 +22,47 @@ import AxisValueLine, {
 } from '@src/axis/ValueLine'
 import Chart, { type ChartProps } from '@src/components/Chart'
 import Legend, { type LegendProps } from '@src/components/Legend'
-import type {
-  AxisConfig,
-  BarConfig,
-  Domain,
-  SeriesMeta,
+import {
+  type AxisConfig,
+  type AxisOrientation,
+  type BarConfig,
+  type Domain,
+  type SeriesMeta,
+  useChartContext,
 } from '@src/components/context'
-import type { Scale } from '@src/lib/scale'
+import {
+  type PlotArea,
+  useAxisValues,
+  useChartSize,
+  useData,
+  useDomain,
+  usePlotArea,
+  useScale,
+  useXScale,
+  useYScale,
+} from '@src/hooks'
+import createPoints from '@src/lib/createPoints'
+import createScale from '@src/lib/createScale'
+import createSeries from '@src/lib/createSeries'
+import {
+  Dot,
+  type DotDatum,
+  type DotProps,
+  type DotRenderer,
+  type PointEventDatum,
+  type PointEventHandler,
+  type PointEvents,
+} from '@src/lib/markers'
+import {
+  type Scale,
+  buildScale,
+  isCategorical,
+  isNumeric,
+  projectScale,
+  scaleTicks,
+} from '@src/lib/scale'
 import type { OverrideProps } from '@src/lib/types'
+import { accessData, axisValues, toNumeric } from '@src/lib/utils'
 import ReferenceArea, {
   type ReferenceAreaProps,
 } from '@src/reference/ReferenceArea'
@@ -41,6 +74,7 @@ import ReferenceLine, {
 } from '@src/reference/ReferenceLine'
 import Area, { type AreaProps } from '@src/series/Area'
 import Bar, { type BarProps } from '@src/series/Bar'
+import Bubble, { type BubbleDatum, type BubbleProps } from '@src/series/Bubble'
 import Line, { type LineProps } from '@src/series/Line'
 import Pie, { type PieProps } from '@src/series/Pie'
 import Point, { type PointDatum, type PointProps } from '@src/series/Point'
@@ -55,11 +89,14 @@ export type {
   ChartProps,
   BarConfig,
   AxisConfig,
+  AxisOrientation,
   Domain,
   SeriesMeta,
   // Series
   AreaProps,
   BarProps,
+  BubbleProps,
+  BubbleDatum,
   LineProps,
   PieProps,
   PointProps,
@@ -84,11 +121,20 @@ export type {
   ReferenceDotProps,
   // Overlays
   LegendProps,
+  // Render-props / markers
+  DotRenderer,
+  DotDatum,
+  DotProps,
+  // Per-datum events
+  PointEvents,
+  PointEventDatum,
+  PointEventHandler,
   // Others
   OverrideProps,
   CurveProps,
   ScaleType,
   Scale,
+  PlotArea,
 }
 
 export {
@@ -97,6 +143,7 @@ export {
   // Series
   Area,
   Bar,
+  Bubble,
   Line,
   Pie,
   Point,
@@ -114,4 +161,30 @@ export {
   ReferenceLine,
   ReferenceArea,
   ReferenceDot,
+  // Shape primitives
+  Dot,
+  // Hooks — read chart state from custom children
+  useChartContext,
+  useScale,
+  useXScale,
+  useYScale,
+  useDomain,
+  usePlotArea,
+  useChartSize,
+  useData,
+  useAxisValues,
+  // Series primitives — author custom series without forking
+  createScale,
+  createSeries,
+  createPoints,
+  // Scale primitives
+  buildScale,
+  projectScale,
+  scaleTicks,
+  isCategorical,
+  isNumeric,
+  // Data utilities
+  accessData,
+  axisValues,
+  toNumeric,
 }

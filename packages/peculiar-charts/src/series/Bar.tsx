@@ -3,6 +3,7 @@ import createBands from '@src/lib/createBands'
 import createBaseLine from '@src/lib/createBaseLine'
 import createPoints from '@src/lib/createPoints'
 import createSeries from '@src/lib/createSeries'
+import { type PointEvents, pointEvents } from '@src/lib/markers'
 import type { OverrideProps } from '@src/lib/types'
 import { accessData } from '@src/lib/utils'
 import {
@@ -30,7 +31,7 @@ export type BarProps = OverrideProps<
     yAxisId?: string
     /** Stack id — series sharing one stack are stacked. */
     stackId?: string
-  }
+  } & PointEvents
 >
 
 /** Bar series.
@@ -44,13 +45,11 @@ const Bar = (props: BarProps) => {
     { xAxisId: 'x', yAxisId: 'y', fill: 'currentColor', stroke: 'none' },
     props,
   )
-  const [localProps, otherProps] = splitProps(defaultedProps, [
-    'dataKey',
-    'name',
-    'xAxisId',
-    'yAxisId',
-    'stackId',
-  ])
+  const [localProps, eventProps, otherProps] = splitProps(
+    defaultedProps,
+    ['dataKey', 'name', 'xAxisId', 'yAxisId', 'stackId'],
+    ['onPointClick', 'onPointEnter', 'onPointLeave'],
+  )
   const chartContext = useChartContext()
 
   // Reserve a slot in the grouped-bar layout while visible.
@@ -122,7 +121,18 @@ const Bar = (props: BarProps) => {
     <Show when={chartContext.isSeriesVisible(seriesId)}>
       <g data-pc-bar-group="">
         <For each={bars()}>
-          {(bar) => <rect {...bar} {...otherProps} data-pc-bar="" />}
+          {(bar, index) => (
+            <rect
+              {...bar}
+              {...otherProps}
+              {...pointEvents(eventProps, () => ({
+                value: data()[index()] as number,
+                index: index(),
+                point: [bar.x + bar.width / 2, bar.y],
+              }))}
+              data-pc-bar=""
+            />
+          )}
         </For>
       </g>
     </Show>

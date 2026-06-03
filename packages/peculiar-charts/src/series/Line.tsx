@@ -1,8 +1,10 @@
 import { useChartContext } from '@src/components/context'
 import createPoints from '@src/lib/createPoints'
 import createSeries from '@src/lib/createSeries'
+import type { DotRenderer, PointEvents } from '@src/lib/markers'
 import type { OverrideProps } from '@src/lib/types'
 import { accessData } from '@src/lib/utils'
+import DotsLayer from '@src/series/Dots'
 import Curve from '@src/shapes/Curve'
 import type { CurveFactory } from 'd3-shape'
 import {
@@ -31,7 +33,11 @@ export type LineProps = OverrideProps<
     curve?: CurveFactory
     /** Connect across null/missing values. */
     connectNulls?: boolean
-  }
+    /** Marker at every point. `true`/props-object/function — see {@link DotRenderer}. */
+    dot?: DotRenderer
+    /** Marker at the point nearest the pointer (hover highlight). */
+    activeDot?: DotRenderer
+  } & PointEvents
 >
 
 /** Line series.
@@ -44,13 +50,11 @@ const Line = (props: LineProps) => {
     { xAxisId: 'x', yAxisId: 'y', stroke: 'currentColor', fill: 'none' },
     props,
   )
-  const [localProps, otherProps] = splitProps(defaultedProps, [
-    'dataKey',
-    'name',
-    'xAxisId',
-    'yAxisId',
-    'stackId',
-  ])
+  const [localProps, eventProps, otherProps] = splitProps(
+    defaultedProps,
+    ['dataKey', 'name', 'xAxisId', 'yAxisId', 'stackId', 'dot', 'activeDot'],
+    ['onPointClick', 'onPointEnter', 'onPointLeave'],
+  )
   const chartContext = useChartContext()
 
   const data = createMemo(() =>
@@ -80,6 +84,16 @@ const Line = (props: LineProps) => {
   return (
     <Show when={chartContext.isSeriesVisible(seriesId)}>
       <Curve points={points()} data-pc-line="" {...otherProps} />
+      <Show when={localProps.dot || localProps.activeDot}>
+        <DotsLayer
+          points={points}
+          data={data}
+          xAxisId={localProps.xAxisId}
+          dot={localProps.dot}
+          activeDot={localProps.activeDot}
+          events={eventProps}
+        />
+      </Show>
     </Show>
   )
 }

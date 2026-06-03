@@ -33,7 +33,12 @@ export default function DatetimeAxis() {
         </AxisTooltip>
       </Axis>
       <Area dataKey="price" curve={curveNatural} class="text-sky-200" />
-      <Line dataKey="price" curve={curveNatural} class="text-sky-600" stroke-width={2} />
+      <Line
+        dataKey="price"
+        curve={curveNatural}
+        class="text-sky-600"
+        stroke-width={2}
+      />
     </Chart>
   )
 }

@@ -30,7 +30,12 @@ export default function NegativeFill() {
         negativeFill="#ef4444"
         fill-opacity={0.5}
       />
-      <Line dataKey="v" curve={curveNatural} class="text-zinc-700" stroke-width={2} />
+      <Line
+        dataKey="v"
+        curve={curveNatural}
+        class="text-zinc-700"
+        stroke-width={2}
+      />
     </Chart>
   )
 }

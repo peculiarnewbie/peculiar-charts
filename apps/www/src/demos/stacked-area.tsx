@@ -16,8 +16,18 @@ export default function StackedArea() {
       <Legend class="text-xs" />
       <Area dataKey="coffee" name="Coffee" stackId="s" class="text-blue-300" />
       <Area dataKey="tea" name="Tea" stackId="s" class="text-emerald-300" />
-      <Line dataKey="coffee" stackId="s" class="text-blue-600" stroke-width={2} />
-      <Line dataKey="tea" stackId="s" class="text-emerald-600" stroke-width={2} />
+      <Line
+        dataKey="coffee"
+        stackId="s"
+        class="text-blue-600"
+        stroke-width={2}
+      />
+      <Line
+        dataKey="tea"
+        stackId="s"
+        class="text-emerald-600"
+        stroke-width={2}
+      />
       <Axis axis="y" position="left" tickCount={4}>
         <AxisLabel />
         <AxisGrid class="stroke-black/10" />

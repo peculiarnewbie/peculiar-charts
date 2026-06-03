@@ -24,7 +24,12 @@ export default function Annotations() {
         <AxisLabel format={monthLabel} />
         <AxisLine class="stroke-black" />
       </Axis>
-      <ReferenceArea y1={150} y2={190} class="fill-amber-400" fill-opacity={0.15} />
+      <ReferenceArea
+        y1={150}
+        y2={190}
+        class="fill-amber-400"
+        fill-opacity={0.15}
+      />
       <ReferenceLine
         y={170}
         class="stroke-amber-500"
@@ -32,7 +37,12 @@ export default function Annotations() {
         label="target"
         labelProps={{ class: 'fill-amber-600 text-[10px]' }}
       />
-      <Line dataKey="price" curve={curveNatural} class="text-indigo-600" stroke-width={2} />
+      <Line
+        dataKey="price"
+        curve={curveNatural}
+        class="text-indigo-600"
+        stroke-width={2}
+      />
       <ReferenceDot
         x={peak.t}
         y={peak.price}

@@ -25,7 +25,12 @@ export default function Biaxial() {
         <AxisLabel />
         <AxisLine class="stroke-black" />
       </Axis>
-      <Line dataKey="coffee" name="Coffee" class="text-blue-600" stroke-width={2} />
+      <Line
+        dataKey="coffee"
+        name="Coffee"
+        class="text-blue-600"
+        stroke-width={2}
+      />
       <Line
         dataKey="revenue"
         name="Revenue"

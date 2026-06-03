@@ -8,16 +8,22 @@ import Basic from './demos/basic'
 import basicCode from './demos/basic?raw'
 import Biaxial from './demos/biaxial'
 import biaxialCode from './demos/biaxial?raw'
+import BubbleChart from './demos/bubble'
+import bubbleCode from './demos/bubble?raw'
 import CustomDots from './demos/custom-dots'
 import customDotsCode from './demos/custom-dots?raw'
 import CustomLabels from './demos/custom-labels'
 import customLabelsCode from './demos/custom-labels?raw'
+import CustomOverlay from './demos/custom-overlay'
+import customOverlayCode from './demos/custom-overlay?raw'
 import DataLabels from './demos/data-labels'
 import dataLabelsCode from './demos/data-labels?raw'
 import Datetime from './demos/datetime'
 import datetimeCode from './demos/datetime?raw'
 import Donut from './demos/donut'
 import donutCode from './demos/donut?raw'
+import DotsEvents from './demos/dots-events'
+import dotsEventsCode from './demos/dots-events?raw'
 import Gaps from './demos/gaps'
 import gapsCode from './demos/gaps?raw'
 import Gradient from './demos/gradient'
@@ -125,6 +131,22 @@ const DEMOS: Demo[] = [
     code: customDotsCode,
   },
   {
+    id: 'dots-events',
+    group: 'Markers',
+    title: 'Dots + per-datum events',
+    desc: '`<Line>` takes `dot` / `activeDot` (bool, props-object, or function) so markers need no separate `<Point>`; `onPointClick(datum)` carries the datum, not just the DOM event.',
+    Comp: DotsEvents,
+    code: dotsEventsCode,
+  },
+  {
+    id: 'bubble',
+    group: 'Markers',
+    title: 'Bubble',
+    desc: '`<Bubble>` plots `(x, y)` on numeric axes and encodes a third value as area-proportional radius via `sizeKey`.',
+    Comp: BubbleChart,
+    code: bubbleCode,
+  },
+  {
     id: 'custom-labels',
     group: 'Markers',
     title: 'Custom tick labels',
@@ -139,6 +161,14 @@ const DEMOS: Demo[] = [
     desc: '`<ReferenceArea>`, `<ReferenceLine>` and `<ReferenceDot>` — each resolves against the axis scales, with optional labels.',
     Comp: Annotations,
     code: annotationsCode,
+  },
+  {
+    id: 'custom-overlay',
+    group: 'Annotations',
+    title: 'Custom overlay (hooks)',
+    desc: 'A user-land child reads the chart scales via `useXScale` / `useYScale` / `usePlotArea` + `projectScale` — drawing its own peak/trough markers with no registration or fork.',
+    Comp: CustomOverlay,
+    code: customOverlayCode,
   },
   {
     id: 'grouped-bars',
@@ -459,7 +489,10 @@ function AllDemos() {
 }
 
 export default function App() {
-  const all =
-    typeof location !== 'undefined' && location.search.includes('all')
-  return <Show when={all} fallback={<Landing />}>{<AllDemos />}</Show>
+  const all = typeof location !== 'undefined' && location.search.includes('all')
+  return (
+    <Show when={all} fallback={<Landing />}>
+      {<AllDemos />}
+    </Show>
+  )
 }

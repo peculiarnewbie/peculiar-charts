@@ -1,4 +1,11 @@
-import { Axis, AxisGrid, AxisLabel, AxisLine, Chart, Line } from 'peculiar-charts'
+import {
+  Axis,
+  AxisGrid,
+  AxisLabel,
+  AxisLine,
+  Chart,
+  Line,
+} from 'peculiar-charts'
 import { sales } from '../data'
 
 export default function CustomLabels() {
@@ -13,7 +20,11 @@ export default function CustomLabels() {
           {(tick) => (
             <g transform={`translate(${tick.x}, ${tick.y})`}>
               <circle cy={2} r={8} class="fill-teal-500" />
-              <text y={4} text-anchor="middle" class="fill-white text-[8px] font-bold">
+              <text
+                y={4}
+                text-anchor="middle"
+                class="fill-white text-[8px] font-bold"
+              >
                 {String(tick.label).slice(0, 1)}
               </text>
             </g>

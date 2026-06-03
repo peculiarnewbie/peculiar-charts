@@ -1,8 +1,15 @@
+import { mkdirSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright-core'
 
 // `/?all` renders every demo in a flat grid (the verification view).
 const URL = process.env.PC_URL ?? 'http://localhost:5371/?all'
-const OUT = process.env.PC_OUT ?? '/tmp/pc-lab.png'
+// Default into a gitignored `.tmp/` at the repo root (this file lives at
+// apps/www/scripts/screenshot.mjs → three levels up).
+const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..')
+const OUT = process.env.PC_OUT ?? resolve(REPO_ROOT, '.tmp/pc-lab.png')
+mkdirSync(dirname(OUT), { recursive: true })
 const EXECUTABLE =
   process.env.PC_CHROME ??
   `${process.env.HOME}/.cache/ms-playwright/chromium_headless_shell-1217/chrome-headless-shell-linux64/chrome-headless-shell`
@@ -26,6 +33,8 @@ const counts = await page.evaluate(() => ({
   areas: document.querySelectorAll('[data-pc-area]').length,
   bars: document.querySelectorAll('[data-pc-bar]').length,
   points: document.querySelectorAll('[data-pc-point]').length,
+  dots: document.querySelectorAll('[data-pc-dot]').length,
+  bubbles: document.querySelectorAll('[data-pc-bubble]').length,
   pieSlices: document.querySelectorAll('[data-pc-pie-slice]').length,
   legendItems: document.querySelectorAll('[data-pc-legend-item]').length,
   seriesLabels: document.querySelectorAll('[data-pc-series-label]').length,

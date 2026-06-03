@@ -37,7 +37,12 @@ export default function BasicLine() {
           )}
         </AxisTooltip>
       </Axis>
-      <Line dataKey="coffee" name="Coffee" class="text-blue-500" stroke-width={3} />
+      <Line
+        dataKey="coffee"
+        name="Coffee"
+        class="text-blue-500"
+        stroke-width={3}
+      />
       <Point
         dataKey="coffee"
         class="text-blue-600 stroke-white transition-all"

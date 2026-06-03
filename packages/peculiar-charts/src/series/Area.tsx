@@ -3,9 +3,11 @@ import createBaseLine from '@src/lib/createBaseLine'
 import createPoints from '@src/lib/createPoints'
 import createScale from '@src/lib/createScale'
 import createSeries from '@src/lib/createSeries'
+import type { DotRenderer, PointEvents } from '@src/lib/markers'
 import { projectScale } from '@src/lib/scale'
 import type { OverrideProps } from '@src/lib/types'
 import { accessData } from '@src/lib/utils'
+import DotsLayer from '@src/series/Dots'
 import Curve from '@src/shapes/Curve'
 import type { CurveFactory } from 'd3-shape'
 import {
@@ -39,7 +41,11 @@ export type AreaProps = OverrideProps<
     positiveFill?: string
     /** Fill for the portion below the zero baseline. Enables fill-by-value. */
     negativeFill?: string
-  }
+    /** Marker at every point. `true`/props-object/function — see {@link DotRenderer}. */
+    dot?: DotRenderer
+    /** Marker at the point nearest the pointer (hover highlight). */
+    activeDot?: DotRenderer
+  } & PointEvents
 >
 
 /** Area series.
@@ -53,15 +59,21 @@ const Area = (props: AreaProps) => {
     { xAxisId: 'x', yAxisId: 'y', fill: 'currentColor', stroke: 'none' },
     props,
   )
-  const [localProps, otherProps] = splitProps(defaultedProps, [
-    'dataKey',
-    'name',
-    'xAxisId',
-    'yAxisId',
-    'stackId',
-    'positiveFill',
-    'negativeFill',
-  ])
+  const [localProps, eventProps, otherProps] = splitProps(
+    defaultedProps,
+    [
+      'dataKey',
+      'name',
+      'xAxisId',
+      'yAxisId',
+      'stackId',
+      'positiveFill',
+      'negativeFill',
+      'dot',
+      'activeDot',
+    ],
+    ['onPointClick', 'onPointEnter', 'onPointLeave'],
+  )
   const chartContext = useChartContext()
 
   const data = createMemo(() =>
@@ -148,6 +160,16 @@ const Area = (props: AreaProps) => {
           {...otherProps}
           fill={localProps.negativeFill ?? 'none'}
           clip-path={`url(#${clipId}-neg)`}
+        />
+      </Show>
+      <Show when={localProps.dot || localProps.activeDot}>
+        <DotsLayer
+          points={points}
+          data={data}
+          xAxisId={localProps.xAxisId}
+          dot={localProps.dot}
+          activeDot={localProps.activeDot}
+          events={eventProps}
         />
       </Show>
     </Show>
