@@ -111,6 +111,8 @@ const Area = (props: AreaProps) => {
   })
 
   const baseLine = createBaseLine({
+    layout: () => 'vertical',
+    xAxisId: () => localProps.xAxisId,
     yAxisId: () => localProps.yAxisId,
     dataKey: () => localProps.dataKey,
     stackId: () => localProps.stackId,

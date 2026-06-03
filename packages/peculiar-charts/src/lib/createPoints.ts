@@ -1,17 +1,19 @@
 import type { ChartContextType } from '@src/components/context'
+import type { BarLayout } from '@src/lib/createBands'
 import createScale from '@src/lib/createScale'
 import { projectScale } from '@src/lib/scale'
 import { axisValues } from '@src/lib/utils'
 import { type Accessor, createMemo } from 'solid-js'
 
 /**
- * Projects a series' data to `[x, y]` pixel coordinates. The x position comes
- * from the bound x-axis scale (categorical or numeric), the y position from the
- * bound value-axis scale, with stacking applied when a `stackId` is set.
+ * Projects a series' data to `[x, y]` pixel coordinates. The category axis
+ * position and value-axis position depend on `layout` — vertical bars use x
+ * for categories and y for values; horizontal bars flip that.
  *
- * Non-finite y values become `[x, NaN]` so the shape layer can break the line.
+ * Non-finite values become `NaN` on the value axis so the shape layer can break.
  */
 const createPoints = (props: {
+  layout?: Accessor<BarLayout>
   xAxisId: Accessor<string>
   yAxisId: Accessor<string>
   dataKey: Accessor<string | undefined>
@@ -20,6 +22,7 @@ const createPoints = (props: {
   chartContext: ChartContextType
 }) => {
   const ctx = props.chartContext
+  const layout = () => props.layout?.() ?? 'vertical'
 
   const xScale = createScale({
     axisId: props.xAxisId,
@@ -36,8 +39,15 @@ const createPoints = (props: {
     const data = props.data()
     const _xScale = xScale()
     const _yScale = yScale()
+    const horizontal = layout() === 'horizontal'
 
-    const xValues = axisValues(ctx, props.xAxisId(), 'x')
+    const categoryValues = axisValues(
+      ctx,
+      horizontal ? props.yAxisId() : props.xAxisId(),
+      horizontal ? 'y' : 'x',
+    )
+    const categoryScale = horizontal ? _yScale : _xScale
+    const valueScale = horizontal ? _xScale : _yScale
 
     const stackId = props.stackId()
     const stack = stackId !== undefined && ctx.stacks().get(stackId)
@@ -54,12 +64,15 @@ const createPoints = (props: {
         }
       }
 
-      const x = projectScale(_xScale, xValues[i])
-      const y =
+      const category = projectScale(categoryScale, categoryValues[i])
+      const val =
         typeof value === 'number' && Number.isFinite(value)
-          ? projectScale(_yScale, stacked)
+          ? projectScale(valueScale, stacked)
           : Number.NaN
-      return [x, y] as [number, number]
+      return [horizontal ? val : category, horizontal ? category : val] as [
+        number,
+        number,
+      ]
     })
   })
 }

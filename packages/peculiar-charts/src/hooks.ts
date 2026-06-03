@@ -4,7 +4,8 @@ import {
   useChartContext,
 } from '@src/components/context'
 import createScale from '@src/lib/createScale'
-import type { Scale } from '@src/lib/scale'
+import createClosestTick from '@src/lib/createClosestTick'
+import { type Scale, invertScale } from '@src/lib/scale'
 import { axisValues } from '@src/lib/utils'
 import { type Accessor, createMemo } from 'solid-js'
 
@@ -60,6 +61,34 @@ export const useXScale = (axisId = 'x'): Accessor<Scale> =>
 /** The value-axis scale. @param axisId @defaultValue `'y'` */
 export const useYScale = (axisId = 'y'): Accessor<Scale> =>
   useScale(axisId, 'y')
+
+/**
+ * Maps a pixel position back to a domain value on an axis scale — the inverse
+ * of `projectScale`. Returns an accessor that takes a pixel coordinate.
+ *
+ * ```tsx
+ * const invertY = useInverseYScale()
+ * const yValue = () => invertY(svgPointer()?.y ?? NaN)
+ * ```
+ */
+export const useInverseScale = (
+  axisId?: string,
+  orientation: AxisOrientation = 'x',
+): Accessor<(pixel: number) => any> => {
+  const scale = useScale(axisId, orientation)
+  return createMemo(() => {
+    const s = scale()
+    return (pixel: number) => invertScale(s, pixel)
+  })
+}
+
+/** Pixel→data on the x-axis. @param axisId @defaultValue `'x'` */
+export const useInverseXScale = (axisId = 'x'): Accessor<(pixel: number) => any> =>
+  useInverseScale(axisId, 'x')
+
+/** Pixel→data on the value axis. @param axisId @defaultValue `'y'` */
+export const useInverseYScale = (axisId = 'y'): Accessor<(pixel: number) => any> =>
+  useInverseScale(axisId, 'y')
 
 /** The resolved domain for an axis (categorical values or numeric min/max). */
 export const useDomain = (
@@ -117,4 +146,73 @@ export const useAxisValues = (
 ): Accessor<any[]> => {
   const ctx = useChartContext()
   return createMemo(() => axisValues(ctx, axisId ?? orientation, orientation))
+}
+
+/** Pointer position in container (HTML) coordinates, or `null` when outside. */
+export const usePointerPosition = (): Accessor<{
+  x: number
+  y: number
+} | null> => {
+  const ctx = useChartContext()
+  return ctx.pointerPosition
+}
+
+/** Whether the pointer is currently over the chart plot area. */
+export const usePointerInChart = (): Accessor<boolean> => {
+  const ctx = useChartContext()
+  return ctx.pointerInChart
+}
+
+/** Pointer position converted to SVG coordinates. */
+export const useSvgPointerPosition = (): Accessor<{
+  x: number
+  y: number
+} | null> => {
+  const ctx = useChartContext()
+  return createMemo(() => {
+    const pointer = ctx.pointerPosition()
+    if (!pointer) return null
+    return {
+      x: ctx.toSvgPosition(pointer.x, 'width'),
+      y: ctx.toSvgPosition(pointer.y, 'height'),
+    }
+  })
+}
+
+/**
+ * The datum nearest the pointer along an axis — the same logic crosshairs and
+ * tooltips use internally. Returns the datum index, its domain value, pixel
+ * position, and the full data row.
+ */
+export type ClosestTick = {
+  index: number
+  value: any
+  position: number
+  datum: any
+}
+
+export const useClosestTick = (
+  axisId?: string,
+  orientation: AxisOrientation = 'x',
+): Accessor<ClosestTick | undefined> => {
+  const ctx = useChartContext()
+  const scale = useScale(axisId, orientation)
+  const values = useAxisValues(axisId, orientation)
+  const closest = createClosestTick({
+    axis: () => orientation,
+    scale,
+    values,
+    chartContext: ctx,
+  })
+  return createMemo(() => {
+    const tick = closest()
+    if (!tick) return undefined
+    const rows = ctx.data()
+    return {
+      index: tick.index,
+      value: values()[tick.index],
+      position: tick.position,
+      datum: rows[tick.index],
+    }
+  })
 }

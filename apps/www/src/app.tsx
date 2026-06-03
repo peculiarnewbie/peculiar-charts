@@ -28,6 +28,8 @@ import CustomLabels from './demos/custom-labels'
 import customLabelsCode from './demos/custom-labels?raw'
 import CustomOverlay from './demos/custom-overlay'
 import customOverlayCode from './demos/custom-overlay?raw'
+import CustomTickMarks from './demos/custom-tick-marks'
+import customTickMarksCode from './demos/custom-tick-marks?raw'
 import DataLabels from './demos/data-labels'
 import dataLabelsCode from './demos/data-labels?raw'
 import Datetime from './demos/datetime'
@@ -42,6 +44,10 @@ import Gradient from './demos/gradient'
 import gradientCode from './demos/gradient?raw'
 import GroupedBars from './demos/grouped-bars'
 import groupedBarsCode from './demos/grouped-bars?raw'
+import HorizontalBars from './demos/horizontal-bars'
+import horizontalBarsCode from './demos/horizontal-bars?raw'
+import InverseScale from './demos/inverse-scale'
+import inverseScaleCode from './demos/inverse-scale?raw'
 import Negative from './demos/negative'
 import negativeCode from './demos/negative?raw'
 import PieDemo from './demos/pie'
@@ -50,6 +56,8 @@ import StackedArea from './demos/stacked-area'
 import stackedAreaCode from './demos/stacked-area?raw'
 import Stepline from './demos/stepline'
 import steplineCode from './demos/stepline?raw'
+import StackedBars from './demos/stacked-bars'
+import stackedBarsCode from './demos/stacked-bars?raw'
 
 type Demo = {
   id: string
@@ -167,6 +175,14 @@ const DEMOS: Demo[] = [
     code: customLabelsCode,
   },
   {
+    id: 'custom-tick-marks',
+    group: 'Markers',
+    title: 'Custom tick marks',
+    desc: '`<AxisMark>` accepts a `children` render-prop — draw diamonds, ticks, or any SVG at each tick position instead of the default line.',
+    Comp: CustomTickMarks,
+    code: customTickMarksCode,
+  },
+  {
     id: 'annotations',
     group: 'Annotations',
     title: 'Reference shapes',
@@ -183,12 +199,36 @@ const DEMOS: Demo[] = [
     code: customOverlayCode,
   },
   {
+    id: 'inverse-scale',
+    group: 'Annotations',
+    title: 'Inverse scale (hooks)',
+    desc: 'A custom overlay uses `useInverseYScale` + `useSvgPointerPosition` to read the y-value under the pointer — the pixel→data companion to `projectScale`.',
+    Comp: InverseScale,
+    code: inverseScaleCode,
+  },
+  {
     id: 'grouped-bars',
     group: 'Bar',
     title: 'Grouped bars + line',
     desc: 'Multiple bar series group side by side; a line series overlays on the same categorical axis.',
     Comp: GroupedBars,
     code: groupedBarsCode,
+  },
+  {
+    id: 'stacked-bars',
+    group: 'Bar',
+    title: 'Stacked bars',
+    desc: 'Bar series sharing a `stackId` stack vertically — same stacking model as area, with legend toggle.',
+    Comp: StackedBars,
+    code: stackedBarsCode,
+  },
+  {
+    id: 'horizontal-bars',
+    group: 'Bar',
+    title: 'Horizontal bars',
+    desc: 'Set `layout="horizontal"` to flip the value axis to x and categories to y — grouped bars work the same way.',
+    Comp: HorizontalBars,
+    code: horizontalBarsCode,
   },
   {
     id: 'pie',

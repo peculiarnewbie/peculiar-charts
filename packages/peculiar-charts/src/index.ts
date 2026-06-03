@@ -13,7 +13,7 @@ import AxisLabel, {
   type LabelTick as AxisLabelTick,
 } from '@src/axis/Label'
 import AxisLine, { type LineProps as AxisLineProps } from '@src/axis/Line'
-import AxisMark, { type MarkProps as AxisMarkProps } from '@src/axis/Mark'
+import AxisMark, { type MarkProps as AxisMarkProps, type MarkTick } from '@src/axis/Mark'
 import AxisTooltip, {
   type TooltipProps as AxisTooltipProps,
 } from '@src/axis/Tooltip'
@@ -32,12 +32,20 @@ import {
 } from '@src/components/context'
 import {
   type PlotArea,
+  type ClosestTick,
   useAxisValues,
   useChartSize,
+  useClosestTick,
   useData,
   useDomain,
+  useInverseScale,
+  useInverseXScale,
+  useInverseYScale,
   usePlotArea,
+  usePointerInChart,
+  usePointerPosition,
   useScale,
+  useSvgPointerPosition,
   useXScale,
   useYScale,
 } from '@src/hooks'
@@ -56,6 +64,7 @@ import {
   interpolatePoint,
   resolveAnimation,
 } from '@src/lib/animation'
+import type { BarLayout } from '@src/lib/createBands'
 import createPoints from '@src/lib/createPoints'
 import createScale from '@src/lib/createScale'
 import createSeries from '@src/lib/createSeries'
@@ -71,6 +80,7 @@ import {
 import {
   type Scale,
   buildScale,
+  invertScale,
   isCategorical,
   isNumeric,
   projectScale,
@@ -98,6 +108,8 @@ import SeriesLabel, {
   type SeriesLabelProps,
 } from '@src/series/SeriesLabel'
 import type { CurveProps } from '@src/shapes/Curve'
+import Rectangle, { type RectangleProps } from '@src/shapes/Rectangle'
+import Sector, { type SectorProps } from '@src/shapes/Sector'
 
 export type {
   // Chart
@@ -118,6 +130,7 @@ export type {
   // Series
   AreaProps,
   BarProps,
+  BarLayout,
   BubbleProps,
   BubbleDatum,
   LineProps,
@@ -136,6 +149,7 @@ export type {
   AxisLabelTick,
   AxisLineProps,
   AxisMarkProps,
+  MarkTick,
   AxisTooltipProps,
   AxisValueLineProps,
   // Reference / annotations
@@ -155,9 +169,12 @@ export type {
   // Others
   OverrideProps,
   CurveProps,
+  RectangleProps,
+  SectorProps,
   ScaleType,
   Scale,
   PlotArea,
+  ClosestTick,
 }
 
 export {
@@ -186,16 +203,25 @@ export {
   ReferenceDot,
   // Shape primitives
   Dot,
+  Rectangle,
+  Sector,
   // Hooks — read chart state from custom children
   useChartContext,
   useScale,
   useXScale,
   useYScale,
+  useInverseScale,
+  useInverseXScale,
+  useInverseYScale,
   useDomain,
   usePlotArea,
   useChartSize,
   useData,
   useAxisValues,
+  usePointerPosition,
+  useSvgPointerPosition,
+  usePointerInChart,
+  useClosestTick,
   // Series primitives — author custom series without forking
   createScale,
   createSeries,
@@ -210,6 +236,7 @@ export {
   // Scale primitives
   buildScale,
   projectScale,
+  invertScale,
   scaleTicks,
   isCategorical,
   isNumeric,

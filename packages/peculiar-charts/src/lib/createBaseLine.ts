@@ -1,13 +1,16 @@
 import type { ChartContextType } from '@src/components/context'
+import type { BarLayout } from '@src/lib/createBands'
 import createScale from '@src/lib/createScale'
 import { projectScale } from '@src/lib/scale'
 import { type Accessor, createMemo } from 'solid-js'
 
 /**
- * Baseline y-coordinate(s) for area/bar series. A plain series sits on the
- * zero line; a stacked series sits on top of the series below it in the stack.
+ * Baseline coordinate(s) for area/bar series. A plain series sits on the zero
+ * line; a stacked series sits on top of the series below it in the stack.
  */
 const createBaseLine = (props: {
+  layout: Accessor<BarLayout>
+  xAxisId: Accessor<string>
   yAxisId: Accessor<string>
   dataKey: Accessor<string | undefined>
   stackId: Accessor<string | undefined>
@@ -15,15 +18,18 @@ const createBaseLine = (props: {
   chartContext: ChartContextType
 }) => {
   const ctx = props.chartContext
-  const yScale = createScale({
-    axisId: props.yAxisId,
-    orientation: () => 'y',
+  const valueScale = createScale({
+    axisId: () =>
+      props.layout() === 'horizontal'
+        ? props.xAxisId()
+        : props.yAxisId(),
+    orientation: () => (props.layout() === 'horizontal' ? 'x' : 'y'),
     chartContext: ctx,
   })
 
   return createMemo<number | number[]>(() => {
-    const _yScale = yScale()
-    const zero = projectScale(_yScale, 0)
+    const _scale = valueScale()
+    const zero = projectScale(_scale, 0)
 
     const stackId = props.stackId()
     const stack = stackId !== undefined && ctx.stacks().get(stackId)
@@ -38,7 +44,7 @@ const createBaseLine = (props: {
       for (let s = 0; s < thisIdx; s++) {
         baseLine += stack.get(stackDataKeys[s]!)?.values[i] ?? 0
       }
-      return projectScale(_yScale, baseLine)
+      return projectScale(_scale, baseLine)
     })
   })
 }

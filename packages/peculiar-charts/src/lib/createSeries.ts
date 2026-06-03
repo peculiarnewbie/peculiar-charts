@@ -11,13 +11,17 @@ const createSeries = (props: {
   seriesId: string
   name: Accessor<string>
   type: string
+  xAxisId?: Accessor<string>
   yAxisId: Accessor<string>
+  /** Axis that receives the value extent. @defaultValue `yAxisId` */
+  valueAxisId?: Accessor<string>
   dataKey: Accessor<string | undefined>
   stackId: Accessor<string | undefined>
   data: Accessor<number[]>
   chartContext: ChartContextType
 }) => {
   const ctx = props.chartContext
+  const valueAxisId = () => props.valueAxisId?.() ?? props.yAxisId()
 
   // identity
   createEffect(() => {
@@ -43,7 +47,7 @@ const createSeries = (props: {
     )
   })
 
-  // value extent on the y-axis (stack-aware)
+  // value extent on the value axis (stack-aware)
   createEffect(() => {
     if (!ctx.isSeriesVisible(props.seriesId)) return
 
@@ -68,8 +72,8 @@ const createSeries = (props: {
     }
     max = max ?? Math.max(...data)
 
-    ctx.registerExtent(props.yAxisId(), props.seriesId, { min, max })
-    onCleanup(() => ctx.unregisterExtent(props.yAxisId(), props.seriesId))
+    ctx.registerExtent(valueAxisId(), props.seriesId, { min, max })
+    onCleanup(() => ctx.unregisterExtent(valueAxisId(), props.seriesId))
   })
 }
 

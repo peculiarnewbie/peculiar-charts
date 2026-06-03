@@ -5,6 +5,7 @@ import {
   createPresence,
   resolveAnimation,
 } from '@src/lib/animation'
+import type { BarLayout } from '@src/lib/createBands'
 import createBands from '@src/lib/createBands'
 import createBaseLine from '@src/lib/createBaseLine'
 import createPoints from '@src/lib/createPoints'
@@ -37,10 +38,14 @@ export type BarProps = OverrideProps<
     yAxisId?: string
     /** Stack id — series sharing one stack are stacked. */
     stackId?: string
+    /** Bar orientation. @defaultValue `'vertical'` */
+    layout?: BarLayout
     /** Animation configuration. */
     animation?: AnimationOptions
   } & PointEvents
 >
+
+type BarRect = { x: number; y: number; width: number; height: number }
 
 /** Bar series.
  *
@@ -50,15 +55,30 @@ export type BarProps = OverrideProps<
 const Bar = (props: BarProps) => {
   const seriesId = createUniqueId()
   const defaultedProps = mergeProps(
-    { xAxisId: 'x', yAxisId: 'y', fill: 'currentColor', stroke: 'none' },
+    {
+      xAxisId: 'x',
+      yAxisId: 'y',
+      layout: 'vertical' as const,
+      fill: 'currentColor',
+      stroke: 'none',
+    },
     props,
   )
   const [localProps, eventProps, otherProps] = splitProps(
     defaultedProps,
-    ['dataKey', 'name', 'xAxisId', 'yAxisId', 'stackId', 'animation'],
+    [
+      'dataKey',
+      'name',
+      'xAxisId',
+      'yAxisId',
+      'stackId',
+      'layout',
+      'animation',
+    ],
     ['onPointClick', 'onPointEnter', 'onPointLeave'],
   )
   const chartContext = useChartContext()
+  const horizontal = () => localProps.layout === 'horizontal'
 
   // Reserve a slot in the grouped-bar layout while visible.
   createEffect(() => {
@@ -76,7 +96,10 @@ const Bar = (props: BarProps) => {
     seriesId,
     name: () => localProps.name ?? localProps.dataKey ?? 'series',
     type: 'bar',
+    xAxisId: () => localProps.xAxisId,
     yAxisId: () => localProps.yAxisId,
+    valueAxisId: () =>
+      horizontal() ? localProps.xAxisId : localProps.yAxisId,
     dataKey: () => localProps.dataKey,
     stackId: () => localProps.stackId,
     data,
@@ -84,6 +107,7 @@ const Bar = (props: BarProps) => {
   })
 
   const points = createPoints({
+    layout: () => localProps.layout,
     xAxisId: () => localProps.xAxisId,
     yAxisId: () => localProps.yAxisId,
     dataKey: () => localProps.dataKey,
@@ -93,6 +117,8 @@ const Bar = (props: BarProps) => {
   })
 
   const baseLine = createBaseLine({
+    layout: () => localProps.layout,
+    xAxisId: () => localProps.xAxisId,
     yAxisId: () => localProps.yAxisId,
     dataKey: () => localProps.dataKey,
     stackId: () => localProps.stackId,
@@ -103,23 +129,35 @@ const Bar = (props: BarProps) => {
   const bands = createBands({
     seriesId,
     stackId: () => localProps.stackId,
+    layout: () => localProps.layout,
     data,
     chartContext,
   })
 
-  const bars = () => {
+  const bars = (): BarRect[] => {
     const _points = points()
     let _baseLine = baseLine()
     if (!Array.isArray(_baseLine))
       _baseLine = new Array(_points.length).fill(_baseLine)
     const _bands = bands()
+
     return _points.map((point, i) => {
-      const yValue = point[1]
+      const band = _bands[i]!
       const base = _baseLine[i]!
+      if (horizontal()) {
+        const xValue = point[0]
+        return {
+          x: xValue > base ? base : xValue,
+          y: band.y,
+          width: xValue > base ? xValue - base : base - xValue,
+          height: band.height,
+        }
+      }
+      const yValue = point[1]
       return {
-        x: _bands[i]!.x,
-        width: _bands[i]!.width,
+        x: band.x,
         y: yValue > base ? base : yValue,
+        width: band.width,
         height: yValue > base ? yValue - base : base - yValue,
       }
     })
@@ -128,22 +166,20 @@ const Bar = (props: BarProps) => {
   const animOpts = createMemo<ResolvedAnimationOptions>(() =>
     resolveAnimation(localProps.animation),
   )
-  const enterBar = (bar: { x: number; width: number; y: number; height: number }) => {
+  const enterBar = (bar: BarRect): BarRect => {
     const _baseLine = baseLine()
     const bl = Array.isArray(_baseLine) ? _baseLine[0] : _baseLine
-    return {
-      x: bar.x,
-      width: bar.width,
-      y: bl ?? 0,
-      height: 0,
+    if (horizontal()) {
+      return { x: bl ?? 0, y: bar.y, width: 0, height: bar.height }
     }
+    return { x: bar.x, y: bl ?? 0, width: bar.width, height: 0 }
   }
-  const exitBar = (bar: { x: number; width: number; y: number; height: number }) => ({
-    x: bar.x,
-    width: bar.width,
-    y: bar.y + bar.height,
-    height: 0,
-  })
+  const exitBar = (bar: BarRect): BarRect => {
+    if (horizontal()) {
+      return { x: bar.x, y: bar.y, width: 0, height: bar.height }
+    }
+    return { x: bar.x, y: bar.y + bar.height, width: bar.width, height: 0 }
+  }
   const animatedBars = createPresence(
     bars,
     animOpts,
@@ -157,12 +193,19 @@ const Bar = (props: BarProps) => {
     exitBar,
   )
 
+  const liveBars = () => animatedBars().filter((i) => i.mode !== 'exit')
+
   return (
     <Show when={chartContext.isSeriesVisible(seriesId)}>
       <g data-pc-bar-group="">
         <For each={animatedBars()}>
           {(item) => {
             const bar = () => item.value
+            const idx = () => liveBars().indexOf(item)
+            const eventPoint = (): [number, number] =>
+              horizontal()
+                ? [bar().x + bar().width / 2, bar().y + bar().height / 2]
+                : [bar().x + bar().width / 2, bar().y]
             return (
               <rect
                 x={bar().x}
@@ -173,9 +216,9 @@ const Bar = (props: BarProps) => {
                 {...(item.mode === 'exit'
                   ? {}
                   : pointEvents(eventProps, () => ({
-                      value: data()[animatedBars().filter((i) => i.mode !== 'exit').indexOf(item)] as number,
-                      index: animatedBars().filter((i) => i.mode !== 'exit').indexOf(item),
-                      point: [bar().x + bar().width / 2, bar().y],
+                      value: data()[idx()] as number,
+                      index: idx(),
+                      point: eventPoint(),
                     })))}
                 data-pc-bar=""
               />

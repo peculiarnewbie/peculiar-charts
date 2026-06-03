@@ -91,6 +91,40 @@ export const projectScale = (scale: Scale, value: any): number => {
   }
 }
 
+/**
+ * Maps a pixel position back to a domain value on the scale — the inverse of
+ * {@link projectScale}. Continuous scales (`linear`, `log`, `time`) use d3's
+ * `.invert()`. Categorical scales (`band`, `point`) pick the domain value whose
+ * projected position is nearest to `pixel`.
+ */
+export const invertScale = (scale: Scale, pixel: number): any => {
+  if (!Number.isFinite(pixel)) return undefined
+
+  switch (scale.type) {
+    case 'linear':
+    case 'log':
+    case 'time':
+      return scale.scale.invert(pixel)
+    case 'band':
+    case 'point': {
+      const domain = scale.scale.domain()
+      if (domain.length === 0) return undefined
+      let best = domain[0]
+      let bestDist = Number.POSITIVE_INFINITY
+      for (const value of domain) {
+        const projected = projectScale(scale, value)
+        if (!Number.isFinite(projected)) continue
+        const dist = Math.abs(projected - pixel)
+        if (dist < bestDist) {
+          bestDist = dist
+          best = value
+        }
+      }
+      return best
+    }
+  }
+}
+
 /** Produces the tick values for a scale, optionally targeting a count. */
 export const scaleTicks = (scale: Scale, count: number): any[] => {
   switch (scale.type) {
