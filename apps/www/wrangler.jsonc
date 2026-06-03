@@ -12,7 +12,6 @@
   },
   "observability": {
     "enabled": true
-  }
-  // Add a custom-domain route here when ready, e.g.:
-  // "routes": [{ "pattern": "charts.peculiarnewbie.com", "custom_domain": true }]
+  },
+  "routes": [{ "pattern": "charts.peculiarnewbie.com", "custom_domain": true }]
 }

@@ -41,6 +41,21 @@ import {
   useXScale,
   useYScale,
 } from '@src/hooks'
+import {
+  type AnimationEasing,
+  type AnimationOptions,
+  type PhaseConfig,
+  type PresenceItem,
+  type PresenceMode,
+  type ResolvedAnimationOptions,
+  type ResolvedPhaseConfig,
+  createPresence,
+  createTweened,
+  createTweenedArray,
+  interpolateNumber,
+  interpolatePoint,
+  resolveAnimation,
+} from '@src/lib/animation'
 import createPoints from '@src/lib/createPoints'
 import createScale from '@src/lib/createScale'
 import createSeries from '@src/lib/createSeries'
@@ -92,6 +107,14 @@ export type {
   AxisOrientation,
   Domain,
   SeriesMeta,
+  // Animation
+  AnimationEasing,
+  AnimationOptions,
+  PhaseConfig,
+  PresenceItem,
+  PresenceMode,
+  ResolvedAnimationOptions,
+  ResolvedPhaseConfig,
   // Series
   AreaProps,
   BarProps,
@@ -177,6 +200,13 @@ export {
   createScale,
   createSeries,
   createPoints,
+  // Animation primitives — author custom animated series
+  createTweened,
+  createTweenedArray,
+  createPresence,
+  interpolateNumber,
+  interpolatePoint,
+  resolveAnimation,
   // Scale primitives
   buildScale,
   projectScale,

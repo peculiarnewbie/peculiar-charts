@@ -1,4 +1,11 @@
 import { useChartContext } from '@src/components/context'
+import {
+  type AnimationOptions,
+  type ResolvedAnimationOptions,
+  createTweenedArray,
+  interpolatePoint,
+  resolveAnimation,
+} from '@src/lib/animation'
 import createPoints from '@src/lib/createPoints'
 import createSeries from '@src/lib/createSeries'
 import type { DotRenderer, PointEvents } from '@src/lib/markers'
@@ -37,6 +44,8 @@ export type LineProps = OverrideProps<
     dot?: DotRenderer
     /** Marker at the point nearest the pointer (hover highlight). */
     activeDot?: DotRenderer
+    /** Animation configuration. */
+    animation?: AnimationOptions
   } & PointEvents
 >
 
@@ -52,7 +61,16 @@ const Line = (props: LineProps) => {
   )
   const [localProps, eventProps, otherProps] = splitProps(
     defaultedProps,
-    ['dataKey', 'name', 'xAxisId', 'yAxisId', 'stackId', 'dot', 'activeDot'],
+    [
+      'dataKey',
+      'name',
+      'xAxisId',
+      'yAxisId',
+      'stackId',
+      'dot',
+      'activeDot',
+      'animation',
+    ],
     ['onPointClick', 'onPointEnter', 'onPointLeave'],
   )
   const chartContext = useChartContext()
@@ -81,14 +99,25 @@ const Line = (props: LineProps) => {
     chartContext,
   })
 
+  const animOpts = createMemo<ResolvedAnimationOptions>(() =>
+    resolveAnimation(localProps.animation),
+  )
+  const NaN_POINT: [number, number] = [Number.NaN, Number.NaN]
+  const animatedPoints = createTweenedArray(
+    points,
+    animOpts,
+    interpolatePoint,
+    (target) => (Number.isNaN(target[0]) ? NaN_POINT : target),
+  )
+
   return (
     <Show when={chartContext.isSeriesVisible(seriesId)}>
-      <Curve points={points()} data-pc-line="" {...otherProps} />
+      <Curve points={animatedPoints()} data-pc-line="" {...otherProps} />
       <Show when={localProps.dot || localProps.activeDot}>
         <DotsLayer
-          points={points}
+          points={animatedPoints}
           data={data}
-          xAxisId={localProps.xAxisId}
+          xAxisId={() => localProps.xAxisId}
           dot={localProps.dot}
           activeDot={localProps.activeDot}
           events={eventProps}

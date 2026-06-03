@@ -1,4 +1,11 @@
 import { useChartContext } from '@src/components/context'
+import {
+  type AnimationOptions,
+  type ResolvedAnimationOptions,
+  createTweenedArray,
+  interpolatePoint,
+  resolveAnimation,
+} from '@src/lib/animation'
 import createBaseLine from '@src/lib/createBaseLine'
 import createPoints from '@src/lib/createPoints'
 import createScale from '@src/lib/createScale'
@@ -45,6 +52,8 @@ export type AreaProps = OverrideProps<
     dot?: DotRenderer
     /** Marker at the point nearest the pointer (hover highlight). */
     activeDot?: DotRenderer
+    /** Animation configuration. */
+    animation?: AnimationOptions
   } & PointEvents
 >
 
@@ -71,6 +80,7 @@ const Area = (props: AreaProps) => {
       'negativeFill',
       'dot',
       'activeDot',
+      'animation',
     ],
     ['onPointClick', 'onPointEnter', 'onPointLeave'],
   )
@@ -108,6 +118,31 @@ const Area = (props: AreaProps) => {
     chartContext,
   })
 
+  const animOpts = createMemo<ResolvedAnimationOptions>(() =>
+    resolveAnimation(localProps.animation),
+  )
+  const NaN_POINT: [number, number] = [Number.NaN, Number.NaN]
+  const animatedPoints = createTweenedArray(
+    points,
+    animOpts,
+    interpolatePoint,
+    (target) => (Number.isNaN(target[0]) ? NaN_POINT : target),
+  )
+  const animatedBaseLine = createTweenedArray(
+    () => {
+      const bl = baseLine()
+      return Array.isArray(bl) ? bl : [bl]
+    },
+    animOpts,
+    (a, b, t) => a + (b - a) * t,
+    (target) => target,
+  )
+  const resolvedAnimatedBaseLine = () => {
+    const bl = baseLine()
+    if (!Array.isArray(bl)) return bl
+    return animatedBaseLine()
+  }
+
   const fillByValue = () =>
     localProps.positiveFill !== undefined ||
     localProps.negativeFill !== undefined
@@ -125,8 +160,8 @@ const Area = (props: AreaProps) => {
         when={fillByValue()}
         fallback={
           <Curve
-            points={points()}
-            baseLine={baseLine()}
+            points={animatedPoints()}
+            baseLine={resolvedAnimatedBaseLine()}
             data-pc-area=""
             {...otherProps}
           />
@@ -146,7 +181,7 @@ const Area = (props: AreaProps) => {
           </clipPath>
         </defs>
         <Curve
-          points={points()}
+          points={animatedPoints()}
           baseLine={zeroY()}
           data-pc-area=""
           {...otherProps}
@@ -154,7 +189,7 @@ const Area = (props: AreaProps) => {
           clip-path={`url(#${clipId}-pos)`}
         />
         <Curve
-          points={points()}
+          points={animatedPoints()}
           baseLine={zeroY()}
           data-pc-area=""
           {...otherProps}
@@ -164,9 +199,9 @@ const Area = (props: AreaProps) => {
       </Show>
       <Show when={localProps.dot || localProps.activeDot}>
         <DotsLayer
-          points={points}
+          points={animatedPoints}
           data={data}
-          xAxisId={localProps.xAxisId}
+          xAxisId={() => localProps.xAxisId}
           dot={localProps.dot}
           activeDot={localProps.activeDot}
           events={eventProps}

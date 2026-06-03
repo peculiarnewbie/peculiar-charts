@@ -1,4 +1,10 @@
 import { useChartContext } from '@src/components/context'
+import {
+  type AnimationOptions,
+  type ResolvedAnimationOptions,
+  createPresence,
+  resolveAnimation,
+} from '@src/lib/animation'
 import createBands from '@src/lib/createBands'
 import createBaseLine from '@src/lib/createBaseLine'
 import createPoints from '@src/lib/createPoints'
@@ -31,6 +37,8 @@ export type BarProps = OverrideProps<
     yAxisId?: string
     /** Stack id — series sharing one stack are stacked. */
     stackId?: string
+    /** Animation configuration. */
+    animation?: AnimationOptions
   } & PointEvents
 >
 
@@ -47,7 +55,7 @@ const Bar = (props: BarProps) => {
   )
   const [localProps, eventProps, otherProps] = splitProps(
     defaultedProps,
-    ['dataKey', 'name', 'xAxisId', 'yAxisId', 'stackId'],
+    ['dataKey', 'name', 'xAxisId', 'yAxisId', 'stackId', 'animation'],
     ['onPointClick', 'onPointEnter', 'onPointLeave'],
   )
   const chartContext = useChartContext()
@@ -117,22 +125,62 @@ const Bar = (props: BarProps) => {
     })
   }
 
+  const animOpts = createMemo<ResolvedAnimationOptions>(() =>
+    resolveAnimation(localProps.animation),
+  )
+  const enterBar = (bar: { x: number; width: number; y: number; height: number }) => {
+    const _baseLine = baseLine()
+    const bl = Array.isArray(_baseLine) ? _baseLine[0] : _baseLine
+    return {
+      x: bar.x,
+      width: bar.width,
+      y: bl ?? 0,
+      height: 0,
+    }
+  }
+  const exitBar = (bar: { x: number; width: number; y: number; height: number }) => ({
+    x: bar.x,
+    width: bar.width,
+    y: bar.y + bar.height,
+    height: 0,
+  })
+  const animatedBars = createPresence(
+    bars,
+    animOpts,
+    (a, b, t) => ({
+      x: a.x + (b.x - a.x) * t,
+      width: a.width + (b.width - a.width) * t,
+      y: a.y + (b.y - a.y) * t,
+      height: a.height + (b.height - a.height) * t,
+    }),
+    enterBar,
+    exitBar,
+  )
+
   return (
     <Show when={chartContext.isSeriesVisible(seriesId)}>
       <g data-pc-bar-group="">
-        <For each={bars()}>
-          {(bar, index) => (
-            <rect
-              {...bar}
-              {...otherProps}
-              {...pointEvents(eventProps, () => ({
-                value: data()[index()] as number,
-                index: index(),
-                point: [bar.x + bar.width / 2, bar.y],
-              }))}
-              data-pc-bar=""
-            />
-          )}
+        <For each={animatedBars()}>
+          {(item) => {
+            const bar = () => item.value
+            return (
+              <rect
+                x={bar().x}
+                y={bar().y}
+                width={bar().width}
+                height={bar().height}
+                {...otherProps}
+                {...(item.mode === 'exit'
+                  ? {}
+                  : pointEvents(eventProps, () => ({
+                      value: data()[animatedBars().filter((i) => i.mode !== 'exit').indexOf(item)] as number,
+                      index: animatedBars().filter((i) => i.mode !== 'exit').indexOf(item),
+                      point: [bar().x + bar().width / 2, bar().y],
+                    })))}
+                data-pc-bar=""
+              />
+            )
+          }}
         </For>
       </g>
     </Show>

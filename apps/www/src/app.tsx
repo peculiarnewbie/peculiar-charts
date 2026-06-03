@@ -2,6 +2,18 @@ import { For, Show, createMemo, createSignal } from 'solid-js'
 import { Dynamic } from 'solid-js/web'
 import { highlight } from 'sugar-high'
 
+import AnimatedArea from './demos/animated-area'
+import animatedAreaCode from './demos/animated-area?raw'
+import AnimatedBars from './demos/animated-bars'
+import animatedBarsCode from './demos/animated-bars?raw'
+import AnimatedBubble from './demos/animated-bubble'
+import animatedBubbleCode from './demos/animated-bubble?raw'
+import AnimatedLine from './demos/animated-line'
+import animatedLineCode from './demos/animated-line?raw'
+import AnimatedPhaseBars from './demos/animated-phase-bars'
+import animatedPhaseBarsCode from './demos/animated-phase-bars?raw'
+import AnimatedPie from './demos/animated-pie'
+import animatedPieCode from './demos/animated-pie?raw'
 import Annotations from './demos/annotations'
 import annotationsCode from './demos/annotations?raw'
 import Basic from './demos/basic'
@@ -193,6 +205,55 @@ const DEMOS: Demo[] = [
     desc: 'A pie with `innerRadius` — plus `padAngle` and `cornerRadius` for the gaps and rounding.',
     Comp: Donut,
     code: donutCode,
+  },
+  {
+    id: 'animated-bars',
+    group: 'Animation',
+    title: 'Animated bars',
+    desc: 'Bar series with `animation` — toggle between 5 and 3 items to see entering bars grow and exiting bars shrink to baseline.',
+    Comp: AnimatedBars,
+    code: animatedBarsCode,
+  },
+  {
+    id: 'animated-line',
+    group: 'Animation',
+    title: 'Animated line + points',
+    desc: 'Line and Point series with `animation` — points tween their coordinates and exiting points shrink to zero radius. The path snaps on remove (no per-point exit for lines).',
+    Comp: AnimatedLine,
+    code: animatedLineCode,
+  },
+  {
+    id: 'animated-area',
+    group: 'Animation',
+    title: 'Animated area',
+    desc: 'Stacked area series with `animation` — the filled region morphs smoothly as data changes. Toggle between 7 and 4 items to see the path snap on removal (no per-point exit for areas).',
+    Comp: AnimatedArea,
+    code: animatedAreaCode,
+  },
+  {
+    id: 'animated-pie',
+    group: 'Animation',
+    title: 'Animated pie (exit)',
+    desc: 'Pie series with `animation` — toggle between 7 and 4 slices; exiting slices shrink to zero angular span.',
+    Comp: AnimatedPie,
+    code: animatedPieCode,
+  },
+  {
+    id: 'animated-bubble',
+    group: 'Animation',
+    title: 'Animated bubble (exit)',
+    desc: 'Bubble series with `animation` — bubbles exit by shrinking to zero radius when data shrinks.',
+    Comp: AnimatedBubble,
+    code: animatedBubbleCode,
+  },
+  {
+    id: 'animated-phase-bars',
+    group: 'Animation',
+    title: 'Phase-config bars',
+    desc: 'Per-phase animation config — enter grows over 600ms with `ease`, exit snaps first with a springy cubic-bezier, update tweens at 400ms `ease-out`. Toggle between 7 and 3 items to see exits.',
+    Comp: AnimatedPhaseBars,
+    code: animatedPhaseBarsCode,
+    tall: true,
   },
 ]
 

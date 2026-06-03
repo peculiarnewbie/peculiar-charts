@@ -1,5 +1,11 @@
 import { dataIf } from '@corvu/utils'
 import { useChartContext } from '@src/components/context'
+import {
+  type AnimationOptions,
+  type ResolvedAnimationOptions,
+  createPresence,
+  resolveAnimation,
+} from '@src/lib/animation'
 import createClosestTick from '@src/lib/createClosestTick'
 import createPoints from '@src/lib/createPoints'
 import createScale from '@src/lib/createScale'
@@ -44,6 +50,8 @@ export type PointProps = OverrideProps<
     /** Render a custom marker per point (e.g. an image or emoji) instead of a
      * `<circle>`. Receives the point's pixel position, value and active state. */
     children?: (datum: PointDatum) => JSX.Element
+    /** Animation configuration. */
+    animation?: AnimationOptions
   } & PointEvents
 >
 
@@ -68,6 +76,7 @@ const Point = (props: PointProps) => {
       'stackId',
       'activeProps',
       'children',
+      'animation',
     ],
     ['onPointClick', 'onPointEnter', 'onPointLeave'],
   )
@@ -118,38 +127,67 @@ const Point = (props: PointProps) => {
       ? mergeProps(otherProps, localProps.activeProps)
       : otherProps
 
+  const animOpts = createMemo<ResolvedAnimationOptions>(() =>
+    resolveAnimation(localProps.animation),
+  )
+  const circles = createMemo(() =>
+    points().map((p, i) => ({
+      cx: p[0],
+      cy: p[1],
+      r: Number(otherProps.r ?? 4),
+      index: i,
+    })),
+  )
+  const animatedCircles = createPresence(
+    circles,
+    animOpts,
+    (a, b, t) => ({
+      cx: a.cx + (b.cx - a.cx) * t,
+      cy: a.cy + (b.cy - a.cy) * t,
+      r: a.r + (b.r - a.r) * t,
+      index: b.index,
+    }),
+    (target) => ({ cx: target.cx, cy: target.cy, r: 0, index: target.index }),
+    (current) => ({ cx: current.cx, cy: current.cy, r: 0, index: current.index }),
+  )
+
   return (
     <Show when={chartContext.isSeriesVisible(seriesId)}>
       <g data-pc-point-group="">
-        <For each={points().filter(pointDefined)}>
-          {(point, index) => (
-            <Show
-              when={localProps.children}
-              fallback={
-                <circle
-                  cx={point[0]}
-                  cy={point[1]}
-                  data-active={dataIf(isActive(index()))}
-                  data-pc-point=""
-                  {...circleProps(index())}
-                  {...pointEvents(eventProps, () => ({
-                    value: data()[index()] as number,
-                    index: index(),
-                    point,
-                  }))}
-                />
-              }
-            >
-              {(children) =>
-                children()({
-                  point,
-                  value: data()[index()] as number,
-                  index: index(),
-                  active: isActive(index()),
-                })
-              }
-            </Show>
-          )}
+        <For each={animatedCircles()}>
+          {(item) => {
+            const c = () => item.value
+            const dataIndex = () => animatedCircles().filter((i) => i.mode !== 'exit').indexOf(item)
+            const valid = () => pointDefined([c().cx, c().cy]) && (c().r > 0 || item.mode === 'exit')
+            return (
+              <Show when={valid()}>
+                {item.mode === 'exit' || !localProps.children ? (
+                  <circle
+                    cx={c().cx}
+                    cy={c().cy}
+                    data-active={isActive(dataIndex())}
+                    data-pc-point=""
+                    {...circleProps(dataIndex())}
+                    {...(item.mode === 'exit'
+                      ? {}
+                      : pointEvents(eventProps, () => ({
+                          value: data()[dataIndex()] as number,
+                          index: dataIndex(),
+                          point: [c().cx, c().cy],
+                        })))}
+                    r={Math.max(0, c().r)}
+                  />
+                ) : (
+                  localProps.children({
+                    point: [c().cx, c().cy],
+                    value: data()[dataIndex()] as number,
+                    index: dataIndex(),
+                    active: isActive(dataIndex()),
+                  })
+                )}
+              </Show>
+            )
+          }}
         </For>
       </g>
     </Show>

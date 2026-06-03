@@ -6,6 +6,5 @@ dist
 .DS_Store
 
 # Reference clones managed separately
-/solid-charts
-/ag-charts
-/recharts
+/references
+apps/www/.wrangler

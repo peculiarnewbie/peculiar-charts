@@ -16,6 +16,8 @@ and a prioritized roadmap for closing the gap.
 > (bool | props-object | function) on Line/Area and per-datum `onPoint*` events across the
 > series. Remaining gaps: the other render-prop surfaces, inverse (pixel→data) scales, more shape
 > primitives, and cross-chart `syncId` sync.
+> Animation is also currently absent; see `docs/animation.md` for the proposed Solid-native
+> tweening direction.
 
 ---
 
@@ -250,6 +252,16 @@ Synchronize tooltip/crosshair (and later brush) across charts sharing a `syncId`
 
 - **Effort**: high; overlaps with the deferred interaction tier (brush/zoom/realtime). Best done
   as part of that effort.
+
+### 6. Animation support
+Add optional, Solid-native geometry tweening for series updates and simple enters. The current
+package has no built-in animation support; users must animate manually with CSS or custom logic.
+The intended direction is documented in `docs/animation.md`: start with a small `createTweened`
+primitive, an `animation` prop on series, reduced-motion handling, and no exit animations in the
+first release.
+
+- **Effort**: medium for basic bars/points; higher for line/area/pie polish and presence-based
+  exits.
 
 ---
 

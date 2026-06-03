@@ -16,7 +16,7 @@ import { type Accessor, For, Show } from 'solid-js'
 const DotsLayer = (props: {
   points: Accessor<[number, number][]>
   data: Accessor<number[]>
-  xAxisId: string
+  xAxisId: Accessor<string>
   dot?: DotRenderer
   activeDot?: DotRenderer
   events: PointEvents
@@ -24,7 +24,7 @@ const DotsLayer = (props: {
   const ctx = useChartContext()
 
   const xScale = createScale({
-    axisId: () => props.xAxisId,
+    axisId: props.xAxisId,
     orientation: () => 'x',
     chartContext: ctx,
   })
@@ -32,7 +32,7 @@ const DotsLayer = (props: {
   const closestTick = createClosestTick({
     axis: () => 'x',
     scale: xScale,
-    values: () => axisValues(ctx, props.xAxisId, 'x'),
+    values: () => axisValues(ctx, props.xAxisId(), 'x'),
     chartContext: ctx,
   })
 

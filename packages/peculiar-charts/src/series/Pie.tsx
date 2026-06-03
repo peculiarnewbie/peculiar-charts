@@ -1,4 +1,10 @@
 import { useChartContext } from '@src/components/context'
+import {
+  type AnimationOptions,
+  type ResolvedAnimationOptions,
+  createPresence,
+  resolveAnimation,
+} from '@src/lib/animation'
 import { paletteColor } from '@src/lib/palette'
 import type { OverrideProps } from '@src/lib/types'
 import { accessData } from '@src/lib/utils'
@@ -33,6 +39,8 @@ export type PieProps = OverrideProps<
     startAngle?: number
     /** End angle of the pie in radians. @defaultValue `2π` */
     endAngle?: number
+    /** Animation configuration. */
+    animation?: AnimationOptions
   }
 >
 
@@ -73,6 +81,7 @@ const Pie = (props: PieProps) => {
     'padAngle',
     'startAngle',
     'endAngle',
+    'animation',
   ])
   const chartContext = useChartContext()
 
@@ -134,18 +143,59 @@ const Pie = (props: PieProps) => {
       .endAngle(localProps.endAngle)
       .padAngle(localProps.padAngle)
 
-    const arcGen = d3arc<ReturnType<typeof pieGen>[number]>()
-      .innerRadius(innerR)
-      .outerRadius(outerR)
-      .cornerRadius(localProps.cornerRadius)
-
     return {
       cx,
       cy,
+      innerR,
+      outerR,
       slices: pieGen(slices).map((a) => ({
-        d: arcGen(a) ?? '',
+        startAngle: a.startAngle,
+        endAngle: a.endAngle,
         id: a.data.id,
         index: a.data.index,
+      })),
+    }
+  })
+
+  const animOpts = createMemo<ResolvedAnimationOptions>(() =>
+    resolveAnimation(localProps.animation),
+  )
+  const animatedSlices = createPresence(
+    () => layout().slices,
+    animOpts,
+    (a, b, t) => ({
+      startAngle: a.startAngle + (b.startAngle - a.startAngle) * t,
+      endAngle: a.endAngle + (b.endAngle - a.endAngle) * t,
+      id: b.id,
+      index: b.index,
+    }),
+    (target) => ({
+      startAngle: target.startAngle,
+      endAngle: target.startAngle,
+      id: target.id,
+      index: target.index,
+    }),
+    (current) => ({
+      startAngle: current.startAngle,
+      endAngle: current.startAngle,
+      id: current.id,
+      index: current.index,
+    }),
+  )
+  const animatedLayout = createMemo(() => {
+    const { cx, cy, innerR, outerR } = layout()
+    const arcGen = d3arc<{ startAngle: number; endAngle: number }>()
+      .innerRadius(innerR)
+      .outerRadius(outerR)
+      .cornerRadius(localProps.cornerRadius)
+    return {
+      cx,
+      cy,
+      slices: animatedSlices().map((item) => ({
+        d: arcGen(item.value) ?? '',
+        id: item.value.id,
+        index: item.value.index,
+        mode: item.mode,
       })),
     }
   })
@@ -153,9 +203,9 @@ const Pie = (props: PieProps) => {
   return (
     <g
       data-pc-pie-group=""
-      transform={`translate(${layout().cx}, ${layout().cy})`}
+      transform={`translate(${animatedLayout().cx}, ${animatedLayout().cy})`}
     >
-      <For each={layout().slices}>
+      <For each={animatedLayout().slices}>
         {(slice) => (
           <path
             d={slice.d}
