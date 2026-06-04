@@ -1,9 +1,10 @@
 import { combineStyle } from '@corvu/utils/dom'
-import { useAxisContext } from '@src/axis/context'
+import { usePolarAxisContext } from '@src/axis/polar/context'
 import { useChartContext } from '@src/components/context'
-import createClosestTick from '@src/lib/createClosestTick'
 import createSize from '@src/lib/dom/createSize'
-import { isNumeric } from '@src/lib/scale'
+import createPolarClosestTick from '@src/lib/polar/createPolarClosestTick'
+import { usePolarLayout } from '@src/lib/polar/context'
+import { type PolarAngleScale } from '@src/lib/polar/scale'
 import {
   type TooltipPayload,
   type TooltipRenderer,
@@ -22,50 +23,41 @@ import {
 } from 'solid-js'
 import { Portal, isDev } from 'solid-js/web'
 
-export type TooltipProps = OverrideProps<
+export type PolarTooltipProps = OverrideProps<
   ComponentProps<'div'>,
   {
-    /** Gap between the tick and the tooltip. @defaultValue `16` */
-    tickGap?: number
     /** Gap between the pointer and the tooltip. @defaultValue `16` */
     pointerGap?: number
-    /**
-     * Tooltip body renderer — Recharts-style alias for `children`.
-     * `true` (or omit both) renders the default {@link TooltipContent}.
-     */
     content?: TooltipRenderer
-    /** Render the tooltip body from the active datum. Alias: see `content`. */
     children?: TooltipRenderer
   }
 >
 
 export type { TooltipPayload, TooltipRenderer }
 
-/** HTML tooltip positioned near the closest tick, portaled out of the svg.
+/** HTML tooltip for polar charts — snaps to the nearest category spoke.
  *
- * @data `data-pc-axis-tooltip` - Present on every tooltip element.
+ * Place inside `<PolarAngleAxis>`. Uses the same payload shape as {@link AxisTooltip}.
+ *
+ * @data `data-pc-polar-tooltip` - Present on the tooltip element.
  */
-const Tooltip = (props: TooltipProps) => {
-  const defaultedProps = mergeProps({ tickGap: 16, pointerGap: 16 }, props)
+const PolarTooltip = (props: PolarTooltipProps) => {
+  const defaultedProps = mergeProps({ pointerGap: 16 }, props)
   const [localProps, otherProps] = splitProps(defaultedProps, [
-    'tickGap',
     'pointerGap',
     'content',
     'children',
     'style',
   ])
   const chartContext = useChartContext()
-  const axisContext = useAxisContext()
+  const axisContext = usePolarAxisContext()
+  const layout = usePolarLayout()
   const renderer = () =>
     resolveTooltipRenderer(localProps.content, localProps.children)
 
-  if (
-    isDev &&
-    isNumeric(axisContext.scale().type) &&
-    axisContext.axis() === 'y'
-  ) {
+  if (isDev && axisContext.axis() === 'radius') {
     throw new Error(
-      '[peculiar-charts] Tooltip can not be used with a numeric value axis',
+      '[peculiar-charts] PolarTooltip must be used inside <PolarAngleAxis>',
     )
   }
 
@@ -76,11 +68,15 @@ const Tooltip = (props: TooltipProps) => {
     (prev) => chartContext.pointerPosition() ?? prev,
   )
 
-  const closestTick = createClosestTick({
-    axis: axisContext.axis,
-    scale: axisContext.scale,
+  const closestTick = createPolarClosestTick({
+    layout,
+    scale: () => axisContext.scale() as PolarAngleScale,
     values: () =>
-      axisValues(chartContext, axisContext.axisId(), axisContext.axis()),
+      axisValues(
+        chartContext,
+        axisContext.axisId(),
+        axisContext.axis(),
+      ),
     chartContext,
   })
 
@@ -90,58 +86,36 @@ const Tooltip = (props: TooltipProps) => {
     return buildTooltipPayload(
       chartContext,
       axisContext.axisId(),
-      axisContext.axis(),
+      'angle',
       tick.index,
     )
   })
 
   const x = () => {
-    const _pointerPosition = pointerPosition()
-    const tick = closestTick()
-    if (!_pointerPosition || !tick) return 0
+    const pointer = pointerPosition()
+    if (!pointer) return 0
     const _tooltipSize = tooltipSize()
     const containerWidth = chartContext.toContainerPosition(
       chartContext.width(),
       'width',
     )
-    if (axisContext.axis() === 'x') {
-      const tickPosition = chartContext.toContainerPosition(
-        tick.position,
-        'width',
-      )
-      const preferred = tickPosition + localProps.tickGap
-      if (_tooltipSize && preferred + _tooltipSize[0] > containerWidth)
-        return tickPosition - localProps.tickGap - _tooltipSize[0]
-      return preferred
-    }
-    const preferred = _pointerPosition.x + localProps.pointerGap
+    const preferred = pointer.x + localProps.pointerGap
     if (_tooltipSize && preferred + _tooltipSize[0] > containerWidth)
-      return _pointerPosition.x - localProps.pointerGap - _tooltipSize[0]
+      return pointer.x - localProps.pointerGap - _tooltipSize[0]
     return preferred
   }
 
   const y = () => {
-    const _pointerPosition = pointerPosition()
-    const tick = closestTick()
-    if (!_pointerPosition || !tick) return 0
+    const pointer = pointerPosition()
+    if (!pointer) return 0
     const _tooltipSize = tooltipSize()
     const containerHeight = chartContext.toContainerPosition(
       chartContext.height(),
       'height',
     )
-    if (axisContext.axis() === 'y') {
-      const tickPosition = chartContext.toContainerPosition(
-        tick.position,
-        'height',
-      )
-      const preferred = tickPosition + localProps.tickGap
-      if (_tooltipSize && preferred + _tooltipSize[1] > containerHeight)
-        return tickPosition - localProps.tickGap - _tooltipSize[1]
-      return preferred
-    }
-    const preferred = _pointerPosition.y + localProps.pointerGap
+    const preferred = pointer.y + localProps.pointerGap
     if (_tooltipSize && preferred + _tooltipSize[1] > containerHeight)
-      return _pointerPosition.y - localProps.pointerGap - _tooltipSize[1]
+      return pointer.y - localProps.pointerGap - _tooltipSize[1]
     return preferred
   }
 
@@ -160,7 +134,7 @@ const Tooltip = (props: TooltipProps) => {
           },
           localProps.style,
         )}
-        data-pc-axis-tooltip=""
+        data-pc-polar-tooltip=""
         {...otherProps}
       >
         {(() => {
@@ -172,4 +146,4 @@ const Tooltip = (props: TooltipProps) => {
   )
 }
 
-export default Tooltip
+export default PolarTooltip

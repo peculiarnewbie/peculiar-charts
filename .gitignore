@@ -5,6 +5,7 @@ dist
 *.log
 .DS_Store
 
-# Reference clones managed separately
+# Reference clones managed separately (see docs/references.md)
 /references
+/solid-charts
 apps/www/.wrangler

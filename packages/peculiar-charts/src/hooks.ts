@@ -5,6 +5,14 @@ import {
 } from '@src/components/context'
 import createScale from '@src/lib/createScale'
 import createClosestTick from '@src/lib/createClosestTick'
+import createPolarClosestTick, {
+  type ClosestPolarTick,
+} from '@src/lib/polar/createPolarClosestTick'
+import { usePolarLayout } from '@src/lib/polar/context'
+import {
+  createPolarAngleScale,
+  type PolarAngleScale,
+} from '@src/lib/polar/scale'
 import { type Scale, invertScale } from '@src/lib/scale'
 import { axisValues } from '@src/lib/utils'
 import { type Accessor, createMemo } from 'solid-js'
@@ -191,9 +199,44 @@ export type ClosestTick = {
   datum: any
 }
 
+export type { ClosestPolarTick }
+
+/**
+ * The category spoke nearest the pointer on a polar angle axis — same logic
+ * {@link PolarTooltip} and {@link PolarCrosshair} use internally.
+ */
+export const usePolarClosestTick = (
+  angleAxisId = 'angle',
+): Accessor<ClosestPolarTick | undefined> => {
+  const ctx = useChartContext()
+  const layout = usePolarLayout()
+  const scale = createPolarAngleScale({
+    axisId: () => angleAxisId,
+    layout,
+    chartContext: ctx,
+  })
+  const values = useAxisValues(angleAxisId, 'angle')
+  const closest = createPolarClosestTick({
+    layout,
+    scale: () => scale() as PolarAngleScale,
+    values,
+    chartContext: ctx,
+  })
+  return createMemo(() => {
+    const tick = closest()
+    if (!tick) return undefined
+    return {
+      index: tick.index,
+      value: values()[tick.index],
+      angle: tick.angle,
+      datum: ctx.data()[tick.index],
+    }
+  })
+}
+
 export const useClosestTick = (
   axisId?: string,
-  orientation: AxisOrientation = 'x',
+  orientation: 'x' | 'y' = 'x',
 ): Accessor<ClosestTick | undefined> => {
   const ctx = useChartContext()
   const scale = useScale(axisId, orientation)

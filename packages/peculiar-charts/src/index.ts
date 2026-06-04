@@ -16,12 +16,17 @@ import AxisLine, { type LineProps as AxisLineProps } from '@src/axis/Line'
 import AxisMark, { type MarkProps as AxisMarkProps, type MarkTick } from '@src/axis/Mark'
 import AxisTooltip, {
   type TooltipProps as AxisTooltipProps,
+  type TooltipPayload,
+  type TooltipRenderer,
 } from '@src/axis/Tooltip'
 import AxisValueLine, {
   type ValueLineProps as AxisValueLineProps,
 } from '@src/axis/ValueLine'
 import Chart, { type ChartProps } from '@src/components/Chart'
-import Legend, { type LegendProps } from '@src/components/Legend'
+import Legend, {
+  type LegendProps,
+  type LegendItemRenderer,
+} from '@src/components/Legend'
 import {
   type AxisConfig,
   type AxisOrientation,
@@ -33,9 +38,11 @@ import {
 import {
   type PlotArea,
   type ClosestTick,
+  type ClosestPolarTick,
   useAxisValues,
   useChartSize,
   useClosestTick,
+  usePolarClosestTick,
   useData,
   useDomain,
   useInverseScale,
@@ -70,6 +77,10 @@ import createScale from '@src/lib/createScale'
 import createSeries from '@src/lib/createSeries'
 import {
   Dot,
+  BarShape,
+  type BarDatum,
+  type BarShapeProps,
+  type BarShapeRenderer,
   type DotDatum,
   type DotProps,
   type DotRenderer,
@@ -88,6 +99,14 @@ import {
 } from '@src/lib/scale'
 import type { OverrideProps } from '@src/lib/types'
 import { accessData, axisValues, toNumeric } from '@src/lib/utils'
+import {
+  TooltipContent,
+  type TooltipSeriesItem,
+  buildTooltipPayload,
+} from '@src/lib/tooltip'
+import {
+  LegendItemContent,
+} from '@src/lib/legend'
 import ReferenceArea, {
   type ReferenceAreaProps,
 } from '@src/reference/ReferenceArea'
@@ -102,11 +121,46 @@ import Bar, { type BarProps } from '@src/series/Bar'
 import Bubble, { type BubbleDatum, type BubbleProps } from '@src/series/Bubble'
 import Line, { type LineProps } from '@src/series/Line'
 import Pie, { type PieProps } from '@src/series/Pie'
+import PolarAngleAxis, {
+  type PolarAngleAxisProps,
+} from '@src/axis/polar/PolarAngleAxis'
+import PolarAngleLabel, {
+  type PolarAngleLabelProps,
+} from '@src/axis/polar/PolarAngleLabel'
+import PolarGrid, { type PolarGridProps } from '@src/axis/polar/PolarGrid'
+import PolarLayout, {
+  type PolarLayoutProps,
+} from '@src/axis/polar/PolarLayout'
+import PolarRadiusAxis, {
+  type PolarRadiusAxisProps,
+} from '@src/axis/polar/PolarRadiusAxis'
+import PolarRadiusLabel, {
+  type PolarRadiusLabelProps,
+} from '@src/axis/polar/PolarRadiusLabel'
+import PolarCrosshair, {
+  type PolarCrosshairProps,
+} from '@src/axis/polar/PolarCrosshair'
+import PolarTooltip, {
+  type PolarTooltipProps,
+} from '@src/axis/polar/PolarTooltip'
+import { usePolarLayout, type PolarLayout as PolarLayoutContext } from '@src/lib/polar/context'
+import createPolarPoints from '@src/lib/polar/createPolarPoints'
+import { polarToCartesian } from '@src/lib/polar/utils'
+import PolarPolygon, {
+  type PolarPolygonProps,
+} from '@src/shapes/PolarPolygon'
+import Radar, { type RadarProps } from '@src/series/Radar'
 import Point, { type PointDatum, type PointProps } from '@src/series/Point'
 import SeriesLabel, {
   type SeriesLabelDatum,
   type SeriesLabelProps,
 } from '@src/series/SeriesLabel'
+import {
+  LabelLine,
+  type LabelLineDatum,
+  type LabelLineProps,
+  type LabelLineRenderer,
+} from '@src/lib/labels'
 import type { CurveProps } from '@src/shapes/Curve'
 import Rectangle, { type RectangleProps } from '@src/shapes/Rectangle'
 import Sector, { type SectorProps } from '@src/shapes/Sector'
@@ -135,10 +189,14 @@ export type {
   BubbleDatum,
   LineProps,
   PieProps,
+  RadarProps,
   PointProps,
   PointDatum,
   SeriesLabelProps,
   SeriesLabelDatum,
+  LabelLineRenderer,
+  LabelLineDatum,
+  LabelLineProps,
   // Axis
   AxisProps,
   XAxisProps,
@@ -151,17 +209,35 @@ export type {
   AxisMarkProps,
   MarkTick,
   AxisTooltipProps,
+  TooltipPayload,
+  TooltipRenderer,
+  TooltipSeriesItem,
   AxisValueLineProps,
+  // Polar
+  PolarLayoutProps,
+  PolarLayoutContext,
+  PolarAngleAxisProps,
+  PolarAngleLabelProps,
+  PolarRadiusAxisProps,
+  PolarRadiusLabelProps,
+  PolarGridProps,
+  PolarCrosshairProps,
+  PolarTooltipProps,
+  PolarPolygonProps,
   // Reference / annotations
   ReferenceLineProps,
   ReferenceAreaProps,
   ReferenceDotProps,
   // Overlays
   LegendProps,
+  LegendItemRenderer,
   // Render-props / markers
   DotRenderer,
   DotDatum,
   DotProps,
+  BarShapeRenderer,
+  BarDatum,
+  BarShapeProps,
   // Per-datum events
   PointEvents,
   PointEventDatum,
@@ -175,6 +251,7 @@ export type {
   Scale,
   PlotArea,
   ClosestTick,
+  ClosestPolarTick,
 }
 
 export {
@@ -186,8 +263,19 @@ export {
   Bubble,
   Line,
   Pie,
+  Radar,
   Point,
   SeriesLabel,
+  // Polar
+  PolarLayout,
+  PolarAngleAxis,
+  PolarAngleLabel,
+  PolarRadiusAxis,
+  PolarRadiusLabel,
+  PolarGrid,
+  PolarCrosshair,
+  PolarTooltip,
+  PolarPolygon,
   // Axis
   Axis,
   AxisCrosshair,
@@ -203,6 +291,8 @@ export {
   ReferenceDot,
   // Shape primitives
   Dot,
+  BarShape,
+  LabelLine,
   Rectangle,
   Sector,
   // Hooks — read chart state from custom children
@@ -222,10 +312,13 @@ export {
   useSvgPointerPosition,
   usePointerInChart,
   useClosestTick,
+  usePolarClosestTick,
+  usePolarLayout,
   // Series primitives — author custom series without forking
   createScale,
   createSeries,
   createPoints,
+  createPolarPoints,
   // Animation primitives — author custom animated series
   createTweened,
   createTweenedArray,
@@ -244,4 +337,9 @@ export {
   accessData,
   axisValues,
   toNumeric,
+  polarToCartesian,
+  // Tooltip / legend bodies
+  TooltipContent,
+  LegendItemContent,
+  buildTooltipPayload,
 }

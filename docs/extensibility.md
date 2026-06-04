@@ -8,16 +8,10 @@ and a prioritized roadmap for closing the gap.
 > it at all without editing core state). But our *published* surface exposes much less of
 > that power. Recharts still wins on breadth of what a **consumer** can reach: ~25 hooks,
 > a pile of shape primitives, richer render-props, per-datum events, and cross-chart sync.
-> **We have now closed the biggest gap** — roadmap items 1–4 and 6 below are done: a hooks layer
-> (`useScale`, `usePlotArea`, `useChartContext`, …) plus the scale/series primitives
-> (`createScale`/`createSeries`/`createPoints`, `projectScale`/`buildScale`) are exported, so
-> consumers can author custom overlays and series the same way we do in-tree (see the
-> **Custom overlay (hooks)** demo). Items 3 & 4 added `dot`/`activeDot` render-props
-> (bool | props-object | function) on Line/Area and per-datum `onPoint*` events across the
-> series. Item 6 shipped Solid-native geometry tweening — see `docs/animation.md` and the
-> **Animation** demo group. Item 7 added inverse (pixel→data) scales, pointer/closest-tick hooks,
-> and a `children` render-prop on `<AxisMark>`. Remaining gaps: the other render-prop surfaces
-> (tooltip/legend `content`, `labelLine`), more shape primitives, and cross-chart `syncId` sync.
+> **We have now closed the biggest gap** — roadmap items 1–4, 6, and 7 below are done, and item 3
+> render-prop followups are complete (`dot`/`activeDot`, axis ticks, bar `shape`, tooltip/legend
+> `content`, `SeriesLabel labelLine`). **Polar/radar** is shipped (`docs/polar.md`), including
+> polar tooltip/crosshair. Remaining gaps: more shape primitives and cross-chart `syncId` sync.
 
 ---
 
@@ -35,7 +29,8 @@ and a prioritized roadmap for closing the gap.
 
 References below cite real files in this repo:
 - Ours: `packages/peculiar-charts/src/`
-- Recharts clone (read-only): `recharts/src/`
+- Upstream clones (read-only, see `docs/references.md`): `references/recharts/src/`,
+  `references/solid-charts/packages/solid-charts/src/`
 
 ---
 
@@ -46,10 +41,11 @@ References below cite real files in this repo:
 | Styling / SVG passthrough | Fully headless: `data-pc-*` attrs + `{...otherProps}` spread + Tailwind `class`; `OverrideProps<T,P>` | Ships styled (`recharts-*` classes + default palette); `className` + SVG props spread | **peculiar-charts** — truly unstyled, no defaults to fight |
 | Composability model | Children + self-registration into a Solid context registry | Children + self-registration into Redux | **Tie** — same shape, ours is lighter-weight |
 | Adding a new series type | Trivial **in-tree**: one self-contained file, no core edits | **Closed**: series are a Redux discriminated union; a new type needs a core fork | **peculiar-charts** (architecturally) — but neither exposes this to consumers |
-| Render-props | Function children on several components **+ `dot`/`activeDot` on Line/Area** (bool \| props-object \| function) **+ `<AxisLabel>` and `<AxisMark>` tick render-props** | `shape`/`dot`/`activeDot`/`content`/`label`/`tick`/`labelLine`, each accepting element \| function \| props-object \| bool | **Recharts** still has more surfaces (tooltip/legend `content`, `labelLine`); axis tick/label render-props now match |
+| Render-props | Function children on several components **+ `dot`/`activeDot` on Line/Area** (bool \| props-object \| function) **+ `<AxisLabel>` / `<AxisMark>` tick render-props** **+ `<Bar shape>`, `<SeriesLabel labelLine>`, tooltip/legend `content`** | `shape`/`dot`/`activeDot`/`content`/`label`/`tick`/`labelLine`, each accepting element \| function \| props-object \| bool | **Tie** — core render-prop surfaces now match; Recharts still accepts ready-made elements |
 | Custom child reading internal state | **Now exported** — `useChartContext`, `useScale`/`useXScale`/`useYScale`, `useInverseScale`/`useInverseXScale`/`useInverseYScale`, `useDomain`, `usePlotArea`, `useChartSize`, `useData`, `useAxisValues`, `usePointerPosition`, `useSvgPointerPosition`, `usePointerInChart`, `useClosestTick` + `projectScale`/`invertScale`/`buildScale` | ~25 public hooks including inverse scales and active-tooltip hooks | **Tie** on the core interaction pattern — inverse scales and closest-tick hooks now match; Recharts still has more layout/tooltip variants |
 | Per-item events / interaction | **`onPointClick`/`onPointEnter`/`onPointLeave(datum, event)` on Line/Area/Bar/Point/Bubble**, carrying the datum; raw SVG events still ride `{...otherProps}`; no `syncId` yet | `onClick/onMouseEnter(data, index)` per series; `syncId` cross-chart sync; active-tooltip hooks | **Tie** on per-datum events; Recharts still ahead on `syncId` |
-| Shape primitives exported | `Curve` + `/curves`, **`Dot`**, **`Rectangle`**, **`Sector`** | `Curve`, `Rectangle`, `Sector`, `Dot`, `Cross`, `Symbols`, `Surface`, `Layer` | **Recharts** — still more primitives (`Cross`, `Symbols`, …) |
+| Shape primitives exported | `Curve` + `/curves`, **`Dot`**, **`Rectangle`**, **`Sector`**, **`PolarPolygon`** | `Curve`, `Rectangle`, `Sector`, `Dot`, `Cross`, `Symbols`, `Surface`, `Layer` | **Recharts** — still more primitives (`Cross`, `Symbols`, …) |
+| Polar / radar | **`PolarLayout`**, angle/radius axes, grid, **`Radar`**, **`PolarTooltip`**, **`PolarCrosshair`**, `usePolarClosestTick`, `createPolarPoints` — see `docs/polar.md` | `RadarChart`, `RadialBarChart`, polar tooltip/crosshair | **Tie** on radar + polar interaction; Recharts ahead on radial bar |
 
 ---
 
@@ -92,7 +88,7 @@ So the situation is mirror-imaged:
 
 - **Recharts** is *closed* for new **series types** (the type set is a Redux union:
   `AreaSettings | BarSettings | LineSettings | ScatterSettings`, see
-  `recharts/src/state/graphicalItemsSlice.ts`) but *wide open* for custom **children/overlays**.
+  `references/recharts/src/state/graphicalItemsSlice.ts`) but *wide open* for custom **children/overlays**.
 - **peculiar-charts** is *open* to add **series in-tree** (Bubble was added in a single file —
   `packages/peculiar-charts/src/series/Bubble.tsx` — with no core edits) and now *open* to
   **consumers** too — `createSeries`/`createPoints`/`createScale` are exported (roadmap item 2).
@@ -124,7 +120,7 @@ Both use "children + self-registration":
   `createScale(...)`, and `createPoints(...)`, all writing into the chart context registry.
   See `packages/peculiar-charts/src/lib/createSeries.ts`.
 - **Recharts**: graphical items render `SetCartesianGraphicalItem` / `SetPolarGraphicalItem`
-  which dispatch Redux actions on mount/unmount. See `recharts/src/state/SetGraphicalItem.ts`.
+  which dispatch Redux actions on mount/unmount. See `references/recharts/src/state/SetGraphicalItem.ts`.
 
 Same architecture; ours is lighter (fine-grained signals vs a Redux store).
 
@@ -161,7 +157,7 @@ props yet), and the ready-`element` form is intentionally unsupported — Solid 
 
 ### Reading internal state from a custom child — now exported
 
-Recharts exports ~25 hooks from `recharts/src/hooks.ts`, including inverse scales,
+Recharts exports ~25 hooks from `references/recharts/src/hooks.ts`, including inverse scales,
 layout helpers, and active-tooltip hooks. We now export the core interaction surface:
 `useScale` / `useInverseScale`, pointer hooks, and `useClosestTick`. See the
 **Inverse scale (hooks)** and **Custom overlay (hooks)** demos.
@@ -179,7 +175,7 @@ reachable via `useChartContext()` and the focused hooks in `src/hooks.ts`.
   `{...otherProps}` onto the underlying element. No cross-chart sync yet.
 - **Recharts**: per-series `onClick/onMouseEnter(data, index)`; `syncId` synchronizes tooltip
   and brush across charts via an event bus
-  (`recharts/src/synchronisation/useChartSynchronisation.tsx`), with `syncMethod`
+  (`references/recharts/src/synchronisation/useChartSynchronisation.tsx`), with `syncMethod`
   `'index' | 'value' | fn`.
 
 ### Public API surface
@@ -197,7 +193,7 @@ reachable via `useChartContext()` and the focused hooks in `src/hooks.ts`.
   `usePointerInChart`, `useClosestTick`), **animation primitives** (`createTweened`,
   `createTweenedArray`, `createPresence`, …), and axis tick types (`MarkTick`). Shape primitives
   are `Curve` + `Dot` + `Rectangle` + `Sector`.
-- **Recharts** (`recharts/src/index.ts`): 13 chart components, 8 series, 5 axes, annotations,
+- **Recharts** (`references/recharts/src/index.ts`): 13 chart components, 8 series, 5 axes, annotations,
   layout components, shape primitives (`Curve`, `Rectangle`, `Sector`, `Dot`, `Cross`,
   `Symbols`), containers (`Surface`, `Layer`, `ResponsiveContainer`), ~25 hooks, and utilities
   (`getNiceTickValues`, `getRelativeCoordinate`, chart factory functions).
@@ -237,8 +233,9 @@ cloneable; the props-object form covers it). Verified via the **Dots + per-datum
 (screenshot harness counts `data-pc-dot`; a Playwright probe confirms the function `activeDot`
 appears on hover).
 
-- **Followup partially done**: `<AxisMark>` now accepts a `children` render-prop (same pattern as
-  `<AxisLabel>`). Still pending: tooltip/legend `content`, series `labelLine`, series `shape`.
+Followups also done: `<AxisMark>` tick render-prop; `<Bar shape>`; `<AxisTooltip content>` +
+`TooltipContent`; `<Legend content>` + `LegendItemContent`; `<SeriesLabel labelLine>` + exported
+`LabelLine` primitive (`src/lib/labels.tsx`). Shared overlay helpers live in `src/lib/content.ts`.
 
 ### 4. Per-datum events ✅ DONE
 Added `onPointClick` / `onPointEnter` / `onPointLeave(datum, event)` to `Line`, `Area`, `Bar`,
@@ -280,10 +277,9 @@ render-prop for custom tick marks (see **Custom tick marks** demo).
 | | peculiar-charts | Recharts |
 |---|---|---|
 | Maintainer-facing extensibility (add series, swap internals) | **Stronger** | Weaker (closed series union) |
-| Consumer-facing extensibility (no fork) | **Weaker today** | Stronger |
+| Consumer-facing extensibility (no fork) | **Near parity** (hooks, render-props, custom series; polar shipped) | Stronger on `syncId`, polar tooltip, element render-props |
 | Headless styling | **Stronger** | Weaker (ships styles) |
 | Published hooks / primitives | 12+ focused hooks + scale/series/data/animation primitives | ~25 hooks + shape primitives |
 
-The fastest path to parity is items **1 and 2** above: export the context/scale and series
-primitives. They're low-effort, the implementation already exists, and together they convert our
-clean internal architecture into a customization surface a consumer can actually use.
+Items **1 and 2** are done. Next high-leverage gaps: **`syncId`** (item 5), polar
+tooltip/crosshair, and remaining shape primitives. See `docs/polar.md` for the polar API.

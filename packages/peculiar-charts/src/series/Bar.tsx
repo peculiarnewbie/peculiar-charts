@@ -10,7 +10,11 @@ import createBands from '@src/lib/createBands'
 import createBaseLine from '@src/lib/createBaseLine'
 import createPoints from '@src/lib/createPoints'
 import createSeries from '@src/lib/createSeries'
-import { type PointEvents, pointEvents } from '@src/lib/markers'
+import {
+  BarShape,
+  type BarShapeRenderer,
+  type PointEvents,
+} from '@src/lib/markers'
 import type { OverrideProps } from '@src/lib/types'
 import { accessData } from '@src/lib/utils'
 import {
@@ -40,6 +44,8 @@ export type BarProps = OverrideProps<
     stackId?: string
     /** Bar orientation. @defaultValue `'vertical'` */
     layout?: BarLayout
+    /** Custom bar rendering — bool, props-object, or function. @defaultValue `true` */
+    shape?: BarShapeRenderer
     /** Animation configuration. */
     animation?: AnimationOptions
   } & PointEvents
@@ -73,6 +79,7 @@ const Bar = (props: BarProps) => {
       'yAxisId',
       'stackId',
       'layout',
+      'shape',
       'animation',
     ],
     ['onPointClick', 'onPointEnter', 'onPointLeave'],
@@ -202,25 +209,14 @@ const Bar = (props: BarProps) => {
           {(item) => {
             const bar = () => item.value
             const idx = () => liveBars().indexOf(item)
-            const eventPoint = (): [number, number] =>
-              horizontal()
-                ? [bar().x + bar().width / 2, bar().y + bar().height / 2]
-                : [bar().x + bar().width / 2, bar().y]
             return (
-              <rect
-                x={bar().x}
-                y={bar().y}
-                width={bar().width}
-                height={bar().height}
-                {...otherProps}
-                {...(item.mode === 'exit'
-                  ? {}
-                  : pointEvents(eventProps, () => ({
-                      value: data()[idx()] as number,
-                      index: idx(),
-                      point: eventPoint(),
-                    })))}
-                data-pc-bar=""
+              <BarShape
+                renderer={localProps.shape ?? true}
+                bar={bar()}
+                value={data()[idx()] as number}
+                index={idx()}
+                defaults={otherProps}
+                events={item.mode === 'exit' ? undefined : eventProps}
               />
             )
           }}

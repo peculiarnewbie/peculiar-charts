@@ -22,10 +22,14 @@ import Biaxial from './demos/biaxial'
 import biaxialCode from './demos/biaxial?raw'
 import BubbleChart from './demos/bubble'
 import bubbleCode from './demos/bubble?raw'
+import CustomBarShapes from './demos/custom-bar-shapes'
+import customBarShapesCode from './demos/custom-bar-shapes?raw'
 import CustomDots from './demos/custom-dots'
 import customDotsCode from './demos/custom-dots?raw'
 import CustomLabels from './demos/custom-labels'
 import customLabelsCode from './demos/custom-labels?raw'
+import CustomLegend from './demos/custom-legend'
+import customLegendCode from './demos/custom-legend?raw'
 import CustomOverlay from './demos/custom-overlay'
 import customOverlayCode from './demos/custom-overlay?raw'
 import CustomTickMarks from './demos/custom-tick-marks'
@@ -34,6 +38,8 @@ import DataLabels from './demos/data-labels'
 import dataLabelsCode from './demos/data-labels?raw'
 import Datetime from './demos/datetime'
 import datetimeCode from './demos/datetime?raw'
+import DefaultTooltip from './demos/default-tooltip'
+import defaultTooltipCode from './demos/default-tooltip?raw'
 import Donut from './demos/donut'
 import donutCode from './demos/donut?raw'
 import DotsEvents from './demos/dots-events'
@@ -48,10 +54,18 @@ import HorizontalBars from './demos/horizontal-bars'
 import horizontalBarsCode from './demos/horizontal-bars?raw'
 import InverseScale from './demos/inverse-scale'
 import inverseScaleCode from './demos/inverse-scale?raw'
+import LabelLines from './demos/label-lines'
+import labelLinesCode from './demos/label-lines?raw'
 import Negative from './demos/negative'
 import negativeCode from './demos/negative?raw'
 import PieDemo from './demos/pie'
 import pieCode from './demos/pie?raw'
+import RadarDemo from './demos/radar'
+import radarCode from './demos/radar?raw'
+import PolarTooltipDemo from './demos/polar-tooltip'
+import polarTooltipCode from './demos/polar-tooltip?raw'
+import PolarTooltipCustomDemo from './demos/polar-tooltip-custom'
+import polarTooltipCustomCode from './demos/polar-tooltip-custom?raw'
 import StackedArea from './demos/stacked-area'
 import stackedAreaCode from './demos/stacked-area?raw'
 import Stepline from './demos/stepline'
@@ -77,6 +91,14 @@ const DEMOS: Demo[] = [
     desc: 'A line series with hover points, a crosshair, and an HTML tooltip portaled out of the SVG.',
     Comp: Basic,
     code: basicCode,
+  },
+  {
+    id: 'default-tooltip',
+    group: 'Line',
+    title: 'Default tooltip',
+    desc: '`<AxisTooltip>` with no `children` — auto-lists every visible registered series at the hovered index. Override with `content={(p) => …}` or `children`.',
+    Comp: DefaultTooltip,
+    code: defaultTooltipCode,
   },
   {
     id: 'datetime',
@@ -138,9 +160,17 @@ const DEMOS: Demo[] = [
     id: 'data-labels',
     group: 'Markers',
     title: 'Data labels',
-    desc: '`<SeriesLabel>` renders a label at each point — `format` it or take over with a render-prop.',
+    desc: '`<SeriesLabel>` renders a label at each point — `format` it, add `labelLine` (bool, props-object, or function), or take over with a render-prop.',
     Comp: DataLabels,
     code: dataLabelsCode,
+  },
+  {
+    id: 'label-lines',
+    group: 'Markers',
+    title: 'Label lines',
+    desc: '`<SeriesLabel labelLine={…}>` draws a connector from each point to its label — props-object for a styled line, or a function for full control.',
+    Comp: LabelLines,
+    code: labelLinesCode,
   },
   {
     id: 'custom-dots',
@@ -191,6 +221,14 @@ const DEMOS: Demo[] = [
     code: annotationsCode,
   },
   {
+    id: 'custom-legend',
+    group: 'Annotations',
+    title: 'Custom legend',
+    desc: '`<Legend>` accepts `content` (alias for `children`) per series — bool for the default swatch + name, or a function for full control.',
+    Comp: CustomLegend,
+    code: customLegendCode,
+  },
+  {
     id: 'custom-overlay',
     group: 'Annotations',
     title: 'Custom overlay (hooks)',
@@ -217,8 +255,8 @@ const DEMOS: Demo[] = [
   {
     id: 'stacked-bars',
     group: 'Bar',
-    title: 'Stacked bars',
-    desc: 'Bar series sharing a `stackId` stack vertically — same stacking model as area, with legend toggle.',
+    title: 'Stacked bars + tooltip',
+    desc: 'Stacked bars with the default `<AxisTooltip>` — no render-prop needed; series rows come from the registry.',
     Comp: StackedBars,
     code: stackedBarsCode,
   },
@@ -229,6 +267,14 @@ const DEMOS: Demo[] = [
     desc: 'Set `layout="horizontal"` to flip the value axis to x and categories to y — grouped bars work the same way.',
     Comp: HorizontalBars,
     code: horizontalBarsCode,
+  },
+  {
+    id: 'custom-bar-shapes',
+    group: 'Bar',
+    title: 'Custom bar shapes',
+    desc: '`<Bar>` takes a `shape` prop (bool, props-object, or function) — rounded rects via `shape={{ rx: 6 }}` or a fully custom marker per datum; `onPointClick` works on the default shape.',
+    Comp: CustomBarShapes,
+    code: customBarShapesCode,
   },
   {
     id: 'pie',
@@ -245,6 +291,30 @@ const DEMOS: Demo[] = [
     desc: 'A pie with `innerRadius` — plus `padAngle` and `cornerRadius` for the gaps and rounding.',
     Comp: Donut,
     code: donutCode,
+  },
+  {
+    id: 'radar',
+    group: 'Polar',
+    title: 'Radar',
+    desc: '`<PolarLayout>` frames polar axes; `<PolarGrid>` draws rings and spokes; `<Radar>` plots closed polygons. `<PolarAngleLabel>` / `<PolarRadiusLabel>` label categories and values. `<PolarCrosshair>` + `<PolarTooltip>` on hover. Legend toggles each series.',
+    Comp: RadarDemo,
+    code: radarCode,
+  },
+  {
+    id: 'polar-tooltip',
+    group: 'Polar',
+    title: 'Polar tooltip',
+    desc: '`<PolarTooltip>` inside `<PolarAngleAxis>` — default body lists every visible series at the nearest spoke. `<PolarCrosshair>` highlights the active category.',
+    Comp: PolarTooltipDemo,
+    code: polarTooltipCode,
+  },
+  {
+    id: 'polar-tooltip-custom',
+    group: 'Polar',
+    title: 'Polar tooltip (custom)',
+    desc: '`<PolarTooltip content={(p) => …}>` — same `TooltipPayload` as `<AxisTooltip>` (`label`, `series`, `data`, `index`).',
+    Comp: PolarTooltipCustomDemo,
+    code: polarTooltipCustomCode,
   },
   {
     id: 'animated-bars',

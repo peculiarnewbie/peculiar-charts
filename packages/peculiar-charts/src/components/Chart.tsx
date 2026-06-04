@@ -92,7 +92,7 @@ const Chart = (props: ChartProps) => {
   )
   const [bars, setBars] = createSignal(new Set<string>())
   const [series, setSeries] = createSignal(
-    new Map<string, { name: string; type: string; order: number }>(),
+    new Map<string, { name: string; type: string; dataKey?: string; order: number }>(),
   )
   const [hiddenSeries, setHiddenSeries] = createSignal(new Set<string>())
   let seriesOrder = 0
@@ -190,7 +190,8 @@ const Chart = (props: ChartProps) => {
   // --- axis config + domain ----------------------------------------------
   const defaultAxisConfig = (orientation: AxisOrientation): AxisConfig => ({
     orientation,
-    type: orientation === 'x' ? 'point' : 'linear',
+    type:
+      orientation === 'x' || orientation === 'angle' ? 'point' : 'linear',
     range: null,
     reverse: false,
   })
@@ -208,9 +209,6 @@ const Chart = (props: ChartProps) => {
       return { kind: 'categorical' as const, values }
     }
 
-    // A numeric x-axis has no registered extents — its domain comes straight
-    // from the axis's own values (timestamps, irregular numbers, …). The y-axis
-    // aggregates the extents that series register.
     let agg: { min: number; max: number }
     if (orientation === 'x') {
       const raw = config.dataKey
@@ -221,6 +219,7 @@ const Chart = (props: ChartProps) => {
         ? { min: Math.min(...nums), max: Math.max(...nums) }
         : { min: 0, max: 0 }
     } else {
+      // value axes (y / radius) aggregate registered series extents
       const axisExtents = extents().get(axisId)
       agg = axisExtents
         ? [...axisExtents.values()].reduce(
@@ -249,6 +248,7 @@ const Chart = (props: ChartProps) => {
         id,
         name: meta.name,
         type: meta.type,
+        dataKey: meta.dataKey,
         order: meta.order,
         color: paletteColor(meta.order),
       }))

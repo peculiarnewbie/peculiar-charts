@@ -2,7 +2,7 @@ import type { ScaleType } from '@src/lib/scale'
 import { type Accessor, createContext, useContext } from 'solid-js'
 
 export type Edge = 'top' | 'right' | 'bottom' | 'left'
-export type AxisOrientation = 'x' | 'y'
+export type AxisOrientation = 'x' | 'y' | 'angle' | 'radius'
 
 /**
  * Resolved configuration for a single axis. Registered by `<Axis>`; a default
@@ -36,6 +36,8 @@ export type SeriesMeta = {
   id: string
   name: string
   type: string
+  /** Data key used to resolve per-datum values in tooltips. */
+  dataKey?: string
   /** Palette colour assigned by registration order. */
   color: string
   order: number
@@ -89,7 +91,10 @@ export type ChartContextType = {
 
   // --- series identity ----------------------------------------------------
   seriesMeta: Accessor<SeriesMeta[]>
-  registerSeriesMeta: (id: string, meta: { name: string; type: string }) => void
+  registerSeriesMeta: (
+    id: string,
+    meta: { name: string; type: string; dataKey?: string },
+  ) => void
   unregisterSeriesMeta: (id: string) => void
   isSeriesVisible: (id: string) => boolean
   toggleSeries: (id: string) => void

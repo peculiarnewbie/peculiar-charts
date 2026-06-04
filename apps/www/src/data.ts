@@ -40,5 +40,15 @@ export const bubbles = Array.from({ length: 18 }, (_, i) => ({
   volume: Math.round(50 + ((i * 137) % 950)),
 }))
 
+/** Multivariate skills — radar / spider chart demo. */
+export const radarSkills = [
+  { skill: 'Speed', alice: 120, bob: 98 },
+  { skill: 'Strength', alice: 98, bob: 130 },
+  { skill: 'Agility', alice: 86, bob: 110 },
+  { skill: 'Endurance', alice: 99, bob: 85 },
+  { skill: 'Focus', alice: 110, bob: 92 },
+  { skill: 'Technique', alice: 105, bob: 115 },
+]
+
 export const monthLabel = (t: Date) =>
   new Date(t).toLocaleDateString('en', { month: 'short' })

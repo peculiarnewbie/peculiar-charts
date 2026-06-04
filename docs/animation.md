@@ -99,6 +99,7 @@ data → geometry memo → createTweenedArray/createPresence → <svg elements>
 | Pie      | `startAngle`, `endAngle`                   | Grow from zero angular span    | Shrink to zero angular span |
 | Line     | `[x, y]` point coordinates                 | Points appear at final position | N/A (path snaps)            |
 | Area     | `[x, y]` points + baseline                 | Points appear at final position | N/A (path snaps)            |
+| Radar    | —                                          | —                               | Not yet supported           |
 
 Line and Area do not support per-point exit animations because the path would distort during the
 transition. Use the `animation` prop for enter/update tweening only.

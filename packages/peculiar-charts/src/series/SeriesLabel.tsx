@@ -1,5 +1,6 @@
 import { useChartContext } from '@src/components/context'
 import createPoints from '@src/lib/createPoints'
+import { LabelLine, type LabelLineRenderer } from '@src/lib/labels'
 import type { OverrideProps } from '@src/lib/types'
 import { accessData, pointDefined } from '@src/lib/utils'
 import {
@@ -15,6 +16,8 @@ import {
 /** A label's anchor point plus the datum it came from. */
 export type SeriesLabelDatum = {
   point: [number, number]
+  /** Where the label sits — end of the connector when `labelLine` is set. */
+  labelPoint: [number, number]
   value: number
   index: number
 }
@@ -34,6 +37,8 @@ export type SeriesLabelProps = OverrideProps<
     offset?: number
     /** Format a value to its label string. @defaultValue `String` */
     format?: (value: number, index: number) => string
+    /** Connector from point to label — bool, props-object, or function. */
+    labelLine?: LabelLineRenderer
     /** Render each label yourself instead of the default `<text>`. */
     children?: (datum: SeriesLabelDatum) => JSX.Element
   }
@@ -63,6 +68,7 @@ const SeriesLabel = (props: SeriesLabelProps) => {
     'stackId',
     'offset',
     'format',
+    'labelLine',
     'children',
   ])
   const chartContext = useChartContext()
@@ -80,32 +86,55 @@ const SeriesLabel = (props: SeriesLabelProps) => {
     chartContext,
   })
 
+  const labelPoint = (point: [number, number]): [number, number] => [
+    point[0],
+    point[1] - localProps.offset,
+  ]
+
+  const datum = (
+    point: [number, number],
+    value: number,
+    index: number,
+  ): SeriesLabelDatum => ({
+    point,
+    labelPoint: labelPoint(point),
+    value,
+    index,
+  })
+
   return (
     <g data-pc-series-label-group="">
       <For each={points()}>
         {(point, index) => (
           <Show when={pointDefined(point)}>
-            <Show
-              when={localProps.children}
-              fallback={
-                <text
-                  x={point[0]}
-                  y={point[1] - localProps.offset}
-                  data-pc-series-label=""
-                  {...otherProps}
-                >
-                  {localProps.format(data()[index()] as number, index())}
-                </text>
-              }
-            >
-              {(children) =>
-                children()({
-                  point,
-                  value: data()[index()] as number,
-                  index: index(),
-                })
-              }
-            </Show>
+            {(() => {
+              const d = datum(point, data()[index()] as number, index())
+              return (
+                <>
+                  <Show when={localProps.labelLine}>
+                    <LabelLine
+                      renderer={localProps.labelLine!}
+                      datum={d}
+                    />
+                  </Show>
+                  <Show
+                    when={localProps.children}
+                    fallback={
+                      <text
+                        x={d.labelPoint[0]}
+                        y={d.labelPoint[1]}
+                        data-pc-series-label=""
+                        {...otherProps}
+                      >
+                        {localProps.format(d.value, d.index)}
+                      </text>
+                    }
+                  >
+                    {(children) => children()(d)}
+                  </Show>
+                </>
+              )
+            })()}
           </Show>
         )}
       </For>

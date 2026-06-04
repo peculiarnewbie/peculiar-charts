@@ -25,6 +25,7 @@ export default function DataLabels() {
       <SeriesLabel
         dataKey="tea"
         class="fill-emerald-700 text-[10px] font-medium"
+        labelLine={{ class: 'stroke-emerald-400' }}
       />
     </Chart>
   )

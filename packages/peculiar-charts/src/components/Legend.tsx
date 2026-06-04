@@ -1,14 +1,13 @@
 import { dataIf } from '@corvu/utils'
 import { combineStyle } from '@corvu/utils/dom'
-import { type SeriesMeta, useChartContext } from '@src/components/context'
-import type { OverrideProps } from '@src/lib/types'
+import { useChartContext } from '@src/components/context'
 import {
-  type ComponentProps,
-  For,
-  type JSX,
-  mergeProps,
-  splitProps,
-} from 'solid-js'
+  type LegendItemRenderer,
+  renderLegendItem,
+  resolveLegendItemRenderer,
+} from '@src/lib/legend'
+import type { OverrideProps } from '@src/lib/types'
+import { type ComponentProps, For, mergeProps, splitProps } from 'solid-js'
 import { Portal } from 'solid-js/web'
 
 export type LegendProps = OverrideProps<
@@ -16,10 +15,17 @@ export type LegendProps = OverrideProps<
   {
     /** Toggle series visibility on click. @defaultValue `true` */
     interactive?: boolean
-    /** Render a custom legend item from its series metadata. */
-    children?: (series: SeriesMeta) => JSX.Element
+    /**
+     * Per-series legend item renderer — Recharts-style alias for `children`.
+     * `true` (or omit both) renders the default swatch + name.
+     */
+    content?: LegendItemRenderer
+    /** Per-series legend item renderer. Alias: see `content`. */
+    children?: LegendItemRenderer
   }
 >
+
+export type { LegendItemRenderer }
 
 /**
  * Auto-generated legend driven by the series registry. Each registered series
@@ -27,16 +33,18 @@ export type LegendProps = OverrideProps<
  *
  * @data `data-pc-legend` - Present on the legend container.
  * @data `data-pc-legend-item` - Present on every legend item.
- * @data `data-pc-legend-swatch` - Present on every colour swatch.
  */
 const Legend = (props: LegendProps) => {
   const defaultedProps = mergeProps({ interactive: true }, props)
   const [localProps, otherProps] = splitProps(defaultedProps, [
     'interactive',
+    'content',
     'children',
     'style',
   ])
   const chartContext = useChartContext()
+  const itemRenderer = () =>
+    resolveLegendItemRenderer(localProps.content, localProps.children)
 
   return (
     <Portal mount={chartContext.wrapperRef() ?? undefined}>
@@ -78,22 +86,7 @@ const Legend = (props: LegendProps) => {
               data-pc-legend-item=""
               data-hidden={dataIf(!chartContext.isSeriesVisible(series.id))}
             >
-              {localProps.children ? (
-                localProps.children(series)
-              ) : (
-                <>
-                  <span
-                    style={{
-                      width: '10px',
-                      height: '10px',
-                      'border-radius': '2px',
-                      background: series.color,
-                    }}
-                    data-pc-legend-swatch=""
-                  />
-                  {series.name}
-                </>
-              )}
+              {renderLegendItem(itemRenderer(), series)}
             </button>
           )}
         </For>

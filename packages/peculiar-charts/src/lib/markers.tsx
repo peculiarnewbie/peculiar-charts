@@ -136,3 +136,89 @@ export const Dot = (props: {
     </Show>
   )
 }
+
+/** Pixel geometry plus datum index for a single bar. */
+export type BarDatum = {
+  x: number
+  y: number
+  width: number
+  height: number
+  value: number
+  index: number
+}
+
+/** Props accepted by the default bar `<rect>`; its geometry is supplied. */
+export type BarShapeProps = Omit<
+  ComponentProps<'rect'>,
+  'x' | 'y' | 'width' | 'height'
+>
+
+/**
+ * How to render a bar. Mirrors Recharts' `shape` prop:
+ * - `true` (or omitted on `<Bar>`) — the default `<rect>`.
+ * - a partial-props object — merged onto the default `<rect>`.
+ * - a function — full control; receives the {@link BarDatum}.
+ */
+export type BarShapeRenderer =
+  | boolean
+  | BarShapeProps
+  | ((datum: BarDatum) => JSX.Element)
+
+/**
+ * Renders a single bar from a {@link BarShapeRenderer}. The default `<rect>`
+ * carries `data-pc-bar` and any per-datum event handlers. A function renderer
+ * takes over entirely (and wires its own events).
+ *
+ * @data `data-pc-bar` - Present on every default bar rect.
+ */
+export const BarShape = (props: {
+  renderer: BarShapeRenderer
+  bar: Pick<BarDatum, 'x' | 'y' | 'width' | 'height'>
+  value: number
+  index: number
+  /** Defaults merged under a props-object renderer (e.g. series colour). */
+  defaults?: BarShapeProps
+  events?: PointEvents
+}) => {
+  const datum = (): BarDatum => ({
+    ...props.bar,
+    value: props.value,
+    index: props.index,
+  })
+  const eventPoint = (): [number, number] => [
+    props.bar.x + props.bar.width / 2,
+    props.bar.y + props.bar.height / 2,
+  ]
+  return (
+    <Show
+      when={
+        typeof props.renderer === 'function'
+          ? (props.renderer as (d: BarDatum) => JSX.Element)
+          : null
+      }
+      fallback={
+        <rect
+          x={props.bar.x}
+          y={props.bar.y}
+          width={props.bar.width}
+          height={props.bar.height}
+          data-pc-bar=""
+          {...mergeProps(
+            { fill: 'currentColor', stroke: 'none' } as BarShapeProps,
+            props.defaults,
+            props.renderer === true ? {} : (props.renderer as BarShapeProps),
+          )}
+          {...(props.events
+            ? pointEvents(props.events, () => ({
+                value: props.value,
+                index: props.index,
+                point: eventPoint(),
+              }))
+            : {})}
+        />
+      }
+    >
+      {(fn) => fn()(datum())}
+    </Show>
+  )
+}

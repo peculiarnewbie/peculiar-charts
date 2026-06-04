@@ -28,6 +28,7 @@ const createSeries = (props: {
     ctx.registerSeriesMeta(props.seriesId, {
       name: props.name(),
       type: props.type,
+      dataKey: props.dataKey(),
     })
     onCleanup(() => ctx.unregisterSeriesMeta(props.seriesId))
   })

@@ -1,8 +1,8 @@
 {
   "name": "peculiar-charts",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": false,
-  "description": "Composable, unstyled, headless charts for SolidJS — aiming for AG Charts breadth",
+  "description": "Composable, unstyled, headless charts for SolidJS",
   "keywords": ["solid", "solidjs", "charts", "svg", "d3", "headless"],
   "license": "MIT",
   "homepage": "https://charts.peculiarnewbie.com",

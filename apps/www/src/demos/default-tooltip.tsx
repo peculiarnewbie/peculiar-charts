@@ -5,20 +5,16 @@ import {
   AxisLabel,
   AxisLine,
   AxisTooltip,
-  Bar,
   Chart,
-  Legend,
   Line,
 } from 'peculiar-charts'
 import { TOOLTIP_SHELL } from '../demoStyles'
 import { sales } from '../data'
 
-export default function StackedBars() {
+/** Default tooltip — no `children`/`content`; lists registered series automatically. */
+export default function DefaultTooltip() {
   return (
     <Chart data={sales}>
-      <Legend class="text-xs" />
-      <Bar dataKey="coffee" name="Coffee" stackId="s" class="text-blue-400" />
-      <Bar dataKey="tea" name="Tea" stackId="s" class="text-emerald-400" />
       <Axis axis="y" position="left" tickCount={4}>
         <AxisLabel />
         <AxisGrid class="stroke-black/10" />
@@ -29,6 +25,8 @@ export default function StackedBars() {
         <AxisCrosshair stroke-dasharray="6,6" class="stroke-black/60" />
         <AxisTooltip class={TOOLTIP_SHELL} />
       </Axis>
+      <Line dataKey="coffee" name="Coffee" class="text-blue-500" stroke-width={2} />
+      <Line dataKey="tea" name="Tea" class="text-emerald-500" stroke-width={2} />
     </Chart>
   )
 }
