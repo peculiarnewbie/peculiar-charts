@@ -98,7 +98,7 @@ const Tooltip = (props: TooltipProps) => {
   const x = () => {
     const _pointerPosition = pointerPosition()
     const tick = closestTick()
-    if (!_pointerPosition || !tick) return 0
+    if (!tick) return 0
     const _tooltipSize = tooltipSize()
     const containerWidth = chartContext.toContainerPosition(
       chartContext.width(),
@@ -114,6 +114,7 @@ const Tooltip = (props: TooltipProps) => {
         return tickPosition - localProps.tickGap - _tooltipSize[0]
       return preferred
     }
+    if (!_pointerPosition) return 0
     const preferred = _pointerPosition.x + localProps.pointerGap
     if (_tooltipSize && preferred + _tooltipSize[0] > containerWidth)
       return _pointerPosition.x - localProps.pointerGap - _tooltipSize[0]
@@ -123,7 +124,7 @@ const Tooltip = (props: TooltipProps) => {
   const y = () => {
     const _pointerPosition = pointerPosition()
     const tick = closestTick()
-    if (!_pointerPosition || !tick) return 0
+    if (!tick) return 0
     const _tooltipSize = tooltipSize()
     const containerHeight = chartContext.toContainerPosition(
       chartContext.height(),
@@ -139,6 +140,7 @@ const Tooltip = (props: TooltipProps) => {
         return tickPosition - localProps.tickGap - _tooltipSize[1]
       return preferred
     }
+    if (!_pointerPosition) return 0
     const preferred = _pointerPosition.y + localProps.pointerGap
     if (_tooltipSize && preferred + _tooltipSize[1] > containerHeight)
       return _pointerPosition.y - localProps.pointerGap - _tooltipSize[1]
@@ -155,7 +157,11 @@ const Tooltip = (props: TooltipProps) => {
             'pointer-events': 'none',
             top: 0,
             left: 0,
-            opacity: chartContext.pointerInChart() ? 1 : 0,
+            opacity:
+              chartContext.pointerInChart() ||
+              chartContext.syncInteraction()?.active
+                ? 1
+                : 0,
             transform: `translate3d(${x()}px, ${y()}px, 0px)`,
           },
           localProps.style,

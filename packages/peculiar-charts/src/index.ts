@@ -35,8 +35,10 @@ import {
   type BrushRange,
   type Domain,
   type SeriesMeta,
+  type SyncInteraction,
   useChartContext,
 } from '@src/components/context'
+import { type SyncMethod, type SyncHandlerParam, type SyncPayload } from '@src/lib/sync'
 import {
   type PlotArea,
   type ClosestTick,
@@ -177,6 +179,10 @@ export type {
   AxisOrientation,
   Domain,
   SeriesMeta,
+  SyncMethod,
+  SyncHandlerParam,
+  SyncPayload,
+  SyncInteraction,
   // Animation
   AnimationEasing,
   AnimationOptions,

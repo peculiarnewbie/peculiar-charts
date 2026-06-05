@@ -11,6 +11,9 @@ type ClosestTick = { index: number; position: number }
  * through the axis scale, then the nearest one to the pointer is picked. This
  * handles evenly-spaced categorical axes and irregular numeric/time axes alike.
  * Used by crosshairs, tooltips and active-point highlighting.
+ *
+ * When the chart is receiving a cross-chart sync event (`syncInteraction`), the
+ * index is forced to the synced value instead of matching by pointer position.
  */
 const createClosestTick = (props: {
   axis: Accessor<'x' | 'y'>
@@ -21,6 +24,19 @@ const createClosestTick = (props: {
 }) => {
   const ctx = props.chartContext
   return createMemo<ClosestTick | undefined>((prev) => {
+    const sync = ctx.syncInteraction()
+    if (sync?.active && sync.index != null) {
+      const values = props.values()
+      const scale = props.scale()
+      if (sync.index >= 0 && sync.index < values.length) {
+        const position = projectScale(scale, values[sync.index])
+        if (Number.isFinite(position)) {
+          return { index: sync.index, position }
+        }
+      }
+      return undefined
+    }
+
     const pointerPosition = ctx.pointerPosition()
     if (!pointerPosition) return prev
 

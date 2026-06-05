@@ -79,7 +79,11 @@ const Crosshair = (props: CrosshairProps) => {
       y1={y()}
       x2={x2()}
       y2={y2()}
-      opacity={chartContext.pointerInChart() ? 1 : 0}
+      opacity={
+        chartContext.pointerInChart() || chartContext.syncInteraction()?.active
+          ? 1
+          : 0
+      }
       data-pc-axis-crosshair=""
       {...defaultedProps}
     />

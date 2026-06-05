@@ -72,6 +72,8 @@ import StackedBars from './demos/stacked-bars'
 import stackedBarsCode from './demos/stacked-bars?raw'
 import Stepline from './demos/stepline'
 import steplineCode from './demos/stepline?raw'
+import SyncIdDemo from './demos/syncId'
+import syncIdCode from './demos/syncId?raw'
 
 type Demo = {
   id: string
@@ -364,6 +366,15 @@ const DEMOS: Demo[] = [
     desc: '`<Brush>` renders a draggable range selector below the chart with a mini preview. Drag the handles or the slide area to filter the visible data. Children render as a miniature of the full dataset.',
     Comp: BrushDemo,
     code: brushCode,
+    tall: true,
+  },
+  {
+    id: 'syncId',
+    group: 'Sync',
+    title: 'syncId — cross-chart sync',
+    desc: 'Two `<Chart>` components with the same `syncId` synchronise tooltips and crosshairs. Hover one chart and the other follows — works across mixed series and different data lengths.',
+    Comp: SyncIdDemo,
+    code: syncIdCode,
     tall: true,
   },
 ]

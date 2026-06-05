@@ -1,5 +1,6 @@
 import type { ScaleType } from '@src/lib/scale'
-import { type Accessor, createContext, useContext } from 'solid-js'
+import type { SyncMethod, SyncPayload } from '@src/lib/sync'
+import { type Accessor, type Setter, createContext, useContext } from 'solid-js'
 
 export type Edge = 'top' | 'right' | 'bottom' | 'left'
 export type AxisOrientation = 'x' | 'y' | 'angle' | 'radius'
@@ -46,6 +47,14 @@ export type SeriesMeta = {
 export type StackEntry = { seriesIds: Set<string>; values: number[] }
 
 export type BrushRange = { startIndex: number; endIndex: number }
+
+export type SyncInteraction = {
+  active: boolean
+  index: number | null
+  label: string | undefined
+  dataKey: string | undefined
+  sourceViewBox: SyncPayload['sourceViewBox']
+}
 
 export type ChartContextType = {
   data: Accessor<any[]>
@@ -108,6 +117,13 @@ export type ChartContextType = {
   unregisterSeriesMeta: (id: string) => void
   isSeriesVisible: (id: string) => boolean
   toggleSeries: (id: string) => void
+
+  // --- sync ----------------------------------------------------------------
+  syncId: Accessor<string | number | undefined>
+  syncMethod: Accessor<SyncMethod | undefined>
+  syncInteraction: Accessor<SyncInteraction | null>
+  setSyncInteraction: Setter<SyncInteraction | null>
+  emitterSymbol: symbol
 
   // --- pointer ------------------------------------------------------------
   pointerPosition: Accessor<{ x: number; y: number } | null>

@@ -8,11 +8,19 @@ import {
   type Edge,
   type SeriesMeta,
   type StackEntry,
+  type SyncInteraction,
 } from '@src/components/context'
 import createSize from '@src/lib/dom/createSize'
 import { paletteColor } from '@src/lib/palette'
+import { type Scale, buildScale, projectScale } from '@src/lib/scale'
+import { type SyncMethod, type SyncPayload, syncBus } from '@src/lib/sync'
 import type { OverrideProps } from '@src/lib/types'
-import { accessData, toNumeric, uniqueInOrder } from '@src/lib/utils'
+import {
+  accessData,
+  axisValues,
+  toNumeric,
+  uniqueInOrder,
+} from '@src/lib/utils'
 import {
   type ComponentProps,
   type JSX,
@@ -20,6 +28,7 @@ import {
   createMemo,
   createSignal,
   mergeProps,
+  onCleanup,
   splitProps,
 } from 'solid-js'
 
@@ -40,6 +49,18 @@ export type ChartProps = OverrideProps<
       | { top?: number; right?: number; bottom?: number; left?: number }
     /** Global bar series configuration. */
     barConfig?: Partial<BarConfig>
+    /**
+     * Sync identifier. Charts sharing the same `syncId` synchronise their
+     * tooltips and crosshairs — hovering one chart shows the tooltip on all.
+     */
+    syncId?: string | number
+    /**
+     * How to match ticks across synced charts.
+     * - `'index'`: use the data index directly (default)
+     * - `'value'`: match by tick label string
+     * - `function`: custom callback receiving (ticks, handlerParam) → index
+     */
+    syncMethod?: SyncMethod
     /** @hidden */
     children?: JSX.Element
   }
@@ -70,7 +91,12 @@ const Chart = (props: ChartProps) => {
     'barConfig',
     'ref',
     'style',
+    'syncId',
+    'syncMethod',
   ])
+
+  // --- emitter symbol (self-guard for sync; one per chart instance) --------
+  const emitterSymbol = Symbol('peculiar-chart-emitter')
 
   // --- insets -------------------------------------------------------------
   const [inset, setInset] = createSignal<Record<Edge, Map<string, number>>>({
@@ -123,6 +149,12 @@ const Chart = (props: ChartProps) => {
     x: number
     y: number
   } | null>(null)
+
+  // --- sync interaction state ---------------------------------------------
+  const [syncInteraction, setSyncInteraction] =
+    createSignal<SyncInteraction | null>(null)
+
+  const isReceivingSync = () => syncInteraction()?.sourceViewBox != null
 
   const [svgRef, setSvgRef] = createSignal<SVGElement | null>(null)
   const [wrapperRef, setWrapperRef] = createSignal<HTMLDivElement | null>(null)
@@ -207,6 +239,165 @@ const Chart = (props: ChartProps) => {
     const x = toSvgPosition(_pointerPosition.x, 'width')
     const y = toSvgPosition(_pointerPosition.y, 'height')
     return x >= left && x <= right && y >= top && y <= bottom
+  })
+
+  // --- x-axis scale (for sync emission + listener) ------------------------
+  const xScale = createMemo(() => {
+    const config = getAxisConfig('x', 'x')
+    const domain = getDomain('x', 'x')
+    const left = getInset('left')
+    const right = svgSize()[0] - getInset('right')
+
+    if (domain.kind === 'categorical') {
+      return buildScale(config.type, domain.values, [left, right])
+    }
+    return buildScale(config.type, [domain.min, domain.max], [left, right])
+  })
+
+  const xAxisValues = createMemo(() =>
+    axisValues({ getAxisConfig, displayedData } as any, 'x', 'x'),
+  )
+
+  // --- sync emission helpers ----------------------------------------------
+  const findClosestTickIndex = (
+    scale: Scale,
+    values: any[],
+    svgX: number,
+  ): number => {
+    let bestIndex = 0
+    let bestDistance = Number.POSITIVE_INFINITY
+    for (let i = 0; i < values.length; i++) {
+      const projected = projectScale(scale, values[i])
+      if (!Number.isFinite(projected)) continue
+      const distance = Math.abs(projected - svgX)
+      if (distance < bestDistance) {
+        bestDistance = distance
+        bestIndex = i
+      }
+    }
+    return bestIndex
+  }
+
+  const viewBox = createMemo(() => ({
+    x: getInset('left'),
+    y: getInset('top'),
+    width: Math.max(0, svgSize()[0] - getInset('left') - getInset('right')),
+    height: Math.max(0, svgSize()[1] - getInset('top') - getInset('bottom')),
+  }))
+
+  const emitSync = (
+    active: boolean,
+    index: number | null,
+    label: string | undefined,
+  ) => {
+    if (isReceivingSync()) return
+    const syncId = localProps.syncId
+    if (syncId == null) return
+    const coord: SyncPayload['coordinate'] = active
+      ? {
+          x: toSvgPosition(pointerPosition()?.x ?? 0, 'width'),
+          y: toSvgPosition(pointerPosition()?.y ?? 0, 'height'),
+        }
+      : undefined
+    const sourceViewBox = active ? viewBox() : undefined
+    syncBus.emit(
+      syncId,
+      {
+        active,
+        index,
+        coordinate: coord,
+        label,
+        dataKey: undefined,
+        sourceViewBox,
+      },
+      emitterSymbol,
+    )
+  }
+
+  // --- sync listener -------------------------------------------------------
+  createEffect(() => {
+    const currentSyncId = localProps.syncId
+    if (currentSyncId == null) return
+
+    const listener = (
+      incomingSyncId: string | number,
+      payload: SyncPayload,
+      emittingSymbol: symbol,
+    ) => {
+      if (emittingSymbol === emitterSymbol) return
+      if (incomingSyncId !== currentSyncId) return
+
+      if (!payload.active) {
+        setSyncInteraction({
+          active: false,
+          index: null,
+          label: undefined,
+          dataKey: undefined,
+          sourceViewBox: undefined,
+        })
+        return
+      }
+
+      const syncMethod = localProps.syncMethod ?? 'index'
+      const ticks = xAxisValues()
+      let activeIndex: number | null = null
+
+      if (payload.index == null) {
+        setSyncInteraction({
+          active: false,
+          index: null,
+          label: undefined,
+          dataKey: undefined,
+          sourceViewBox: payload.sourceViewBox,
+        })
+        return
+      }
+
+      if (syncMethod === 'index') {
+        activeIndex = payload.index
+      } else if (syncMethod === 'value') {
+        const matchIdx = ticks.findIndex(
+          (t: any) => String(t) === payload.label,
+        )
+        activeIndex = matchIdx >= 0 ? matchIdx : null
+      } else if (typeof syncMethod === 'function') {
+        const param = {
+          activeTooltipIndex: payload.index ?? undefined,
+          isTooltipActive: payload.active,
+          activeIndex: payload.index ?? undefined,
+          activeLabel: payload.label,
+          activeDataKey: payload.dataKey,
+          activeCoordinate: payload.coordinate,
+        }
+        activeIndex = syncMethod(ticks, param) ?? null
+      }
+
+      if (
+        activeIndex == null ||
+        activeIndex < 0 ||
+        activeIndex >= ticks.length
+      ) {
+        setSyncInteraction({
+          active: false,
+          index: null,
+          label: undefined,
+          dataKey: undefined,
+          sourceViewBox: payload.sourceViewBox,
+        })
+        return
+      }
+
+      setSyncInteraction({
+        active: true,
+        index: activeIndex,
+        label: payload.label,
+        dataKey: payload.dataKey,
+        sourceViewBox: payload.sourceViewBox,
+      })
+    }
+
+    syncBus.on(listener)
+    onCleanup(() => syncBus.off(listener))
   })
 
   // --- axis config + domain ----------------------------------------------
@@ -381,6 +572,11 @@ const Chart = (props: ChartProps) => {
             else next.add(id)
             return next
           }),
+        syncId: () => localProps.syncId,
+        syncMethod: () => localProps.syncMethod,
+        syncInteraction,
+        setSyncInteraction,
+        emitterSymbol,
         pointerPosition,
         pointerInChart,
         wrapperRef,
@@ -406,8 +602,17 @@ const Chart = (props: ChartProps) => {
               x: event.clientX - rect.left,
               y: event.clientY - rect.top,
             })
+            if (localProps.syncId != null && !isReceivingSync()) {
+              const svgX = toSvgPosition(event.clientX - rect.left, 'width')
+              const idx = findClosestTickIndex(xScale(), xAxisValues(), svgX)
+              const label = String(xAxisValues()[idx] ?? '')
+              emitSync(true, idx, label)
+            }
           }}
-          onMouseLeave={() => setPointerPosition(null)}
+          onMouseLeave={() => {
+            setPointerPosition(null)
+            emitSync(false, null, undefined)
+          }}
           data-pc-chart=""
           {...otherProps}
         >

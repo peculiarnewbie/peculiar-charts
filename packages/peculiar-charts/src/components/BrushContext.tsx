@@ -1,7 +1,7 @@
 import {
   type AxisOrientation,
-  type ChartContextType,
   ChartContext,
+  type ChartContextType,
   type Domain,
 } from '@src/components/context'
 import { type Accessor, type JSX, createSignal } from 'solid-js'
@@ -24,10 +24,7 @@ export const BrushContextProvider = (props: {
 
   const ctx = props.mainContext
 
-  const getDomain = (
-    axisId: string,
-    orientation: AxisOrientation,
-  ): Domain => {
+  const getDomain = (axisId: string, orientation: AxisOrientation): Domain => {
     const config = ctx.getAxisConfig(axisId, orientation)
 
     if (config.type === 'band' || config.type === 'point') {
@@ -118,6 +115,12 @@ export const BrushContextProvider = (props: {
     pointerInChart: () => false,
     wrapperRef: () => null,
 
+    syncId: () => undefined,
+    syncMethod: () => undefined,
+    syncInteraction: () => null,
+    setSyncInteraction: noop,
+    emitterSymbol: Symbol('brush-emitter'),
+
     toSvgPosition: (pos, dim) =>
       (pos / (dim === 'width' ? props.width : props.height)) *
       (dim === 'width' ? props.width : props.height),
@@ -126,7 +129,11 @@ export const BrushContextProvider = (props: {
       (dim === 'width' ? props.width : props.height),
   }
 
-  return <ChartContext.Provider value={value}>{props.children}</ChartContext.Provider>
+  return (
+    <ChartContext.Provider value={value}>
+      {props.children}
+    </ChartContext.Provider>
+  )
 }
 
 function accessData<T>(data: unknown, dataKey: string | undefined): T[] {
