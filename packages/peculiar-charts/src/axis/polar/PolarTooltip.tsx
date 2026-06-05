@@ -5,6 +5,7 @@ import createSize from '@src/lib/dom/createSize'
 import createPolarClosestTick from '@src/lib/polar/createPolarClosestTick'
 import { usePolarLayout } from '@src/lib/polar/context'
 import { type PolarAngleScale } from '@src/lib/polar/scale'
+import { polarToCartesian } from '@src/lib/polar/utils'
 import {
   type TooltipPayload,
   type TooltipRenderer,
@@ -26,7 +27,7 @@ import { Portal, isDev } from 'solid-js/web'
 export type PolarTooltipProps = OverrideProps<
   ComponentProps<'div'>,
   {
-    /** Gap between the pointer and the tooltip. @defaultValue `16` */
+    /** Offset outward along the active spoke from `outerRadius`, in px. @defaultValue `12` */
     pointerGap?: number
     content?: TooltipRenderer
     children?: TooltipRenderer
@@ -42,7 +43,7 @@ export type { TooltipPayload, TooltipRenderer }
  * @data `data-pc-polar-tooltip` - Present on the tooltip element.
  */
 const PolarTooltip = (props: PolarTooltipProps) => {
-  const defaultedProps = mergeProps({ pointerGap: 16 }, props)
+  const defaultedProps = mergeProps({ pointerGap: 12 }, props)
   const [localProps, otherProps] = splitProps(defaultedProps, [
     'pointerGap',
     'content',
@@ -63,10 +64,6 @@ const PolarTooltip = (props: PolarTooltipProps) => {
 
   const [tooltipRef, setTooltipRef] = createSignal<HTMLDivElement | null>(null)
   const tooltipSize = createSize({ element: tooltipRef })
-
-  const pointerPosition = createMemo<{ x: number; y: number } | undefined>(
-    (prev) => chartContext.pointerPosition() ?? prev,
-  )
 
   const closestTick = createPolarClosestTick({
     layout,
@@ -91,32 +88,47 @@ const PolarTooltip = (props: PolarTooltipProps) => {
     )
   })
 
-  const x = () => {
-    const pointer = pointerPosition()
-    if (!pointer) return 0
-    const _tooltipSize = tooltipSize()
-    const containerWidth = chartContext.toContainerPosition(
-      chartContext.width(),
-      'width',
+  /** Anchor on the active spoke just outside the chart — not at the raw pointer. */
+  const anchor = createMemo(() => {
+    const tick = closestTick()
+    if (!tick) return undefined
+    const [sx, sy] = polarToCartesian(
+      layout.cx(),
+      layout.cy(),
+      layout.outerRadius() + localProps.pointerGap,
+      tick.angle,
     )
-    const preferred = pointer.x + localProps.pointerGap
-    if (_tooltipSize && preferred + _tooltipSize[0] > containerWidth)
-      return pointer.x - localProps.pointerGap - _tooltipSize[0]
+    return {
+      x: chartContext.toContainerPosition(sx, 'width'),
+      y: chartContext.toContainerPosition(sy, 'height'),
+    }
+  })
+
+  const clampPosition = (
+    preferred: number,
+    size: number | undefined,
+    max: number,
+  ) => {
+    if (size === undefined) return preferred
+    if (preferred + size > max) return Math.max(0, max - size)
+    if (preferred < 0) return 0
     return preferred
   }
 
+  const x = () => {
+    const a = anchor()
+    if (!a) return 0
+    const size = tooltipSize()
+    const max = chartContext.toContainerPosition(chartContext.width(), 'width')
+    return clampPosition(a.x, size?.[0], max)
+  }
+
   const y = () => {
-    const pointer = pointerPosition()
-    if (!pointer) return 0
-    const _tooltipSize = tooltipSize()
-    const containerHeight = chartContext.toContainerPosition(
-      chartContext.height(),
-      'height',
-    )
-    const preferred = pointer.y + localProps.pointerGap
-    if (_tooltipSize && preferred + _tooltipSize[1] > containerHeight)
-      return pointer.y - localProps.pointerGap - _tooltipSize[1]
-    return preferred
+    const a = anchor()
+    if (!a) return 0
+    const size = tooltipSize()
+    const max = chartContext.toContainerPosition(chartContext.height(), 'height')
+    return clampPosition(a.y, size?.[1], max)
   }
 
   return (

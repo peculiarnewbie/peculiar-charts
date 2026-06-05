@@ -1,10 +1,14 @@
-# Polar charts
+# Polar charts (radar)
 
-peculiar-charts supports polar (radar / spider) charts through a small layout + axis layer
-and a `Radar` series. Polar components compose like cartesian ones: wrap them in `<Chart>`,
+**Naming:** **Radar** is the chart type users ask for (`<Radar>` series, "radar chart" in
+demos). **Polar** is the coordinate-system prefix for layout and axes (`PolarLayout`,
+`PolarGrid`, `PolarTooltip`, …) — the same split Recharts uses internally.
+
+peculiar-charts supports radar / spider charts through a small layout + axis layer and a
+`Radar` series. Polar components compose like cartesian ones: wrap them in `<Chart>`,
 frame the drawable area with `<PolarLayout>`, register axes, then draw series.
 
-Playground: **Polar → Radar** in [charts.peculiarnewbie.com](https://charts.peculiarnewbie.com).
+Playground: **Radar** group in [charts.peculiarnewbie.com](https://charts.peculiarnewbie.com).
 
 ---
 
@@ -193,6 +197,9 @@ Place `<PolarCrosshair>` and `<PolarTooltip>` inside `<PolarAngleAxis>` (not the
 They snap to the **nearest category spoke** by comparing the pointer angle from the chart centre
 to each category's projected angle (`createPolarClosestTick`).
 
+The tooltip **anchors on the active spoke** just outside `outerRadius` — it does not follow the
+raw pointer, so it stays beside the chart even when the cursor is far from the centre.
+
 ```tsx
 <PolarAngleAxis dataKey="skill">
   <PolarCrosshair class="stroke-zinc-400" stroke-dasharray="4,4" />
@@ -203,7 +210,7 @@ to each category's projected angle (`createPolarClosestTick`).
 `PolarTooltip` accepts the same `content` / `children` render-prop and `TooltipPayload` as
 `<AxisTooltip>`. Use `usePolarClosestTick(angleAxisId)` in custom overlays for the active index.
 
-Playground: **Polar → Polar tooltip** and **Polar tooltip (custom)**.
+Playground: **Radar → Radar chart** and **Custom tooltip**.
 
 ## Limitations (current)
 

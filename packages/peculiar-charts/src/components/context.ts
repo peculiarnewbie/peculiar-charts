@@ -93,7 +93,7 @@ export type ChartContextType = {
   seriesMeta: Accessor<SeriesMeta[]>
   registerSeriesMeta: (
     id: string,
-    meta: { name: string; type: string; dataKey?: string },
+    meta: { name: string; type: string; dataKey?: string; color?: string },
   ) => void
   unregisterSeriesMeta: (id: string) => void
   isSeriesVisible: (id: string) => boolean

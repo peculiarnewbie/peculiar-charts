@@ -62,10 +62,8 @@ import PieDemo from './demos/pie'
 import pieCode from './demos/pie?raw'
 import RadarDemo from './demos/radar'
 import radarCode from './demos/radar?raw'
-import PolarTooltipDemo from './demos/polar-tooltip'
-import polarTooltipCode from './demos/polar-tooltip?raw'
-import PolarTooltipCustomDemo from './demos/polar-tooltip-custom'
-import polarTooltipCustomCode from './demos/polar-tooltip-custom?raw'
+import RadarCustomTooltipDemo from './demos/radar-custom-tooltip'
+import radarCustomTooltipCode from './demos/radar-custom-tooltip?raw'
 import StackedArea from './demos/stacked-area'
 import stackedAreaCode from './demos/stacked-area?raw'
 import Stepline from './demos/stepline'
@@ -294,27 +292,19 @@ const DEMOS: Demo[] = [
   },
   {
     id: 'radar',
-    group: 'Polar',
-    title: 'Radar',
-    desc: '`<PolarLayout>` frames polar axes; `<PolarGrid>` draws rings and spokes; `<Radar>` plots closed polygons. `<PolarAngleLabel>` / `<PolarRadiusLabel>` label categories and values. `<PolarCrosshair>` + `<PolarTooltip>` on hover. Legend toggles each series.',
+    group: 'Radar',
+    title: 'Radar chart',
+    desc: 'Radar / spider chart — `<PolarLayout>` + `<Radar>` series. `<PolarCrosshair>` and `<PolarTooltip>` snap to the nearest category spoke.',
     Comp: RadarDemo,
     code: radarCode,
   },
   {
-    id: 'polar-tooltip',
-    group: 'Polar',
-    title: 'Polar tooltip',
-    desc: '`<PolarTooltip>` inside `<PolarAngleAxis>` — default body lists every visible series at the nearest spoke. `<PolarCrosshair>` highlights the active category.',
-    Comp: PolarTooltipDemo,
-    code: polarTooltipCode,
-  },
-  {
-    id: 'polar-tooltip-custom',
-    group: 'Polar',
-    title: 'Polar tooltip (custom)',
-    desc: '`<PolarTooltip content={(p) => …}>` — same `TooltipPayload` as `<AxisTooltip>` (`label`, `series`, `data`, `index`).',
-    Comp: PolarTooltipCustomDemo,
-    code: polarTooltipCustomCode,
+    id: 'radar-custom-tooltip',
+    group: 'Radar',
+    title: 'Custom tooltip',
+    desc: '`<PolarTooltip content={(p) => …}>` — same `TooltipPayload` as `<AxisTooltip>`. Tooltip anchors on the active spoke, not the raw pointer.',
+    Comp: RadarCustomTooltipDemo,
+    code: radarCustomTooltipCode,
   },
   {
     id: 'animated-bars',

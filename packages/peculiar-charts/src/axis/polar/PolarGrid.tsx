@@ -73,6 +73,15 @@ const PolarGrid = (props: PolarGridProps) => {
   const ringRadius = (tick: number) =>
     projectRadiusScale(radiusAxis.scale() as PolarRadiusScale, tick)
 
+  /** Tick rings plus an outer boundary at `outerRadius` when ticks stop short. */
+  const ringRadii = createMemo(() => {
+    const ticks = radiusAxis.labelTicks()
+    const radii = ticks.map((tick) => ringRadius(tick))
+    const outer = layout.outerRadius()
+    const hasOuter = radii.some((r) => Math.abs(r - outer) < 0.5)
+    return hasOuter ? radii : [...radii, outer]
+  })
+
   const spokePath = (angle: number) => {
     const cx = layout.cx()
     const cy = layout.cy()
@@ -90,25 +99,24 @@ const PolarGrid = (props: PolarGridProps) => {
           )}
         </For>
       </Show>
-      <For each={radiusAxis.labelTicks()}>
-        {(tick) => {
-          const r = () => ringRadius(tick)
-          return localProps.gridType === 'circle' ? (
+      <For each={ringRadii()}>
+        {(r) =>
+          localProps.gridType === 'circle' ? (
             <circle
               cx={layout.cx()}
               cy={layout.cy()}
-              r={r()}
+              r={r}
               fill="none"
               data-pc-polar-grid=""
             />
           ) : (
             <path
-              d={ringPath(layout.cx(), layout.cy(), r(), angles())}
+              d={ringPath(layout.cx(), layout.cy(), r, angles())}
               fill="none"
               data-pc-polar-grid=""
             />
           )
-        }}
+        }
       </For>
     </g>
   )

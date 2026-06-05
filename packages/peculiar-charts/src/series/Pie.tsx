@@ -27,6 +27,10 @@ export type PieProps = OverrideProps<
     dataKey?: string
     /** Data key for slice names (legend/labels). */
     nameKey?: string
+    /** Data key for stable slice identity and palette assignment. @defaultValue `nameKey` */
+    colorKey?: string
+    /** Explicit fill colours — map by `colorKey` value or callback. */
+    colors?: Record<string, string> | ((key: string) => string | undefined)
     /** Inner radius — `0` for a pie, `> 0` (px or `%` of radius) for a donut. */
     innerRadius?: number | `${number}%`
     /** Outer radius as px or `%` of the available radius. @defaultValue `'100%'` */
@@ -75,6 +79,8 @@ const Pie = (props: PieProps) => {
   const [localProps, otherProps] = splitProps(defaultedProps, [
     'dataKey',
     'nameKey',
+    'colorKey',
+    'colors',
     'innerRadius',
     'outerRadius',
     'cornerRadius',
@@ -85,7 +91,32 @@ const Pie = (props: PieProps) => {
   ])
   const chartContext = useChartContext()
 
-  const sliceId = (index: number) => `${pieId}-${index}`
+  const colorIndexByKey = new Map<string, number>()
+  let nextPaletteIndex = 0
+
+  const paletteIndexFor = (key: string) => {
+    let index = colorIndexByKey.get(key)
+    if (index === undefined) {
+      index = nextPaletteIndex++
+      colorIndexByKey.set(key, index)
+    }
+    return index
+  }
+
+  const sliceColor = (key: string) => {
+    const colors = localProps.colors
+    if (colors) {
+      if (typeof colors === 'function') {
+        const color = colors(key)
+        if (color !== undefined) return color
+      } else if (colors[key] !== undefined) {
+        return colors[key]!
+      }
+    }
+    return paletteColor(paletteIndexFor(key))
+  }
+
+  const sliceId = (key: string) => `${pieId}-${key}`
 
   const values = createMemo(() =>
     accessData<number>(chartContext.data(), localProps.dataKey),
@@ -95,27 +126,41 @@ const Pie = (props: PieProps) => {
       ? accessData<any>(chartContext.data(), localProps.nameKey)
       : values().map((_, i) => `Slice ${i + 1}`),
   )
+  const colorKeys = createMemo(() => {
+    if (localProps.colorKey) {
+      return accessData<any>(chartContext.data(), localProps.colorKey).map(
+        String,
+      )
+    }
+    if (localProps.nameKey) return names().map(String)
+    return values().map((_, i) => String(i))
+  })
 
   // Register every slice as a series so the legend lists & toggles them.
   createEffect(() => {
     const _names = names()
-    _names.forEach((name, i) =>
-      chartContext.registerSeriesMeta(sliceId(i), {
-        name: String(name),
+    const _keys = colorKeys()
+    _keys.forEach((key, i) =>
+      chartContext.registerSeriesMeta(sliceId(key), {
+        name: String(_names[i]),
         type: 'pie',
+        color: sliceColor(key),
       }),
     )
     onCleanup(() =>
-      _names.forEach((_, i) => chartContext.unregisterSeriesMeta(sliceId(i))),
+      _keys.forEach((key) =>
+        chartContext.unregisterSeriesMeta(sliceId(key)),
+      ),
     )
   })
 
-  const colorOf = (id: string, fallbackIndex: number) =>
+  const colorOf = (id: string, key: string) =>
     chartContext.seriesMeta().find((s) => s.id === id)?.color ??
-    paletteColor(fallbackIndex)
+    sliceColor(key)
 
   const layout = createMemo(() => {
     const _values = values()
+    const _keys = colorKeys()
 
     const left = chartContext.getInset('left')
     const right = chartContext.width() - chartContext.getInset('right')
@@ -132,7 +177,8 @@ const Pie = (props: PieProps) => {
       .map((value, index) => ({
         value: typeof value === 'number' && value > 0 ? value : 0,
         index,
-        id: sliceId(index),
+        key: _keys[index]!,
+        id: sliceId(_keys[index]!),
       }))
       .filter((s) => chartContext.isSeriesVisible(s.id))
 
@@ -153,6 +199,7 @@ const Pie = (props: PieProps) => {
         endAngle: a.endAngle,
         id: a.data.id,
         index: a.data.index,
+        key: a.data.key,
       })),
     }
   })
@@ -168,18 +215,21 @@ const Pie = (props: PieProps) => {
       endAngle: a.endAngle + (b.endAngle - a.endAngle) * t,
       id: b.id,
       index: b.index,
+      key: b.key,
     }),
     (target) => ({
       startAngle: target.startAngle,
       endAngle: target.startAngle,
       id: target.id,
       index: target.index,
+      key: target.key,
     }),
     (current) => ({
       startAngle: current.startAngle,
       endAngle: current.startAngle,
       id: current.id,
       index: current.index,
+      key: current.key,
     }),
   )
   const animatedLayout = createMemo(() => {
@@ -195,6 +245,7 @@ const Pie = (props: PieProps) => {
         d: arcGen(item.value) ?? '',
         id: item.value.id,
         index: item.value.index,
+        key: item.value.key,
         mode: item.mode,
       })),
     }
@@ -209,9 +260,10 @@ const Pie = (props: PieProps) => {
         {(slice) => (
           <path
             d={slice.d}
-            fill={colorOf(slice.id, slice.index)}
+            fill={colorOf(slice.id, slice.key)}
             data-pc-pie-slice=""
             data-index={slice.index}
+            data-key={slice.key}
             {...otherProps}
           />
         )}

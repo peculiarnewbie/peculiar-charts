@@ -92,7 +92,16 @@ const Chart = (props: ChartProps) => {
   )
   const [bars, setBars] = createSignal(new Set<string>())
   const [series, setSeries] = createSignal(
-    new Map<string, { name: string; type: string; dataKey?: string; order: number }>(),
+    new Map<
+      string,
+      {
+        name: string
+        type: string
+        dataKey?: string
+        order: number
+        color?: string
+      }
+    >(),
   )
   const [hiddenSeries, setHiddenSeries] = createSignal(new Set<string>())
   let seriesOrder = 0
@@ -250,7 +259,7 @@ const Chart = (props: ChartProps) => {
         type: meta.type,
         dataKey: meta.dataKey,
         order: meta.order,
-        color: paletteColor(meta.order),
+        color: meta.color ?? paletteColor(meta.order),
       }))
       .sort((a, b) => a.order - b.order),
   )
@@ -336,9 +345,11 @@ const Chart = (props: ChartProps) => {
         barConfig: () => localProps.barConfig as BarConfig,
         seriesMeta,
         registerSeriesMeta: (id, meta) =>
-          setSeries((prev) =>
-            new Map(prev).set(id, { ...meta, order: seriesOrder++ }),
-          ),
+          setSeries((prev) => {
+            const existing = prev.get(id)
+            const order = existing?.order ?? seriesOrder++
+            return new Map(prev).set(id, { ...meta, order })
+          }),
         unregisterSeriesMeta: (id) =>
           setSeries((prev) => {
             const next = new Map(prev)
