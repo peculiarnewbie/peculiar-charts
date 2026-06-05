@@ -32,7 +32,7 @@
     "build": "tsc --noEmit && tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf .turbo dist node_modules",
+    "clean": "rm -rf dist node_modules",
     "prepublishOnly": "pnpm run build",
     "release": "npm publish --access public"
   },

@@ -20,6 +20,8 @@ import Basic from './demos/basic'
 import basicCode from './demos/basic?raw'
 import Biaxial from './demos/biaxial'
 import biaxialCode from './demos/biaxial?raw'
+import BrushDemo from './demos/brush'
+import brushCode from './demos/brush?raw'
 import BubbleChart from './demos/bubble'
 import bubbleCode from './demos/bubble?raw'
 import CustomBarShapes from './demos/custom-bar-shapes'
@@ -61,15 +63,15 @@ import negativeCode from './demos/negative?raw'
 import PieDemo from './demos/pie'
 import pieCode from './demos/pie?raw'
 import RadarDemo from './demos/radar'
-import radarCode from './demos/radar?raw'
 import RadarCustomTooltipDemo from './demos/radar-custom-tooltip'
 import radarCustomTooltipCode from './demos/radar-custom-tooltip?raw'
+import radarCode from './demos/radar?raw'
 import StackedArea from './demos/stacked-area'
 import stackedAreaCode from './demos/stacked-area?raw'
-import Stepline from './demos/stepline'
-import steplineCode from './demos/stepline?raw'
 import StackedBars from './demos/stacked-bars'
 import stackedBarsCode from './demos/stacked-bars?raw'
+import Stepline from './demos/stepline'
+import steplineCode from './demos/stepline?raw'
 
 type Demo = {
   id: string
@@ -353,6 +355,15 @@ const DEMOS: Demo[] = [
     desc: 'Per-phase animation config — enter grows over 600ms with `ease`, exit snaps first with a springy cubic-bezier, update tweens at 400ms `ease-out`. Toggle between 7 and 3 items to see exits.',
     Comp: AnimatedPhaseBars,
     code: animatedPhaseBarsCode,
+    tall: true,
+  },
+  {
+    id: 'brush',
+    group: 'Brush',
+    title: 'Brush (range selector)',
+    desc: '`<Brush>` renders a draggable range selector below the chart with a mini preview. Drag the handles or the slide area to filter the visible data. Children render as a miniature of the full dataset.',
+    Comp: BrushDemo,
+    code: brushCode,
     tall: true,
   },
 ]

@@ -212,8 +212,7 @@ const Chart = (props: ChartProps) => {
   // --- axis config + domain ----------------------------------------------
   const defaultAxisConfig = (orientation: AxisOrientation): AxisConfig => ({
     orientation,
-    type:
-      orientation === 'x' || orientation === 'angle' ? 'point' : 'linear',
+    type: orientation === 'x' || orientation === 'angle' ? 'point' : 'linear',
     range: null,
     reverse: false,
   })
@@ -225,17 +224,19 @@ const Chart = (props: ChartProps) => {
     const config = getAxisConfig(axisId, orientation)
 
     if (config.type === 'band' || config.type === 'point') {
+      const data = displayedData()
       const values = config.dataKey
-        ? uniqueInOrder(accessData(localProps.data, config.dataKey))
-        : Array.from({ length: localProps.data.length }, (_, i) => i)
+        ? uniqueInOrder(accessData(data, config.dataKey))
+        : Array.from({ length: data.length }, (_, i) => i)
       return { kind: 'categorical' as const, values }
     }
 
     let agg: { min: number; max: number }
     if (orientation === 'x') {
+      const data = displayedData()
       const raw = config.dataKey
-        ? accessData<unknown>(localProps.data, config.dataKey)
-        : localProps.data.map((_, i) => i)
+        ? accessData<unknown>(data, config.dataKey)
+        : data.map((_, i) => i)
       const nums = raw.map(toNumeric).filter((n): n is number => n !== null)
       agg = nums.length
         ? { min: Math.min(...nums), max: Math.max(...nums) }
