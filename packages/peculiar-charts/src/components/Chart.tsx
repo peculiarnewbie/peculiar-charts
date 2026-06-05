@@ -241,6 +241,75 @@ const Chart = (props: ChartProps) => {
     return x >= left && x <= right && y >= top && y <= bottom
   })
 
+  // --- axis config + domain ----------------------------------------------
+  const defaultAxisConfig = (orientation: AxisOrientation): AxisConfig => ({
+    orientation,
+    type: orientation === 'x' || orientation === 'angle' ? 'point' : 'linear',
+    range: null,
+    reverse: false,
+  })
+
+  const getAxisConfig = (axisId: string, orientation: AxisOrientation) =>
+    axisConfigs().get(axisId) ?? defaultAxisConfig(orientation)
+
+  const getDomain = (axisId: string, orientation: AxisOrientation) => {
+    const config = getAxisConfig(axisId, orientation)
+
+    if (config.type === 'band' || config.type === 'point') {
+      const data = displayedData()
+      const values = config.dataKey
+        ? uniqueInOrder(accessData(data, config.dataKey))
+        : Array.from({ length: data.length }, (_, i) => i)
+      return { kind: 'categorical' as const, values }
+    }
+
+    let agg: { min: number; max: number }
+    if (orientation === 'x') {
+      const data = displayedData()
+      const raw = config.dataKey
+        ? accessData<unknown>(data, config.dataKey)
+        : data.map((_, i) => i)
+      const nums = raw.map(toNumeric).filter((n): n is number => n !== null)
+      agg = nums.length
+        ? { min: Math.min(...nums), max: Math.max(...nums) }
+        : { min: 0, max: 0 }
+    } else {
+      // value axes (y / radius) aggregate registered series extents
+      const axisExtents = extents().get(axisId)
+      agg = axisExtents
+        ? [...axisExtents.values()].reduce(
+            (acc, e) => ({
+              min: Math.min(acc.min, e.min),
+              max: Math.max(acc.max, e.max),
+            }),
+            { min: Number.POSITIVE_INFINITY, max: Number.NEGATIVE_INFINITY },
+          )
+        : { min: 0, max: 0 }
+    }
+
+    const userMin = config.range?.[0]
+    const userMax = config.range?.[1]
+    return {
+      kind: 'numeric' as const,
+      min: typeof userMin === 'number' ? userMin : agg.min,
+      max: typeof userMax === 'number' ? userMax : agg.max,
+      userDefined: config.range !== null,
+    }
+  }
+
+  const seriesMeta = createMemo<SeriesMeta[]>(() =>
+    [...series().entries()]
+      .map(([id, meta]) => ({
+        id,
+        name: meta.name,
+        type: meta.type,
+        dataKey: meta.dataKey,
+        order: meta.order,
+        color: meta.color ?? paletteColor(meta.order),
+      }))
+      .sort((a, b) => a.order - b.order),
+  )
+
   // --- x-axis scale (for sync emission + listener) ------------------------
   const xScale = createMemo(() => {
     const config = getAxisConfig('x', 'x')
@@ -399,75 +468,6 @@ const Chart = (props: ChartProps) => {
     syncBus.on(listener)
     onCleanup(() => syncBus.off(listener))
   })
-
-  // --- axis config + domain ----------------------------------------------
-  const defaultAxisConfig = (orientation: AxisOrientation): AxisConfig => ({
-    orientation,
-    type: orientation === 'x' || orientation === 'angle' ? 'point' : 'linear',
-    range: null,
-    reverse: false,
-  })
-
-  const getAxisConfig = (axisId: string, orientation: AxisOrientation) =>
-    axisConfigs().get(axisId) ?? defaultAxisConfig(orientation)
-
-  const getDomain = (axisId: string, orientation: AxisOrientation) => {
-    const config = getAxisConfig(axisId, orientation)
-
-    if (config.type === 'band' || config.type === 'point') {
-      const data = displayedData()
-      const values = config.dataKey
-        ? uniqueInOrder(accessData(data, config.dataKey))
-        : Array.from({ length: data.length }, (_, i) => i)
-      return { kind: 'categorical' as const, values }
-    }
-
-    let agg: { min: number; max: number }
-    if (orientation === 'x') {
-      const data = displayedData()
-      const raw = config.dataKey
-        ? accessData<unknown>(data, config.dataKey)
-        : data.map((_, i) => i)
-      const nums = raw.map(toNumeric).filter((n): n is number => n !== null)
-      agg = nums.length
-        ? { min: Math.min(...nums), max: Math.max(...nums) }
-        : { min: 0, max: 0 }
-    } else {
-      // value axes (y / radius) aggregate registered series extents
-      const axisExtents = extents().get(axisId)
-      agg = axisExtents
-        ? [...axisExtents.values()].reduce(
-            (acc, e) => ({
-              min: Math.min(acc.min, e.min),
-              max: Math.max(acc.max, e.max),
-            }),
-            { min: Number.POSITIVE_INFINITY, max: Number.NEGATIVE_INFINITY },
-          )
-        : { min: 0, max: 0 }
-    }
-
-    const userMin = config.range?.[0]
-    const userMax = config.range?.[1]
-    return {
-      kind: 'numeric' as const,
-      min: typeof userMin === 'number' ? userMin : agg.min,
-      max: typeof userMax === 'number' ? userMax : agg.max,
-      userDefined: config.range !== null,
-    }
-  }
-
-  const seriesMeta = createMemo<SeriesMeta[]>(() =>
-    [...series().entries()]
-      .map(([id, meta]) => ({
-        id,
-        name: meta.name,
-        type: meta.type,
-        dataKey: meta.dataKey,
-        order: meta.order,
-        color: meta.color ?? paletteColor(meta.order),
-      }))
-      .sort((a, b) => a.order - b.order),
-  )
 
   return (
     <ChartContext.Provider
