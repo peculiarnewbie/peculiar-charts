@@ -96,7 +96,7 @@ const Bar = (props: BarProps) => {
   })
 
   const data = createMemo(() =>
-    accessData<number>(chartContext.data(), localProps.dataKey),
+    accessData<number>(chartContext.displayedData(), localProps.dataKey),
   )
 
   createSeries({

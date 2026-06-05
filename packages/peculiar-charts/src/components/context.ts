@@ -45,8 +45,18 @@ export type SeriesMeta = {
 
 export type StackEntry = { seriesIds: Set<string>; values: number[] }
 
+export type BrushRange = { startIndex: number; endIndex: number }
+
 export type ChartContextType = {
   data: Accessor<any[]>
+  /** Data visible in the main chart area — sliced by brush range when a brush
+   *  is present, otherwise identical to `data()`. Series and axes should read
+   *  from this instead of `data()` so they respect the brush selection. */
+  displayedData: Accessor<any[]>
+  /** The active brush range, or `null` when no brush is rendered. */
+  brushRange: Accessor<BrushRange | null>
+  /** @internal Used by `<Brush>` to update the range. */
+  setBrushRange: (range: BrushRange | null) => void
   width: Accessor<number>
   height: Accessor<number>
 

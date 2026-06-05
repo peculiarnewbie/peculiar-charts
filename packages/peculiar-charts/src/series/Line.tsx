@@ -76,7 +76,7 @@ const Line = (props: LineProps) => {
   const chartContext = useChartContext()
 
   const data = createMemo(() =>
-    accessData<number>(chartContext.data(), localProps.dataKey),
+    accessData<number>(chartContext.displayedData(), localProps.dataKey),
   )
 
   createSeries({

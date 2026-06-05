@@ -106,6 +106,19 @@ const Chart = (props: ChartProps) => {
   const [hiddenSeries, setHiddenSeries] = createSignal(new Set<string>())
   let seriesOrder = 0
 
+  // --- brush ---------------------------------------------------------------
+  const [brushRange, setBrushRange] = createSignal<{
+    startIndex: number
+    endIndex: number
+  } | null>(null)
+
+  const displayedData = createMemo(() => {
+    const range = brushRange()
+    const d = localProps.data
+    if (!range) return d
+    return d.slice(range.startIndex, range.endIndex + 1)
+  })
+
   const [pointerPosition, setPointerPosition] = createSignal<{
     x: number
     y: number
@@ -268,6 +281,9 @@ const Chart = (props: ChartProps) => {
     <ChartContext.Provider
       value={{
         data: () => localProps.data,
+        displayedData,
+        brushRange,
+        setBrushRange,
         width: () => svgSize()[0],
         height: () => svgSize()[1],
         getInset,

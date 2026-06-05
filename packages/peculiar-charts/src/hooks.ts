@@ -250,7 +250,7 @@ export const useClosestTick = (
   return createMemo(() => {
     const tick = closest()
     if (!tick) return undefined
-    const rows = ctx.data()
+    const rows = ctx.displayedData()
     return {
       index: tick.index,
       value: values()[tick.index],

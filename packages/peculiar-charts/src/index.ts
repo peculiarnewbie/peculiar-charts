@@ -23,6 +23,7 @@ import AxisValueLine, {
   type ValueLineProps as AxisValueLineProps,
 } from '@src/axis/ValueLine'
 import Chart, { type ChartProps } from '@src/components/Chart'
+import Brush, { type BrushProps } from '@src/components/Brush'
 import Legend, {
   type LegendProps,
   type LegendItemRenderer,
@@ -31,6 +32,7 @@ import {
   type AxisConfig,
   type AxisOrientation,
   type BarConfig,
+  type BrushRange,
   type Domain,
   type SeriesMeta,
   useChartContext,
@@ -168,6 +170,8 @@ import Sector, { type SectorProps } from '@src/shapes/Sector'
 export type {
   // Chart
   ChartProps,
+  BrushProps,
+  BrushRange,
   BarConfig,
   AxisConfig,
   AxisOrientation,
@@ -256,6 +260,7 @@ export type {
 
 export {
   Chart,
+  Brush,
   Legend,
   // Series
   Area,

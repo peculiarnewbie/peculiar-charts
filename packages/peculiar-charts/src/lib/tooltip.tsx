@@ -39,7 +39,7 @@ export const buildTooltipPayload = (
   orientation: AxisOrientation,
   index: number,
 ): TooltipPayload => {
-  const data = ctx.data()
+  const data = ctx.displayedData()
   const row = data[index]
   const labels = axisValues(ctx, axisId, orientation)
 

@@ -16,7 +16,8 @@ export const accessData = <T>(
 
 /** The per-datum domain values for an axis — the values read from the axis's
  * `dataKey`, or the data indices when no key is set. Shared by point projection
- * and pointer hit-testing so they agree on where each datum sits. */
+ * and pointer hit-testing so they agree on where each datum sits. Reads from
+ * `displayedData` so the brush range is respected. */
 export const axisValues = (
   ctx: ChartContextType,
   axisId: string,
@@ -24,8 +25,8 @@ export const axisValues = (
 ): any[] => {
   const config = ctx.getAxisConfig(axisId, orientation)
   return config.dataKey
-    ? accessData<any>(ctx.data(), config.dataKey)
-    : ctx.data().map((_, i) => i)
+    ? accessData<any>(ctx.displayedData(), config.dataKey)
+    : ctx.displayedData().map((_, i) => i)
 }
 
 /** Coerce a domain value to a finite number (Date → epoch ms), or `null`. */
@@ -60,7 +61,7 @@ export const getBarPadding = (chartContext: ChartContextType) => {
   const left = chartContext.getInset('left')
   const right = chartContext.width() - chartContext.getInset('right')
   const chartWidth = right - left
-  const dataLength = chartContext.data().length
+  const dataLength = chartContext.displayedData().length
 
   const barConfig = chartContext.barConfig()
   const bandGap = gapToPadding(barConfig.bandGap, chartWidth / dataLength)

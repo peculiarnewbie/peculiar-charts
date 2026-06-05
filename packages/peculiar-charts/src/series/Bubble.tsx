@@ -112,10 +112,10 @@ const Bubble = (props: BubbleProps) => {
   const chartContext = useChartContext()
 
   const data = createMemo(() =>
-    accessData<number>(chartContext.data(), localProps.dataKey),
+    accessData<number>(chartContext.displayedData(), localProps.dataKey),
   )
   const sizeData = createMemo(() =>
-    accessData<number>(chartContext.data(), localProps.sizeKey),
+    accessData<number>(chartContext.displayedData(), localProps.sizeKey),
   )
 
   createSeries({

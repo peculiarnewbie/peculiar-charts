@@ -44,7 +44,7 @@ References below cite real files in this repo:
 | Render-props | Function children on several components **+ `dot`/`activeDot` on Line/Area** (bool \| props-object \| function) **+ `<AxisLabel>` / `<AxisMark>` tick render-props** **+ `<Bar shape>`, `<SeriesLabel labelLine>`, tooltip/legend `content`** | `shape`/`dot`/`activeDot`/`content`/`label`/`tick`/`labelLine`, each accepting element \| function \| props-object \| bool | **Tie** — core render-prop surfaces now match; Recharts still accepts ready-made elements |
 | Custom child reading internal state | **Now exported** — `useChartContext`, `useScale`/`useXScale`/`useYScale`, `useInverseScale`/`useInverseXScale`/`useInverseYScale`, `useDomain`, `usePlotArea`, `useChartSize`, `useData`, `useAxisValues`, `usePointerPosition`, `useSvgPointerPosition`, `usePointerInChart`, `useClosestTick` + `projectScale`/`invertScale`/`buildScale` | ~25 public hooks including inverse scales and active-tooltip hooks | **Tie** on the core interaction pattern — inverse scales and closest-tick hooks now match; Recharts still has more layout/tooltip variants |
 | Per-item events / interaction | **`onPointClick`/`onPointEnter`/`onPointLeave(datum, event)` on Line/Area/Bar/Point/Bubble**, carrying the datum; raw SVG events still ride `{...otherProps}`; no `syncId` yet | `onClick/onMouseEnter(data, index)` per series; `syncId` cross-chart sync; active-tooltip hooks | **Tie** on per-datum events; Recharts still ahead on `syncId` |
-| Shape primitives exported | `Curve` + `/curves`, **`Dot`**, **`Rectangle`**, **`Sector`**, **`PolarPolygon`** | `Curve`, `Rectangle`, `Sector`, `Dot`, `Cross`, `Symbols`, `Surface`, `Layer` | **Recharts** — still more primitives (`Cross`, `Symbols`, …) |
+| Shape primitives exported | `Curve` + `/curves`, **`Dot`**, **`Rectangle`**, **`Sector`**, **`PolarPolygon`** | `Curve`, `Rectangle`, `Sector`, `Dot`, `Cross`, `Symbols`, `Surface`, `Layer` | **Recharts** — more primitives (`Cross`, `Symbols`, `Surface`, `Layer`) |
 | Polar / radar | **`PolarLayout`**, angle/radius axes, grid, **`Radar`**, **`PolarTooltip`**, **`PolarCrosshair`**, `usePolarClosestTick`, `createPolarPoints` — see `docs/polar.md` | `RadarChart`, `RadialBarChart`, polar tooltip/crosshair | **Tie** on radar + polar interaction; Recharts ahead on radial bar |
 
 ---
@@ -270,6 +270,18 @@ render-prop for custom tick marks (see **Custom tick marks** demo).
 
 - **Effort**: low-medium; reuses existing scale + `createClosestTick` machinery.
 
+### 8. Brush (data range selector) ✅ DONE
+Shipped `<Brush>` — a draggable range selector with a mini chart preview. Children render as
+a miniature of the full dataset via a `BrushContextProvider` that overrides the chart context
+(own dimensions, own extent registry, no-op registration). The main chart respects the brush
+range through a new `displayedData` accessor on the chart context — series and `axisValues()`
+read from it instead of `data()`, so the chart automatically slices when the brush is active.
+Supports controlled/uncontrolled state, `onChange`/`onDragEnd` callbacks, and headless styling
+via `data-pc-brush-*` attributes.
+
+- **Followups not yet done**: keyboard navigation, start/end text labels, `syncId`-based
+  cross-chart brush sync.
+
 ---
 
 ## Summary
@@ -277,9 +289,8 @@ render-prop for custom tick marks (see **Custom tick marks** demo).
 | | peculiar-charts | Recharts |
 |---|---|---|
 | Maintainer-facing extensibility (add series, swap internals) | **Stronger** | Weaker (closed series union) |
-| Consumer-facing extensibility (no fork) | **Near parity** (hooks, render-props, custom series; polar shipped) | Stronger on `syncId`, polar tooltip, element render-props |
+| Consumer-facing extensibility (no fork) | **Near parity** (hooks, render-props, custom series, brush; polar shipped) | Stronger on `syncId`, element render-props |
 | Headless styling | **Stronger** | Weaker (ships styles) |
 | Published hooks / primitives | 12+ focused hooks + scale/series/data/animation primitives | ~25 hooks + shape primitives |
 
-Items **1 and 2** are done. Next high-leverage gaps: **`syncId`** (item 5), polar
-tooltip/crosshair, and remaining shape primitives. See `docs/polar.md` for the polar API.
+Items **1–4, 6–8** are done. Next high-leverage gap: **`syncId`** (item 5). See `docs/polar.md` for the polar API.
