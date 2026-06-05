@@ -50,6 +50,8 @@ export type PointProps = OverrideProps<
     /** Render a custom marker per point (e.g. an image or emoji) instead of a
      * `<circle>`. Receives the point's pixel position, value and active state. */
     children?: (datum: PointDatum) => JSX.Element
+    /** Explicit colour for legend / tooltip swatches. */
+    color?: string
     /** Animation configuration. */
     animation?: AnimationOptions
   } & PointEvents
@@ -76,6 +78,7 @@ const Point = (props: PointProps) => {
       'stackId',
       'activeProps',
       'children',
+      'color',
       'animation',
     ],
     ['onPointClick', 'onPointEnter', 'onPointLeave'],
@@ -94,6 +97,7 @@ const Point = (props: PointProps) => {
     dataKey: () => localProps.dataKey,
     stackId: () => localProps.stackId,
     data,
+    color: () => localProps.color,
     chartContext,
   })
 

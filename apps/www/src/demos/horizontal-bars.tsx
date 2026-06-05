@@ -18,8 +18,9 @@ export default function HorizontalBars() {
         name="Coffee"
         layout="horizontal"
         class="text-blue-400"
+        color="#60a5fa"
       />
-      <Bar dataKey="tea" name="Tea" layout="horizontal" class="text-emerald-400" />
+      <Bar dataKey="tea" name="Tea" layout="horizontal" class="text-emerald-400" color="#34d399" />
       <Axis axis="x" position="bottom" tickCount={4}>
         <AxisLabel />
         <AxisGrid class="stroke-black/10" />

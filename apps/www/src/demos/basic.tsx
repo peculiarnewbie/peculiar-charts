@@ -41,11 +41,13 @@ export default function BasicLine() {
         dataKey="coffee"
         name="Coffee"
         class="text-blue-500"
+        color="#3b82f6"
         stroke-width={3}
       />
       <Point
         dataKey="coffee"
         class="text-blue-600 stroke-white transition-all"
+        color="#2563eb"
         stroke-width={2}
         r={4}
         activeProps={{ r: 6 }}

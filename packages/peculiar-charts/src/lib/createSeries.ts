@@ -18,6 +18,8 @@ const createSeries = (props: {
   dataKey: Accessor<string | undefined>
   stackId: Accessor<string | undefined>
   data: Accessor<number[]>
+  /** Explicit colour for legend / tooltip swatches. Falls back to the palette. */
+  color?: Accessor<string | undefined>
   chartContext: ChartContextType
 }) => {
   const ctx = props.chartContext
@@ -29,6 +31,7 @@ const createSeries = (props: {
       name: props.name(),
       type: props.type,
       dataKey: props.dataKey(),
+      color: props.color?.(),
     })
     onCleanup(() => ctx.unregisterSeriesMeta(props.seriesId))
   })

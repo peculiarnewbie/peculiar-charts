@@ -59,6 +59,7 @@ export default function AnimatedPhaseBars() {
           dataKey="revenue"
           name="Revenue"
           class="text-blue-500"
+          color="#3b82f6"
           animation={{
             duration: 400,
             easing: 'ease-out',
@@ -70,6 +71,7 @@ export default function AnimatedPhaseBars() {
           dataKey="costs"
           name="Costs"
           class="text-rose-400"
+          color="#fb7185"
           animation={{
             duration: 400,
             easing: 'ease-out',

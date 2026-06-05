@@ -61,12 +61,14 @@ export default function AnimatedLine() {
           dataKey="coffee"
           name="Coffee"
           class="text-blue-500"
+          color="#3b82f6"
           stroke-width={2.5}
           animation
         />
         <Point
           dataKey="coffee"
           class="text-blue-600 stroke-white"
+          color="#2563eb"
           stroke-width={2}
           r={4}
           animation
@@ -75,12 +77,14 @@ export default function AnimatedLine() {
           dataKey="tea"
           name="Tea"
           class="text-emerald-500"
+          color="#10b981"
           stroke-width={2.5}
           animation
         />
         <Point
           dataKey="tea"
           class="text-emerald-600 stroke-white"
+          color="#059669"
           stroke-width={2}
           r={4}
           animation

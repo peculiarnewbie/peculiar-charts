@@ -27,6 +27,8 @@ export type RadarProps = OverrideProps<
     radiusAxisId?: string
     /** Fill opacity. @defaultValue `0.35` */
     fillOpacity?: number
+    /** Explicit colour for legend / tooltip swatches. */
+    color?: string
   }
 >
 
@@ -53,6 +55,7 @@ const Radar = (props: RadarProps) => {
     'angleAxisId',
     'radiusAxisId',
     'fillOpacity',
+    'color',
   ])
   const chartContext = useChartContext()
   const layout = usePolarLayout()
@@ -70,6 +73,7 @@ const Radar = (props: RadarProps) => {
     dataKey: () => localProps.dataKey,
     stackId: () => undefined,
     data,
+    color: () => localProps.color,
     chartContext,
   })
 

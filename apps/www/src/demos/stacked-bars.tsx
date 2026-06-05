@@ -17,8 +17,8 @@ export default function StackedBars() {
   return (
     <Chart data={sales}>
       <Legend class="text-xs" />
-      <Bar dataKey="coffee" name="Coffee" stackId="s" class="text-blue-400" />
-      <Bar dataKey="tea" name="Tea" stackId="s" class="text-emerald-400" />
+      <Bar dataKey="coffee" name="Coffee" stackId="s" class="text-blue-400" color="#60a5fa" />
+      <Bar dataKey="tea" name="Tea" stackId="s" class="text-emerald-400" color="#34d399" />
       <Axis axis="y" position="left" tickCount={4}>
         <AxisLabel />
         <AxisGrid class="stroke-black/10" />

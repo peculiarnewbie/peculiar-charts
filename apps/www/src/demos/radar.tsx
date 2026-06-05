@@ -32,6 +32,7 @@ export default function RadarDemo() {
           dataKey="alice"
           name="Alice"
           class="text-violet-500"
+          color="#8b5cf6"
           stroke-width={2}
           fillOpacity={0.25}
         />
@@ -39,6 +40,7 @@ export default function RadarDemo() {
           dataKey="bob"
           name="Bob"
           class="text-emerald-500"
+          color="#10b981"
           stroke-width={2}
           fillOpacity={0.2}
         />

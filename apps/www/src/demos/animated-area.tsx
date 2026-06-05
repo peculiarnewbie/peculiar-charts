@@ -60,6 +60,7 @@ export default function AnimatedArea() {
           dataKey="coffee"
           name="Coffee"
           class="text-blue-500"
+          color="#3b82f6"
           fill-opacity={0.3}
           stroke-width={2}
           animation
@@ -68,6 +69,7 @@ export default function AnimatedArea() {
           dataKey="tea"
           name="Tea"
           class="text-emerald-500"
+          color="#10b981"
           fill-opacity={0.3}
           stroke-width={2}
           animation

@@ -28,8 +28,8 @@ export default function CustomLegend() {
           </>
         )}
       />
-      <Bar dataKey="coffee" name="Coffee" class="text-blue-400" />
-      <Bar dataKey="tea" name="Tea" class="text-emerald-400" />
+      <Bar dataKey="coffee" name="Coffee" class="text-blue-400" color="#60a5fa" />
+      <Bar dataKey="tea" name="Tea" class="text-emerald-400" color="#34d399" />
       <Axis axis="y" position="left" tickCount={4}>
         <AxisLabel />
         <AxisGrid class="stroke-black/10" />
@@ -38,7 +38,7 @@ export default function CustomLegend() {
         <AxisLabel />
         <AxisLine class="stroke-black" />
       </Axis>
-      <Line dataKey="coffee" class="text-blue-700" stroke-width={2} />
+      <Line dataKey="coffee" class="text-blue-700" color="#1d4ed8" stroke-width={2} />
     </Chart>
   )
 }

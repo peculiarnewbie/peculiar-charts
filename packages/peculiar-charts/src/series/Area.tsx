@@ -52,6 +52,8 @@ export type AreaProps = OverrideProps<
     dot?: DotRenderer
     /** Marker at the point nearest the pointer (hover highlight). */
     activeDot?: DotRenderer
+    /** Explicit colour for legend / tooltip swatches. */
+    color?: string
     /** Animation configuration. */
     animation?: AnimationOptions
   } & PointEvents
@@ -80,6 +82,7 @@ const Area = (props: AreaProps) => {
       'negativeFill',
       'dot',
       'activeDot',
+      'color',
       'animation',
     ],
     ['onPointClick', 'onPointEnter', 'onPointLeave'],
@@ -98,6 +101,7 @@ const Area = (props: AreaProps) => {
     dataKey: () => localProps.dataKey,
     stackId: () => localProps.stackId,
     data,
+    color: () => localProps.color,
     chartContext,
   })
 

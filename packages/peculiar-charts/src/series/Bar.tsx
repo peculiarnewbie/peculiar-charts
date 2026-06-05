@@ -46,6 +46,8 @@ export type BarProps = OverrideProps<
     layout?: BarLayout
     /** Custom bar rendering — bool, props-object, or function. @defaultValue `true` */
     shape?: BarShapeRenderer
+    /** Explicit colour for legend / tooltip swatches. */
+    color?: string
     /** Animation configuration. */
     animation?: AnimationOptions
   } & PointEvents
@@ -80,6 +82,7 @@ const Bar = (props: BarProps) => {
       'stackId',
       'layout',
       'shape',
+      'color',
       'animation',
     ],
     ['onPointClick', 'onPointEnter', 'onPointLeave'],
@@ -110,6 +113,7 @@ const Bar = (props: BarProps) => {
     dataKey: () => localProps.dataKey,
     stackId: () => localProps.stackId,
     data,
+    color: () => localProps.color,
     chartContext,
   })
 

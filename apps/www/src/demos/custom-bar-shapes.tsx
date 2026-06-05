@@ -28,6 +28,7 @@ export default function CustomBarShapes() {
           dataKey="coffee"
           name="Coffee"
           class="text-blue-500"
+          color="#3b82f6"
           shape={{ rx: 6, ry: 6 }}
           onPointClick={(d) =>
             setPicked({ day: sales[d.index]!.day, v: d.value })
@@ -37,6 +38,7 @@ export default function CustomBarShapes() {
           dataKey="tea"
           name="Tea"
           class="text-emerald-500"
+          color="#10b981"
           shape={(bar) => (
             <rect
               x={bar.x + 2}

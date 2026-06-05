@@ -2,10 +2,7 @@ import { createWritableMemo } from '@solid-primitives/memo'
 import { PolarAxisContext } from '@src/axis/polar/context'
 import { useChartContext } from '@src/components/context'
 import { usePolarLayout } from '@src/lib/polar/context'
-import {
-  createPolarRadiusScale,
-  polarScaleTicks,
-} from '@src/lib/polar/scale'
+import { createPolarRadiusScale, polarScaleTicks } from '@src/lib/polar/scale'
 import { type JSX, createEffect, mergeProps, onCleanup } from 'solid-js'
 
 export type PolarRadiusAxisProps = {
@@ -17,7 +14,7 @@ export type PolarRadiusAxisProps = {
   tickValues?: any[]
   /** Numeric domain override. @defaultValue `'auto'` */
   axisRange?: 'auto' | [number | 'min', number | 'max']
-  /** Angle in radians where radius ticks are drawn. @defaultValue `-π/2` (top) */
+  /** Angle in radians where radius ticks are drawn. @defaultValue `0` (right) */
   angle?: number
   children?: JSX.Element
 }
@@ -29,7 +26,7 @@ const PolarRadiusAxis = (props: PolarRadiusAxisProps) => {
       axisId: 'radius',
       tickCount: 5,
       axisRange: 'auto' as const,
-      angle: -Math.PI / 2,
+      angle: 0,
     },
     props,
   )

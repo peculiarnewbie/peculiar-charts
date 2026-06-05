@@ -53,8 +53,8 @@ export default function AnimatedBars() {
           <AxisLine class="stroke-black" />
         </Axis>
         <Legend class="text-xs" />
-        <Bar dataKey="revenue" name="Revenue" class="text-blue-500" animation />
-        <Bar dataKey="costs" name="Costs" class="text-rose-400" animation />
+        <Bar dataKey="revenue" name="Revenue" class="text-blue-500" color="#3b82f6" animation />
+        <Bar dataKey="costs" name="Costs" class="text-rose-400" color="#fb7185" animation />
       </Chart>
     </div>
   )

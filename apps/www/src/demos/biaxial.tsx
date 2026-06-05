@@ -29,6 +29,7 @@ export default function Biaxial() {
         dataKey="coffee"
         name="Coffee"
         class="text-blue-600"
+        color="#2563eb"
         stroke-width={2}
       />
       <Line
@@ -36,6 +37,7 @@ export default function Biaxial() {
         name="Revenue"
         yAxisId="revenue"
         class="text-emerald-600"
+        color="#059669"
         stroke-width={2}
       />
     </Chart>

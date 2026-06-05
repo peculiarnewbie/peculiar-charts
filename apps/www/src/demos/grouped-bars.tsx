@@ -24,9 +24,9 @@ export default function GroupedBars() {
         <AxisLine class="stroke-black" />
         <AxisMark class="stroke-black" />
       </Axis>
-      <Bar dataKey="coffee" name="Coffee" class="text-blue-400" />
-      <Bar dataKey="tea" name="Tea" class="text-emerald-400" />
-      <Line dataKey="coffee" class="text-blue-700" stroke-width={3} />
+      <Bar dataKey="coffee" name="Coffee" class="text-blue-400" color="#60a5fa" />
+      <Bar dataKey="tea" name="Tea" class="text-emerald-400" color="#34d399" />
+      <Line dataKey="coffee" class="text-blue-700" color="#1d4ed8" stroke-width={3} />
     </Chart>
   )
 }

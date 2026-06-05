@@ -44,6 +44,8 @@ export type LineProps = OverrideProps<
     dot?: DotRenderer
     /** Marker at the point nearest the pointer (hover highlight). */
     activeDot?: DotRenderer
+    /** Explicit colour for legend / tooltip swatches. */
+    color?: string
     /** Animation configuration. */
     animation?: AnimationOptions
   } & PointEvents
@@ -69,6 +71,7 @@ const Line = (props: LineProps) => {
       'stackId',
       'dot',
       'activeDot',
+      'color',
       'animation',
     ],
     ['onPointClick', 'onPointEnter', 'onPointLeave'],
@@ -87,6 +90,7 @@ const Line = (props: LineProps) => {
     dataKey: () => localProps.dataKey,
     stackId: () => localProps.stackId,
     data,
+    color: () => localProps.color,
     chartContext,
   })
 

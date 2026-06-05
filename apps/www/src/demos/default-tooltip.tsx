@@ -25,8 +25,8 @@ export default function DefaultTooltip() {
         <AxisCrosshair stroke-dasharray="6,6" class="stroke-black/60" />
         <AxisTooltip class={TOOLTIP_SHELL} />
       </Axis>
-      <Line dataKey="coffee" name="Coffee" class="text-blue-500" stroke-width={2} />
-      <Line dataKey="tea" name="Tea" class="text-emerald-500" stroke-width={2} />
+      <Line dataKey="coffee" name="Coffee" class="text-blue-500" color="#3b82f6" stroke-width={2} />
+      <Line dataKey="tea" name="Tea" class="text-emerald-500" color="#10b981" stroke-width={2} />
     </Chart>
   )
 }

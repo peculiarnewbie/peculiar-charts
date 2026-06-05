@@ -58,6 +58,8 @@ export type BubbleProps = OverrideProps<
     activeProps?: Omit<ComponentProps<'circle'>, 'cx' | 'cy' | 'r'>
     /** Render a custom marker per bubble instead of a `<circle>`. */
     children?: (datum: BubbleDatum) => JSX.Element
+    /** Explicit colour for legend / tooltip swatches. */
+    color?: string
     /** Animation configuration. */
     animation?: AnimationOptions
   } & PointEvents
@@ -105,6 +107,7 @@ const Bubble = (props: BubbleProps) => {
       'yAxisId',
       'activeProps',
       'children',
+      'color',
       'animation',
     ],
     ['onPointClick', 'onPointEnter', 'onPointLeave'],
@@ -126,6 +129,7 @@ const Bubble = (props: BubbleProps) => {
     dataKey: () => localProps.dataKey,
     stackId: () => undefined,
     data,
+    color: () => localProps.color,
     chartContext,
   })
 

@@ -39,8 +39,8 @@ export default function RadarCustomTooltipDemo() {
         <PolarRadiusAxis tickCount={4}>
           <PolarGrid class="stroke-zinc-300" stroke-width={1} />
         </PolarRadiusAxis>
-        <Radar dataKey="alice" name="Alice" class="text-violet-500" fillOpacity={0.2} />
-        <Radar dataKey="bob" name="Bob" class="text-emerald-500" fillOpacity={0.15} />
+        <Radar dataKey="alice" name="Alice" class="text-violet-500" color="#8b5cf6" fillOpacity={0.2} />
+        <Radar dataKey="bob" name="Bob" class="text-emerald-500" color="#10b981" fillOpacity={0.15} />
       </PolarLayout>
     </Chart>
   )

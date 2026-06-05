@@ -29,12 +29,19 @@ export const createPolarAngleScale = (props: {
       domain.kind === 'categorical'
         ? domain.values.map(String)
         : []
+    const start = props.layout.startAngle()
+    const end = props.layout.endAngle()
+    const range = end - start
+    // When the angular range is a full circle, the last point would overlap
+    // the first if placed at endAngle. Shrink the range so the step becomes
+    // 2π / n instead of 2π / (n − 1), giving evenly-spaced spokes with no overlap.
+    const fullCircle = Math.abs(range - 2 * Math.PI) < 0.001
+    const adjustedEnd = fullCircle && values.length > 1
+      ? start + range * (values.length - 1) / values.length
+      : end
     return {
       type: 'angle' as const,
-      scale: scalePoint<string>(values, [
-        props.layout.startAngle(),
-        props.layout.endAngle(),
-      ]),
+      scale: scalePoint<string>(values, [start, adjustedEnd]),
     }
   })
 
