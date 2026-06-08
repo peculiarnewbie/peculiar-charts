@@ -39,7 +39,20 @@ const createBaseLine = (props: {
     const thisIdx = stackDataKeys.indexOf(props.dataKey() ?? '')
     if (thisIdx <= 0) return zero
 
+    const expand = ctx.stackOffset?.() === 'expand'
+
     return props.data().map((_, i) => {
+      if (expand) {
+        let total = 0
+        for (const key of stackDataKeys)
+          total += stack.get(key)?.values[i] ?? 0
+        if (total === 0) return projectScale(_scale, 0)
+        let baseLine = 0
+        for (let s = 0; s < thisIdx; s++)
+          baseLine += stack.get(stackDataKeys[s]!)?.values[i] ?? 0
+        return projectScale(_scale, baseLine / total)
+      }
+
       let baseLine = 0
       for (let s = 0; s < thisIdx; s++) {
         baseLine += stack.get(stackDataKeys[s]!)?.values[i] ?? 0

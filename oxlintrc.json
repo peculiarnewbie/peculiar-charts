@@ -1,0 +1,10 @@
+{
+  "$schema": "https://oxc-project.github.io/docs/guide/usage/linter/config-file",
+  "rules": {
+    "no-unused-vars": "error",
+    "no-non-null-assertion": "off",
+    "no-parameter-assign": "off",
+    "no-explicit-any": "off"
+  },
+  "ignorePatterns": ["**/dist/**", "**/node_modules/**"]
+}

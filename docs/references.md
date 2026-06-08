@@ -39,3 +39,8 @@ When comparing implementations, use paths relative to those clones, for example:
 
 Do **not** vendor clones at the repository root (`/solid-charts`, etc.) — keep everything
 under `references/` so `.gitignore` stays predictable.
+
+## Analysis docs
+
+- `docs/extensibility.md` — extensibility comparison (hooks, render-props, custom series)
+- `docs/feature-parity.md` — Line & Area chart feature parity vs Recharts' 33 examples

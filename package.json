@@ -9,14 +9,21 @@
     "dev": "pnpm --filter peculiar-charts build && pnpm --filter @peculiar-charts/www dev",
     "dev:www": "pnpm --filter @peculiar-charts/www dev",
     "deploy": "pnpm run build:www && pnpm --filter @peculiar-charts/www deploy",
-    "lint": "biome check",
-    "lint:fix": "biome check --fix",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint . --fix",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "typecheck": "pnpm --filter peculiar-charts build && pnpm --filter @peculiar-charts/www typecheck",
     "publish:lib": "pnpm --filter peculiar-charts release"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
-    "typescript": "^5.8.3"
+    "@typescript/native-preview": "7.0.0-dev.20260607.1",
+    "oxfmt": "^0.53.0",
+    "oxlint": "^1.68.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.8"
   },
   "packageManager": "pnpm@11.5.0"
 }

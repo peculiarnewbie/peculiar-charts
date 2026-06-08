@@ -34,6 +34,8 @@ export type BarProps = OverrideProps<
   {
     /** Data key for the y-values. Omit for plain number arrays. */
     dataKey?: string
+    /** Per-series data array. Overrides chart-level `data` for this series. */
+    data?: unknown[]
     /** Display name for legends/tooltips. @defaultValue `dataKey` */
     name?: string
     /** Bound x-axis id. @defaultValue `'x'` */
@@ -77,6 +79,7 @@ const Bar = (props: BarProps) => {
     [
       'dataKey',
       'name',
+      'data',
       'xAxisId',
       'yAxisId',
       'stackId',
@@ -98,8 +101,13 @@ const Bar = (props: BarProps) => {
     onCleanup(() => chartContext.unregisterBar(key))
   })
 
+  const seriesRawData = () => localProps.data
+
   const data = createMemo(() =>
-    accessData<number>(chartContext.displayedData(), localProps.dataKey),
+    accessData<number>(
+      localProps.data ?? chartContext.displayedData(),
+      localProps.dataKey,
+    ),
   )
 
   createSeries({
@@ -124,6 +132,7 @@ const Bar = (props: BarProps) => {
     dataKey: () => localProps.dataKey,
     stackId: () => localProps.stackId,
     data,
+    seriesData: seriesRawData,
     chartContext,
   })
 

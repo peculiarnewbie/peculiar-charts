@@ -19,6 +19,9 @@ const createPoints = (props: {
   dataKey: Accessor<string | undefined>
   stackId: Accessor<string | undefined>
   data: Accessor<number[]>
+  /** Per-series raw data for category extraction. When set, `axisValues` reads
+   * category positions from this instead of `ctx.displayedData()`. */
+  seriesData?: Accessor<unknown[] | undefined>
   chartContext: ChartContextType
 }) => {
   const ctx = props.chartContext
@@ -45,19 +48,32 @@ const createPoints = (props: {
       ctx,
       horizontal ? props.yAxisId() : props.xAxisId(),
       horizontal ? 'y' : 'x',
+      props.seriesData?.(),
     )
     const categoryScale = horizontal ? _yScale : _xScale
     const valueScale = horizontal ? _xScale : _yScale
 
     const stackId = props.stackId()
     const stack = stackId !== undefined && ctx.stacks().get(stackId)
+    const expand = ctx.stackOffset?.() === 'expand'
 
     return data.map((value, i) => {
       let stacked = value
       if (stack) {
         const stackDataKeys = [...stack.keys()]
         const thisIdx = stackDataKeys.indexOf(props.dataKey() ?? '')
-        if (thisIdx > 0) {
+        if (expand) {
+          let total = 0
+          for (const key of stackDataKeys)
+            total += stack.get(key)?.values[i] ?? 0
+          if (total !== 0) {
+            for (let s = 0; s < thisIdx; s++)
+              stacked += stack.get(stackDataKeys[s]!)?.values[i] || 0
+            stacked = stacked / total
+          } else {
+            stacked = 0
+          }
+        } else if (thisIdx > 0) {
           for (let s = 0; s < thisIdx; s++) {
             stacked += stack.get(stackDataKeys[s]!)?.values[i] || 0
           }

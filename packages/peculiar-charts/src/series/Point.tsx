@@ -6,6 +6,7 @@ import {
   createPresence,
   resolveAnimation,
 } from '@src/lib/animation'
+import type { BarLayout } from '@src/lib/createBands'
 import createClosestTick from '@src/lib/createClosestTick'
 import createPoints from '@src/lib/createPoints'
 import createScale from '@src/lib/createScale'
@@ -37,6 +38,8 @@ export type PointProps = OverrideProps<
   {
     /** Data key for the y-values. Omit for plain number arrays. */
     dataKey?: string
+    /** Per-series data array. Overrides chart-level `data` for this series. */
+    data?: unknown[]
     /** Display name for legends/tooltips. @defaultValue `dataKey` */
     name?: string
     /** Bound x-axis id. @defaultValue `'x'` */
@@ -45,6 +48,8 @@ export type PointProps = OverrideProps<
     yAxisId?: string
     /** Stack id — series sharing one stack are stacked. */
     stackId?: string
+    /** Point orientation. `'horizontal'` swaps axes: categories on Y, values on X. @defaultValue `'vertical'` */
+    layout?: BarLayout
     /** `<circle>` props applied when the point is the active (hovered) one. */
     activeProps?: Omit<ComponentProps<'circle'>, 'cx' | 'cy'>
     /** Render a custom marker per point (e.g. an image or emoji) instead of a
@@ -65,7 +70,13 @@ export type PointProps = OverrideProps<
 const Point = (props: PointProps) => {
   const seriesId = createUniqueId()
   const defaultedProps = mergeProps(
-    { xAxisId: 'x', yAxisId: 'y', r: 4, fill: 'currentColor' },
+    {
+      xAxisId: 'x',
+      yAxisId: 'y',
+      layout: 'vertical' as const,
+      r: 4,
+      fill: 'currentColor',
+    },
     props,
   )
   const [localProps, eventProps, otherProps] = splitProps(
@@ -73,9 +84,11 @@ const Point = (props: PointProps) => {
     [
       'dataKey',
       'name',
+      'data',
       'xAxisId',
       'yAxisId',
       'stackId',
+      'layout',
       'activeProps',
       'children',
       'color',
@@ -84,16 +97,25 @@ const Point = (props: PointProps) => {
     ['onPointClick', 'onPointEnter', 'onPointLeave'],
   )
   const chartContext = useChartContext()
+  const horizontal = () => localProps.layout === 'horizontal'
+
+  const seriesRawData = () => localProps.data
 
   const data = createMemo(() =>
-    accessData<number>(chartContext.displayedData(), localProps.dataKey),
+    accessData<number>(
+      localProps.data ?? chartContext.displayedData(),
+      localProps.dataKey,
+    ),
   )
 
   createSeries({
     seriesId,
     name: () => localProps.name ?? localProps.dataKey ?? 'series',
     type: 'point',
+    xAxisId: () => localProps.xAxisId,
     yAxisId: () => localProps.yAxisId,
+    valueAxisId: () =>
+      horizontal() ? localProps.xAxisId : localProps.yAxisId,
     dataKey: () => localProps.dataKey,
     stackId: () => localProps.stackId,
     data,
@@ -102,24 +124,30 @@ const Point = (props: PointProps) => {
   })
 
   const points = createPoints({
+    layout: () => localProps.layout,
     xAxisId: () => localProps.xAxisId,
     yAxisId: () => localProps.yAxisId,
     dataKey: () => localProps.dataKey,
     stackId: () => localProps.stackId,
     data,
+    seriesData: seriesRawData,
     chartContext,
   })
 
-  const xScale = createScale({
-    axisId: () => localProps.xAxisId,
-    orientation: () => 'x',
+  const categoryAxis = () => (horizontal() ? 'y' : 'x')
+  const categoryAxisId = () =>
+    horizontal() ? localProps.yAxisId : localProps.xAxisId
+
+  const categoryScale = createScale({
+    axisId: categoryAxisId,
+    orientation: categoryAxis,
     chartContext,
   })
 
   const closestTick = createClosestTick({
-    axis: () => 'x',
-    scale: xScale,
-    values: () => axisValues(chartContext, localProps.xAxisId, 'x'),
+    axis: categoryAxis,
+    scale: categoryScale,
+    values: () => axisValues(chartContext, categoryAxisId(), categoryAxis()),
     chartContext,
   })
 

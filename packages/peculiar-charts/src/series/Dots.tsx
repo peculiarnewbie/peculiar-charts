@@ -17,22 +17,30 @@ const DotsLayer = (props: {
   points: Accessor<[number, number][]>
   data: Accessor<number[]>
   xAxisId: Accessor<string>
+  yAxisId?: Accessor<string>
+  layout?: Accessor<'vertical' | 'horizontal'>
   dot?: DotRenderer
   activeDot?: DotRenderer
   events: PointEvents
 }) => {
   const ctx = useChartContext()
+  const layout = () => props.layout?.() ?? 'vertical'
+  const categoryAxis = () => (layout() === 'horizontal' ? 'y' : 'x')
+  const categoryAxisId = () =>
+    layout() === 'horizontal'
+      ? (props.yAxisId?.() ?? 'y')
+      : props.xAxisId()
 
-  const xScale = createScale({
-    axisId: props.xAxisId,
-    orientation: () => 'x',
+  const categoryScale = createScale({
+    axisId: categoryAxisId,
+    orientation: categoryAxis,
     chartContext: ctx,
   })
 
   const closestTick = createClosestTick({
-    axis: () => 'x',
-    scale: xScale,
-    values: () => axisValues(ctx, props.xAxisId(), 'x'),
+    axis: categoryAxis,
+    scale: categoryScale,
+    values: () => axisValues(ctx, categoryAxisId(), categoryAxis()),
     chartContext: ctx,
   })
 

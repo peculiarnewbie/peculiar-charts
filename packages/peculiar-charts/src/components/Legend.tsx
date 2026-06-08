@@ -1,6 +1,6 @@
 import { dataIf } from '@corvu/utils'
 import { combineStyle } from '@corvu/utils/dom'
-import { useChartContext } from '@src/components/context'
+import { type SeriesMeta, useChartContext } from '@src/components/context'
 import {
   type LegendItemRenderer,
   renderLegendItem,
@@ -22,6 +22,10 @@ export type LegendProps = OverrideProps<
     content?: LegendItemRenderer
     /** Per-series legend item renderer. Alias: see `content`. */
     children?: LegendItemRenderer
+    /** Fired when the pointer enters a legend item. */
+    onMouseEnter?: (series: SeriesMeta, event: MouseEvent) => void
+    /** Fired when the pointer leaves a legend item. */
+    onMouseLeave?: (series: SeriesMeta, event: MouseEvent) => void
   }
 >
 
@@ -41,6 +45,8 @@ const Legend = (props: LegendProps) => {
     'content',
     'children',
     'style',
+    'onMouseEnter',
+    'onMouseLeave',
   ])
   const chartContext = useChartContext()
   const itemRenderer = () =>
@@ -71,6 +77,8 @@ const Legend = (props: LegendProps) => {
               onClick={() =>
                 localProps.interactive && chartContext.toggleSeries(series.id)
               }
+              onMouseEnter={(e) => localProps.onMouseEnter?.(series, e)}
+              onMouseLeave={(e) => localProps.onMouseLeave?.(series, e)}
               style={{
                 display: 'flex',
                 'align-items': 'center',

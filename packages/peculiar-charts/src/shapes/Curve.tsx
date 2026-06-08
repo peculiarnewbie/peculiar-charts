@@ -22,13 +22,15 @@ export type CurveProps = OverrideProps<
     curve?: CurveFactory
     baseLine?: number | number[]
     connectNulls?: boolean
+    /** When `'horizontal'`, the baseline runs along the x-axis instead of y. */
+    layout?: 'vertical' | 'horizontal'
   }
 >
 
 /** Renders a `<path>` from points, optionally as a filled area to a baseline. */
 const Curve = (props: CurveProps) => {
   const defaultedProps = mergeProps(
-    { baseLine: null, curve: curveLinear, connectNulls: false },
+    { baseLine: null, curve: curveLinear, connectNulls: false, layout: 'vertical' as const },
     props,
   )
   const [localProps, otherProps] = splitProps(defaultedProps, [
@@ -36,6 +38,7 @@ const Curve = (props: CurveProps) => {
     'curve',
     'baseLine',
     'connectNulls',
+    'layout',
   ])
 
   const path = createMemo(() =>
@@ -44,6 +47,7 @@ const Curve = (props: CurveProps) => {
       localProps.points,
       localProps.baseLine,
       localProps.connectNulls,
+      localProps.layout,
     ),
   )
 
@@ -55,9 +59,10 @@ const getPath = (
   points: [number, number][],
   baseLine: number | number[] | null,
   connectNulls: boolean,
+  layout: 'vertical' | 'horizontal',
 ) => {
   if (connectNulls) {
-    return createPathSegment(curve, points.filter(pointDefined), baseLine)
+    return createPathSegment(curve, points.filter(pointDefined), baseLine, layout)
   }
 
   const segments: [number, number][][] = []
@@ -75,7 +80,7 @@ const getPath = (
   if (current.length > 0) segments.push(current)
 
   return segments
-    .map((segment) => createPathSegment(curve, segment, baseLine))
+    .map((segment) => createPathSegment(curve, segment, baseLine, layout))
     .join(' ')
 }
 
@@ -83,6 +88,7 @@ const createPathSegment = (
   curve: CurveFactory,
   points: [number, number][],
   baseLine: number | number[] | null,
+  layout: 'vertical' | 'horizontal',
 ) => {
   let fn: Line<[number, number]> | Area<[number, number]>
   if (baseLine === null) {
@@ -90,9 +96,18 @@ const createPathSegment = (
   } else if (Array.isArray(baseLine)) {
     fn = area()
       .curve(curve)
-      .y0((_, i) => baseLine[i] ?? 0)
+    if (layout === 'horizontal') {
+      fn = (fn as Area<[number, number]>).x0((_, i) => baseLine[i] ?? 0)
+    } else {
+      fn = (fn as Area<[number, number]>).y0((_, i) => baseLine[i] ?? 0)
+    }
   } else {
-    fn = area().curve(curve).y0(baseLine)
+    fn = area().curve(curve)
+    if (layout === 'horizontal') {
+      fn = (fn as Area<[number, number]>).x0(baseLine)
+    } else {
+      fn = (fn as Area<[number, number]>).y0(baseLine)
+    }
   }
   return fn(points)
 }

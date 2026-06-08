@@ -55,6 +55,12 @@ const createSeries = (props: {
   createEffect(() => {
     if (!ctx.isSeriesVisible(props.seriesId)) return
 
+    if (ctx.stackOffset?.() === 'expand') {
+      ctx.registerExtent(valueAxisId(), props.seriesId, { min: 0, max: 1 })
+      onCleanup(() => ctx.unregisterExtent(valueAxisId(), props.seriesId))
+      return
+    }
+
     const stackId = props.stackId()
     const stack = stackId !== undefined && ctx.stacks().get(stackId)
     const data = props.data()

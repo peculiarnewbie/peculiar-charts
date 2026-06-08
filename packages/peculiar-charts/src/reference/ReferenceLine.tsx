@@ -13,6 +13,8 @@ import {
 export type ReferenceLineProps = OverrideProps<
   Omit<ComponentProps<'line'>, 'x1' | 'y1' | 'x2' | 'y2'>,
   {
+    /** Two data-space points — draws a segment between arbitrary x/y values. */
+    segment?: [{ x: any; y: any }, { x: any; y: any }]
     /** Value on the x-axis — draws a vertical line. */
     x?: any
     /** Value on the y-axis — draws a horizontal line. */
@@ -38,6 +40,7 @@ const ReferenceLine = (props: ReferenceLineProps) => {
     props,
   )
   const [localProps, otherProps] = splitProps(defaultedProps, [
+    'segment',
     'x',
     'y',
     'xAxisId',
@@ -63,6 +66,17 @@ const ReferenceLine = (props: ReferenceLineProps) => {
     const right = ctx.width() - ctx.getInset('right')
     const top = ctx.getInset('top')
     const bottom = ctx.height() - ctx.getInset('bottom')
+    if (localProps.segment) {
+      const [start, end] = localProps.segment
+      return {
+        x1: projectScale(xScale(), start.x),
+        y1: projectScale(yScale(), start.y),
+        x2: projectScale(xScale(), end.x),
+        y2: projectScale(yScale(), end.y),
+        lx: projectScale(xScale(), start.x),
+        ly: projectScale(yScale(), start.y),
+      }
+    }
     if (localProps.y !== undefined) {
       const p = projectScale(yScale(), localProps.y)
       return { x1: left, x2: right, y1: p, y2: p, lx: left, ly: p }

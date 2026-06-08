@@ -8,6 +8,27 @@ import {
   untrack,
 } from 'solid-js'
 
+/**
+ * Animation metadata forwarded to custom chart shapes.
+ *
+ * These props let a shape react to the current animation state without needing
+ * to know how its parent chart component computes the animated geometry.
+ */
+export type ShapeAnimationProps = {
+  /**
+   * Raw animation progress in the `[0, 1]` range (before easing).
+   * `0` at the start of the animation, `1` at the end.
+   */
+  animationElapsedTime?: number
+  /** Whether the series is currently animating. */
+  isAnimating?: boolean
+  /**
+   * Whether this is the initial entrance animation (first render).
+   * Subsequent data-change animations have `isEntrance = false`.
+   */
+  isEntrance?: boolean
+}
+
 export type AnimationEasing =
   | 'linear'
   | 'ease'
@@ -246,6 +267,7 @@ export const createTweenedArray = <T>(
   options: Accessor<ResolvedAnimationOptions>,
   interpolate: (a: T, b: T, t: number) => T,
   enterValue: (target: T, index: number, prev: T[]) => T,
+  onProgress?: (elapsed: number) => void,
 ): Accessor<T[]> => {
   const initial = source()
   const [animated, setAnimated] = createSignal<T[]>(initial)
@@ -283,6 +305,7 @@ export const createTweenedArray = <T>(
         for (let i = 0; i < len; i++) arr.push(interpolate(from[i]!, to[i]!, t))
         for (let i = len; i < to.length; i++) arr.push(to[i]!)
         setAnimated(arr)
+        onProgress?.(progress)
         if (progress < 1) {
           raf = undefined
           run()
@@ -318,6 +341,7 @@ export const createTweenedArray = <T>(
     if (disabled) {
       cancelAnim()
       setAnimated(() => src)
+      onProgress?.(1)
       return
     }
 

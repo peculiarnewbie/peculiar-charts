@@ -25,12 +25,17 @@ const createScale = (props: {
     if (orientation === 'x') {
       // point/linear x-scales inset by half a band so markers centre over bars
       const barPadding = config.type === 'band' ? 0 : getBarPadding(ctx)
-      start = ctx.getInset('left') + barPadding
-      end = ctx.width() - ctx.getInset('right') - barPadding
+      start = ctx.getInset('left') + barPadding + (config.padding?.left ?? 0)
+      end =
+        ctx.width() -
+        ctx.getInset('right') -
+        barPadding -
+        (config.padding?.right ?? 0)
     } else {
       // value axis grows upward → inverted pixel range
-      start = ctx.height() - ctx.getInset('bottom')
-      end = ctx.getInset('top')
+      start =
+        ctx.height() - ctx.getInset('bottom') - (config.padding?.bottom ?? 0)
+      end = ctx.getInset('top') + (config.padding?.top ?? 0)
     }
 
     if (domain.kind === 'categorical') {

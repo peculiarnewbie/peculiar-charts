@@ -5,6 +5,7 @@ export type AxisContextType = {
   axisId: Accessor<string>
   axis: Accessor<'x' | 'y'>
   position: Accessor<'top' | 'right' | 'bottom' | 'left'>
+  tickFormatter: Accessor<(value: any) => string>
   scale: Accessor<Scale>
   ticks: Accessor<any[]>
   /** Ticks that survived label-collision filtering (shared by Label/Grid/Mark). */

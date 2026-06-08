@@ -17,10 +17,15 @@ export type AxisProps = {
   tickCount?: number
   /** Force specific tick values. */
   tickValues?: any[]
+  /** Format tick values for default axis labels. */
+  tickFormatter?: (value: any) => string
   /** Numeric domain override. @defaultValue `'auto'` */
   axisRange?: 'auto' | [number | 'min', number | 'max']
   /** Reverse the axis direction. */
   reverse?: boolean
+  /** Pixel padding at axis edges. Prevents data points from sitting flush
+   *  against the chart boundary. */
+  padding?: { left?: number; right?: number; top?: number; bottom?: number }
   /** @hidden */
   children?: JSX.Element
 } & (XAxisProps | YAxisProps)
@@ -37,6 +42,7 @@ const Axis = (props: AxisProps) => {
       type: props.axis === 'x' ? ('point' as const) : ('linear' as const),
       axisId: props.axis === 'x' ? 'x' : 'y',
       tickCount: 5,
+      tickFormatter: (value: any) => String(value),
       axisRange: 'auto' as const,
       reverse: false,
     },
@@ -52,6 +58,7 @@ const Axis = (props: AxisProps) => {
       range:
         defaultedProps.axisRange === 'auto' ? null : defaultedProps.axisRange,
       reverse: defaultedProps.reverse,
+      padding: defaultedProps.padding,
     })
     onCleanup(() => chartContext.unregisterAxisConfig(defaultedProps.axisId))
   })
@@ -76,6 +83,7 @@ const Axis = (props: AxisProps) => {
         axisId: () => defaultedProps.axisId,
         axis: () => defaultedProps.axis,
         position: () => defaultedProps.position,
+        tickFormatter: () => defaultedProps.tickFormatter,
         scale,
         ticks,
         labelTicks,

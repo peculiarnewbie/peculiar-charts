@@ -94,6 +94,7 @@ import {
   type PresenceMode,
   type ResolvedAnimationOptions,
   type ResolvedPhaseConfig,
+  type ShapeAnimationProps,
   createPresence,
   createTweened,
   createTweenedArray,
@@ -157,10 +158,10 @@ import ReferenceDot, {
 import ReferenceLine, {
   type ReferenceLineProps,
 } from '@src/reference/ReferenceLine'
-import Area, { type AreaProps } from '@src/series/Area'
+import Area, { type AreaProps, type AreaShapeProps, type AreaShapeRenderer } from '@src/series/Area'
 import Bar, { type BarProps } from '@src/series/Bar'
 import Bubble, { type BubbleDatum, type BubbleProps } from '@src/series/Bubble'
-import Line, { type LineProps } from '@src/series/Line'
+import Line, { type LineProps, type LineShapeProps, type LineShapeRenderer } from '@src/series/Line'
 import Pie, { type PieProps } from '@src/series/Pie'
 import Point, { type PointDatum, type PointProps } from '@src/series/Point'
 import Radar, { type RadarProps } from '@src/series/Radar'
@@ -168,6 +169,7 @@ import SeriesLabel, {
   type SeriesLabelDatum,
   type SeriesLabelProps,
 } from '@src/series/SeriesLabel'
+import Curve from '@src/shapes/Curve'
 import type { CurveProps } from '@src/shapes/Curve'
 import PolarPolygon, { type PolarPolygonProps } from '@src/shapes/PolarPolygon'
 import Rectangle, { type RectangleProps } from '@src/shapes/Rectangle'
@@ -198,13 +200,18 @@ export type {
   PresenceMode,
   ResolvedAnimationOptions,
   ResolvedPhaseConfig,
+  ShapeAnimationProps,
   // Series
   AreaProps,
+  AreaShapeProps,
+  AreaShapeRenderer,
   BarProps,
   BarLayout,
   BubbleProps,
   BubbleDatum,
   LineProps,
+  LineShapeProps,
+  LineShapeRenderer,
   PieProps,
   RadarProps,
   PointProps,
@@ -308,6 +315,7 @@ export {
   ReferenceArea,
   ReferenceDot,
   // Shape primitives
+  Curve,
   Dot,
   BarShape,
   LabelLine,

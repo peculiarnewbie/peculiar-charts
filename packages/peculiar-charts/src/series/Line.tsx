@@ -2,10 +2,12 @@ import { useChartContext } from '@src/components/context'
 import {
   type AnimationOptions,
   type ResolvedAnimationOptions,
+  type ShapeAnimationProps,
   createTweenedArray,
   interpolatePoint,
   resolveAnimation,
 } from '@src/lib/animation'
+import type { BarLayout } from '@src/lib/createBands'
 import createPoints from '@src/lib/createPoints'
 import createSeries from '@src/lib/createSeries'
 import type { DotRenderer, PointEvents } from '@src/lib/markers'
@@ -16,18 +18,34 @@ import Curve from '@src/shapes/Curve'
 import type { CurveFactory } from 'd3-shape'
 import {
   type ComponentProps,
+  type JSX,
   Show,
   createMemo,
+  createSignal,
   createUniqueId,
   mergeProps,
   splitProps,
 } from 'solid-js'
+
+/** Props forwarded to a custom Line shape function. */
+export type LineShapeProps = ShapeAnimationProps &
+  Omit<ComponentProps<'path'>, 'd'> & {
+    points: [number, number][]
+  }
+
+/**
+ * How to render a custom Line shape:
+ * - a function — receives {@link LineShapeProps}, returns JSX.
+ */
+export type LineShapeRenderer = (props: LineShapeProps) => JSX.Element
 
 export type LineProps = OverrideProps<
   Omit<ComponentProps<'path'>, 'd'>,
   {
     /** Data key for the y-values. Omit for plain number arrays. */
     dataKey?: string
+    /** Per-series data array. Overrides chart-level `data` for this series. */
+    data?: unknown[]
     /** Display name for legends/tooltips. @defaultValue `dataKey` */
     name?: string
     /** Bound x-axis id. @defaultValue `'x'` */
@@ -36,6 +54,8 @@ export type LineProps = OverrideProps<
     yAxisId?: string
     /** Stack id — series sharing one stack are stacked. */
     stackId?: string
+    /** Line orientation. `'horizontal'` swaps axes: categories on Y, values on X. @defaultValue `'vertical'` */
+    layout?: BarLayout
     /** d3 curve interpolation factory. */
     curve?: CurveFactory
     /** Connect across null/missing values. */
@@ -48,6 +68,11 @@ export type LineProps = OverrideProps<
     color?: string
     /** Animation configuration. */
     animation?: AnimationOptions
+    /**
+     * Custom shape renderer. Replaces the default `<Curve>` path.
+     * Receives the computed pixel-space points, SVG path props, and animation state.
+     */
+    shape?: LineShapeRenderer
   } & PointEvents
 >
 
@@ -58,7 +83,13 @@ export type LineProps = OverrideProps<
 const Line = (props: LineProps) => {
   const seriesId = createUniqueId()
   const defaultedProps = mergeProps(
-    { xAxisId: 'x', yAxisId: 'y', stroke: 'currentColor', fill: 'none' },
+    {
+      xAxisId: 'x',
+      yAxisId: 'y',
+      layout: 'vertical' as const,
+      stroke: 'currentColor',
+      fill: 'none',
+    },
     props,
   )
   const [localProps, eventProps, otherProps] = splitProps(
@@ -66,27 +97,39 @@ const Line = (props: LineProps) => {
     [
       'dataKey',
       'name',
+      'data',
       'xAxisId',
       'yAxisId',
       'stackId',
+      'layout',
       'dot',
       'activeDot',
       'color',
       'animation',
+      'shape',
     ],
     ['onPointClick', 'onPointEnter', 'onPointLeave'],
   )
   const chartContext = useChartContext()
+  const horizontal = () => localProps.layout === 'horizontal'
+
+  const seriesRawData = () => localProps.data
 
   const data = createMemo(() =>
-    accessData<number>(chartContext.displayedData(), localProps.dataKey),
+    accessData<number>(
+      localProps.data ?? chartContext.displayedData(),
+      localProps.dataKey,
+    ),
   )
 
   createSeries({
     seriesId,
     name: () => localProps.name ?? localProps.dataKey ?? 'series',
     type: 'line',
+    xAxisId: () => localProps.xAxisId,
     yAxisId: () => localProps.yAxisId,
+    valueAxisId: () =>
+      horizontal() ? localProps.xAxisId : localProps.yAxisId,
     dataKey: () => localProps.dataKey,
     stackId: () => localProps.stackId,
     data,
@@ -95,11 +138,13 @@ const Line = (props: LineProps) => {
   })
 
   const points = createPoints({
+    layout: () => localProps.layout,
     xAxisId: () => localProps.xAxisId,
     yAxisId: () => localProps.yAxisId,
     dataKey: () => localProps.dataKey,
     stackId: () => localProps.stackId,
     data,
+    seriesData: seriesRawData,
     chartContext,
   })
 
@@ -107,21 +152,58 @@ const Line = (props: LineProps) => {
     resolveAnimation(localProps.animation),
   )
   const NaN_POINT: [number, number] = [Number.NaN, Number.NaN]
+
+  const [animElapsed, setAnimElapsed] = createSignal(1)
+  const [isAnimating, setIsAnimating] = createSignal(false)
+  const [isEntrance, setIsEntrance] = createSignal(false)
+  let firstAnimation = true
+
   const animatedPoints = createTweenedArray(
     points,
     animOpts,
     interpolatePoint,
     (target) => (Number.isNaN(target[0]) ? NaN_POINT : target),
+    (elapsed) => {
+      setAnimElapsed(elapsed)
+      if (elapsed < 1) {
+        setIsAnimating(true)
+      } else {
+        setIsAnimating(false)
+        firstAnimation = false
+      }
+    },
   )
+
+  const hasShape = () => localProps.shape !== undefined
 
   return (
     <Show when={chartContext.isSeriesVisible(seriesId)}>
-      <Curve points={animatedPoints()} data-pc-line="" {...otherProps} />
+      {hasShape() ? (
+        (() => {
+          if (firstAnimation && animOpts().enabled !== false) setIsEntrance(true)
+          return localProps.shape!({
+            points: animatedPoints(),
+            animationElapsedTime: animElapsed(),
+            isAnimating: isAnimating(),
+            isEntrance: isEntrance(),
+            ...otherProps,
+          })
+        })()
+      ) : (
+        <Curve
+          points={animatedPoints()}
+          layout={localProps.layout}
+          data-pc-line=""
+          {...otherProps}
+        />
+      )}
       <Show when={localProps.dot || localProps.activeDot}>
         <DotsLayer
           points={animatedPoints}
           data={data}
           xAxisId={() => localProps.xAxisId}
+          yAxisId={() => localProps.yAxisId}
+          layout={() => localProps.layout}
           dot={localProps.dot}
           activeDot={localProps.activeDot}
           events={eventProps}

@@ -1,3 +1,7 @@
+This is going to be the best charting library for solidjs apps. we'll be using solidjs patterns to make it more than just a port of other charting libraries
+
+This library will be performant, extensible, composable, and headless.
+
 See [docs/patterns/solid-js.md](docs/patterns/solid-js.md) for SolidJS patterns and reactivity conventions used in this codebase.
 
 ## Reference clones
