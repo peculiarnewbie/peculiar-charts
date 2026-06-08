@@ -49,6 +49,7 @@ const createScale = (props: {
     })
     if (
       !domain.userDefined &&
+      orientation !== 'x' &&
       (scale.type === 'linear' || scale.type === 'log' || scale.type === 'time')
     ) {
       scale.scale.nice()

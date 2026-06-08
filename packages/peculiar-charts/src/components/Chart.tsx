@@ -273,6 +273,20 @@ const Chart = (props: ChartProps) => {
       agg = nums.length
         ? { min: Math.min(...nums), max: Math.max(...nums) }
         : { min: 0, max: 0 }
+
+      // Also factor in registered series extents (horizontal bars, mixed charts, etc.)
+      const axisExtents = extents().get(axisId)
+      if (axisExtents) {
+        const extentAgg = [...axisExtents.values()].reduce(
+          (acc, e) => ({
+            min: Math.min(acc.min, e.min),
+            max: Math.max(acc.max, e.max),
+          }),
+          { min: Number.POSITIVE_INFINITY, max: Number.NEGATIVE_INFINITY },
+        )
+        agg.min = Math.min(agg.min, extentAgg.min)
+        agg.max = Math.max(agg.max, extentAgg.max)
+      }
     } else {
       // value axes (y / radius) aggregate registered series extents
       const axisExtents = extents().get(axisId)

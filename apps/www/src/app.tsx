@@ -21,6 +21,10 @@ import basicCode from './demos/basic?raw'
 import Biaxial from './demos/biaxial'
 import biaxialCode from './demos/biaxial?raw'
 import BrushDemo from './demos/brush'
+import BrushArea from './demos/brush-area'
+import brushAreaCode from './demos/brush-area?raw'
+import BrushBars from './demos/brush-bars'
+import brushBarsCode from './demos/brush-bars?raw'
 import brushCode from './demos/brush?raw'
 import BubbleChart from './demos/bubble'
 import bubbleCode from './demos/bubble?raw'
@@ -362,10 +366,28 @@ const DEMOS: Demo[] = [
   {
     id: 'brush',
     group: 'Brush',
-    title: 'Brush (range selector)',
+    title: 'Line + brush',
     desc: '`<Brush>` renders a draggable range selector below the chart with a mini preview. Drag the handles or the slide area to filter the visible data. Children render as a miniature of the full dataset.',
     Comp: BrushDemo,
     code: brushCode,
+    tall: true,
+  },
+  {
+    id: 'brush-area',
+    group: 'Brush',
+    title: 'Area + brush (time axis)',
+    desc: 'Area chart with a time-based x-axis and a brush. The area and line preview in the brush use lighter fills so the main chart remains visually dominant.',
+    Comp: BrushArea,
+    code: brushAreaCode,
+    tall: true,
+  },
+  {
+    id: 'brush-bars',
+    group: 'Brush',
+    title: 'Grouped bars + brush',
+    desc: 'Grouped bar series with a brush range selector. The brush preview uses the same bars at reduced opacity — drag the handles to zoom into a subset of months.',
+    Comp: BrushBars,
+    code: brushBarsCode,
     tall: true,
   },
   {

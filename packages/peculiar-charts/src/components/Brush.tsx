@@ -7,6 +7,7 @@ import {
   type ComponentProps,
   type JSX,
   Show,
+  createEffect,
   createMemo,
   createSignal,
   createUniqueId,
@@ -111,7 +112,7 @@ const Brush = (props: BrushProps) => {
   }
 
   // --- displayed data for the main chart -----------------------------------
-  createMemo(() => {
+  createEffect(() => {
     ctx.setBrushRange({
       startIndex: clampedStart(),
       endIndex: clampedEnd(),
@@ -123,7 +124,7 @@ const Brush = (props: BrushProps) => {
   // --- dimensions ----------------------------------------------------------
   const insetTotal = local.height + local.gap
   const pad = 1
-  const innerH = local.height - pad * 2
+  const innerH = () => local.height - pad * 2
 
   onMount(() => {
     ctx.registerInset('bottom', BRUSH_INSET_KEY, insetTotal)
@@ -242,13 +243,13 @@ const Brush = (props: BrushProps) => {
             x={pad}
             y={brushY() + pad}
             width={innerW()}
-            height={innerH}
+            height={innerH()}
           />
         </clipPath>
         <g clip-path={`url(#pc-brush-clip-${clipId})`}>
           <BrushContextProvider
             mainContext={ctx}
-            width={innerW()}
+            width={innerW}
             height={innerH}
             data={ctx.data}
           >

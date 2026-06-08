@@ -4,6 +4,7 @@ import {
   type ChartContextType,
   type Domain,
 } from '@src/components/context'
+import { toNumeric } from '@src/lib/utils'
 import { type Accessor, type JSX, createSignal } from 'solid-js'
 
 /**
@@ -13,8 +14,8 @@ import { type Accessor, type JSX, createSignal } from 'solid-js'
  */
 export const BrushContextProvider = (props: {
   mainContext: ChartContextType
-  width: number
-  height: number
+  width: Accessor<number>
+  height: Accessor<number>
   data: Accessor<any[]>
   children: JSX.Element
 }) => {
@@ -51,6 +52,22 @@ export const BrushContextProvider = (props: {
       }
     }
 
+    // For numeric x-axis (e.g. time), derive domain from data values
+    if (orientation === 'x') {
+      const raw = config.dataKey
+        ? accessData<unknown>(props.data(), config.dataKey)
+        : props.data().map((_, i) => i)
+      const nums = raw.map(toNumeric).filter((n): n is number => n !== null)
+      if (nums.length) {
+        return {
+          kind: 'numeric',
+          min: Math.min(...nums),
+          max: Math.max(...nums),
+          userDefined: false,
+        }
+      }
+    }
+
     return { kind: 'numeric', min: 0, max: 1, userDefined: false }
   }
 
@@ -64,8 +81,8 @@ export const BrushContextProvider = (props: {
     displayedData: props.data,
     brushRange: () => null,
     setBrushRange: noop,
-    width: () => props.width,
-    height: () => props.height,
+    width: () => props.width(),
+    height: () => props.height(),
 
     getInset: noopInset,
     registerInset: noop,
@@ -122,11 +139,11 @@ export const BrushContextProvider = (props: {
     emitterSymbol: Symbol('brush-emitter'),
 
     toSvgPosition: (pos, dim) =>
-      (pos / (dim === 'width' ? props.width : props.height)) *
-      (dim === 'width' ? props.width : props.height),
+      (pos / (dim === 'width' ? props.width() : props.height())) *
+      (dim === 'width' ? props.width() : props.height()),
     toContainerPosition: (pos, dim) =>
-      (pos / (dim === 'width' ? props.width : props.height)) *
-      (dim === 'width' ? props.width : props.height),
+      (pos / (dim === 'width' ? props.width() : props.height())) *
+      (dim === 'width' ? props.width() : props.height()),
   }
 
   return (

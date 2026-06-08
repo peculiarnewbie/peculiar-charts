@@ -21,7 +21,7 @@ export default function HorizontalBars() {
         color="#60a5fa"
       />
       <Bar dataKey="tea" name="Tea" layout="horizontal" class="text-emerald-400" color="#34d399" />
-      <Axis axis="x" position="bottom" tickCount={4}>
+      <Axis axis="x" position="bottom" type="linear" tickCount={4} axisRange={[0, 100]}>
         <AxisLabel />
         <AxisGrid class="stroke-black/10" />
       </Axis>

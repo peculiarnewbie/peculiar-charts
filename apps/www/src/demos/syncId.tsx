@@ -7,15 +7,23 @@ import {
   AxisTooltip,
   Chart,
   Line,
-  Point,
 } from 'peculiar-charts'
 import { TOOLTIP_SHELL } from '../demoStyles'
 
-const monthly = Array.from({ length: 12 }, (_, i) => ({
-  month: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'][i]!,
-  a: 40 + Math.sin((i / 12) * Math.PI * 2) * 10 + (i % 3) * 5,
-  b: 30 + Math.cos((i / 12) * Math.PI * 2) * 15 + (i % 2) * 10,
-}))
+const monthly = [
+  { month: 'Jan', revenue: 40, profit: 14 },
+  { month: 'Feb', revenue: 45, profit: 20 },
+  { month: 'Mar', revenue: 42, profit: 16 },
+  { month: 'Apr', revenue: 55, profit: 24 },
+  { month: 'May', revenue: 50, profit: 22 },
+  { month: 'Jun', revenue: 65, profit: 30 },
+  { month: 'Jul', revenue: 75, profit: 38 },
+  { month: 'Aug', revenue: 70, profit: 34 },
+  { month: 'Sep', revenue: 60, profit: 26 },
+  { month: 'Oct', revenue: 52, profit: 20 },
+  { month: 'Nov', revenue: 62, profit: 28 },
+  { month: 'Dec', revenue: 70, profit: 34 },
+]
 
 export default function SyncIdDemo() {
   return (
@@ -35,19 +43,13 @@ export default function SyncIdDemo() {
           <AxisTooltip class={TOOLTIP_SHELL} />
         </Axis>
         <Line
-          dataKey="a"
-          name="Series A"
+          dataKey="revenue"
+          name="Revenue"
           class="text-blue-500"
           color="#3b82f6"
           stroke-width={2}
-        />
-        <Point
-          dataKey="a"
-          class="text-blue-600 stroke-white"
-          color="#2563eb"
-          stroke-width={2}
-          r={3}
-          activeProps={{ r: 5 }}
+          dot={{ r: 3, fill: '#2563eb', stroke: '#ffffff', 'stroke-width': 2 }}
+          activeDot={{ r: 5, fill: '#2563eb', stroke: '#ffffff', 'stroke-width': 2 }}
         />
       </Chart>
 
@@ -66,19 +68,13 @@ export default function SyncIdDemo() {
           <AxisTooltip class={TOOLTIP_SHELL} />
         </Axis>
         <Line
-          dataKey="b"
-          name="Series B"
+          dataKey="profit"
+          name="Profit"
           class="text-emerald-500"
           color="#10b981"
           stroke-width={2}
-        />
-        <Point
-          dataKey="b"
-          class="text-emerald-600 stroke-white"
-          color="#059669"
-          stroke-width={2}
-          r={3}
-          activeProps={{ r: 5 }}
+          dot={{ r: 3, fill: '#059669', stroke: '#ffffff', 'stroke-width': 2 }}
+          activeDot={{ r: 5, fill: '#059669', stroke: '#ffffff', 'stroke-width': 2 }}
         />
       </Chart>
     </div>
