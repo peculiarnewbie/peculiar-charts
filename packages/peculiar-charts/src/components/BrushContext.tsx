@@ -13,7 +13,7 @@ import { type Accessor, type JSX, createSignal } from 'solid-js'
  * provides `displayedData` as the full data array.
  */
 export const BrushContextProvider = (props: {
-  mainContext: ChartContextType
+  mainContext: ChartContextType<any>
   width: Accessor<number>
   height: Accessor<number>
   data: Accessor<any[]>
@@ -76,7 +76,7 @@ export const BrushContextProvider = (props: {
   const emptySet = () => new Set<string>()
   const emptyMap = () => new Map<string, Map<string, any>>()
 
-  const value: ChartContextType = {
+  const value: ChartContextType<any> = {
     data: props.data,
     displayedData: props.data,
     brushRange: () => null,
@@ -114,6 +114,7 @@ export const BrushContextProvider = (props: {
     getDomain,
 
     stacks: emptyMap,
+    stackOffset: ctx.stackOffset,
     registerStack: noop,
     unregisterStack: noop,
 

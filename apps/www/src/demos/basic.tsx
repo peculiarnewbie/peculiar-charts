@@ -13,7 +13,7 @@ import { sales } from '../data'
 
 export default function BasicLine() {
   return (
-    <Chart data={sales}>
+    <Chart<typeof sales> data={sales}>
       <Axis axis="y" position="left" tickCount={4}>
         <AxisLabel />
         <AxisGrid class="stroke-black/10" />
@@ -23,18 +23,21 @@ export default function BasicLine() {
         <AxisLine class="stroke-black" />
         <AxisCrosshair stroke-dasharray="6,6" class="stroke-black/60" />
         <AxisTooltip class="flex flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-lg">
-          {(p) => (
-            <>
-              <div class="border-b border-zinc-200 bg-zinc-50 p-2 text-xs font-medium">
-                {p.data.day}
-              </div>
-              <div class="flex items-center gap-2 p-2 text-xs">
-                <div class="size-2 rounded-full bg-blue-500" />
-                <span class="grow">Coffee</span>
-                <span>{p.data.coffee}</span>
-              </div>
-            </>
-          )}
+          {(p) => {
+            const row = p.data as (typeof sales)[number]
+            return (
+              <>
+                <div class="border-b border-zinc-200 bg-zinc-50 p-2 text-xs font-medium">
+                  {row.day}
+                </div>
+                <div class="flex items-center gap-2 p-2 text-xs">
+                  <div class="size-2 rounded-full bg-blue-500" />
+                  <span class="grow">Coffee</span>
+                  <span>{row.coffee}</span>
+                </div>
+              </>
+            )
+          }}
         </AxisTooltip>
       </Axis>
       <Line

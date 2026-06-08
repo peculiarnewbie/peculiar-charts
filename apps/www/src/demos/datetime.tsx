@@ -14,7 +14,7 @@ import { monthLabel, priceSeries } from '../data'
 
 export default function DatetimeAxis() {
   return (
-    <Chart data={priceSeries}>
+    <Chart<typeof priceSeries> data={priceSeries}>
       <Axis axis="y" position="left" tickCount={4}>
         <AxisLabel />
         <AxisGrid class="stroke-black/10" />
@@ -25,11 +25,14 @@ export default function DatetimeAxis() {
         <AxisLine class="stroke-black" />
         <AxisCrosshair class="stroke-black/50" stroke-dasharray="4,4" />
         <AxisTooltip class="rounded-lg border border-zinc-200 bg-white px-2 py-1 text-xs shadow-lg">
-          {(p) => (
-            <span>
-              {monthLabel(new Date(p.data.t))}: <b>{p.data.price}</b>
-            </span>
-          )}
+          {(p) => {
+            const row = p.data as (typeof priceSeries)[number]
+            return (
+              <span>
+                {monthLabel(new Date(row.t))}: <b>{row.price}</b>
+              </span>
+            )
+          }}
         </AxisTooltip>
       </Axis>
       <Area dataKey="price" curve={curveNatural} class="text-sky-200" color="#bae6fd" />

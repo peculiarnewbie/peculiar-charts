@@ -1,9 +1,16 @@
 {
   "name": "peculiar-charts",
-  "version": "0.2.1",
+  "version": "0.4.0",
   "private": false,
   "description": "Composable, unstyled, headless charts for SolidJS",
-  "keywords": ["solid", "solidjs", "charts", "svg", "d3", "headless"],
+  "keywords": [
+    "solid",
+    "solidjs",
+    "charts",
+    "svg",
+    "d3",
+    "headless"
+  ],
   "license": "MIT",
   "homepage": "https://charts.peculiarnewbie.com",
   "repository": {
@@ -27,11 +34,15 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "build": "tsc --noEmit && tsup",
-    "dev": "tsup --watch",
-    "typecheck": "tsc --noEmit",
+    "build": "tsgo --noEmit && tsdown",
+    "dev": "tsdown --watch",
+    "typecheck": "tsgo --noEmit",
     "clean": "rm -rf dist node_modules",
     "prepublishOnly": "pnpm run build",
     "release": "npm publish --access public"
@@ -39,16 +50,16 @@
   "dependencies": {
     "@corvu/utils": "^0.4.2",
     "@solid-primitives/memo": "^1.4.2",
+    "@standard-schema/spec": "^1.1.0",
     "d3-scale": "^4.0.2",
     "d3-shape": "^3.2.0"
   },
   "devDependencies": {
     "@types/d3-scale": "^4.0.9",
     "@types/d3-shape": "^3.1.7",
-    "esbuild-plugin-solid": "^0.6.0",
+    "rolldown-plugin-solid": "^0.2.1",
     "solid-js": "^1.9.6",
-    "tsup": "^8.4.0",
-    "typescript": "^5.8.3"
+    "tsdown": "^0.22.2"
   },
   "peerDependencies": {
     "solid-js": "^1.8"

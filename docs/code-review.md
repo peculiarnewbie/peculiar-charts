@@ -105,3 +105,56 @@ The library has no OpenTelemetry spans or instrumentation points. For a charting
 | OpenTelemetry | **Not present** |
 
 The strongest recommendation: add tests for the pure-function core (`scale.ts`, `utils.ts`, `animation.ts` resolve logic) and tighten the `any` usage in the data pipeline. Those two changes would have the highest impact on maintainability.
+
+---
+
+## Changes made
+
+### 1. Generic data row type (`TData`)
+
+`ChartContextType<TData extends unknown[]>`, `ChartProps<TData>`, `ChartEventPayload<TData>`, `TooltipPayload<TData>`, `ClosestTick<TData>`, `useData<TData>()`, `useClosestTick<TData>()`, `useAxisValues<TData>()` are now all generic over the data array type. Usage:
+
+```tsx
+// The data array type flows through the component
+<Chart<typeof data> data={data}>
+  <AxisTooltip>
+    {(p) => {
+      // p.series[].value is typed via SeriesMeta
+      // p.data is TData[number] (unknown by default — cast in renderer)
+    }}
+  </AxisTooltip>
+</Chart>
+
+// Event payloads carry the datum type
+<Chart<typeof data> data={data} onChartClick={(p) => {
+  p.datum // TData[number] | undefined — typed!
+}} />
+
+// Hooks carry the type
+const tick = useClosestTick<typeof data>('x', 'x')
+tick()?.datum // TData[number] — typed!
+```
+
+### 2. Narrowed internal helper params
+
+`axisValues` now accepts `Pick<ChartContextType, 'getAxisConfig' | 'displayedData'>` instead of the full context. `getBarPadding` accepts `Pick<ChartContextType, 'bars' | 'getInset' | 'width' | 'displayedData' | 'barConfig'>`. Removed the `as any` cast in `Chart.tsx:381`.
+
+### 3. Runtime validation at boundaries
+
+- `accessData` now throws if `data` is not an array.
+- `<Chart>` validates `data` is an array in dev mode.
+- `<Chart>` accepts an optional `schema` prop (`StandardSchemaV1<TData>`) for runtime validation via any Standard Schema–compatible library (Zod, Valibot, ArkType, etc.).
+
+```tsx
+import { z } from 'zod'
+
+const schema = z.array(z.object({ day: z.string(), coffee: z.number() }))
+
+<Chart data={sales} schema={schema}>
+  {/* console.warn in dev mode if data doesn't match schema */}
+</Chart>
+```
+
+### 4. Standard Schema support
+
+`@standard-schema/spec` added as a dependency. `StandardSchemaV1` is re-exported from the library. The `schema` prop on `<Chart>` is typed as `StandardSchemaV1<TData>`, so the schema's inferred output type must match `TData`.

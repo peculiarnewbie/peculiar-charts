@@ -13,7 +13,10 @@ import AxisLabel, {
   type LabelTick as AxisLabelTick,
 } from '@src/axis/Label'
 import AxisLine, { type LineProps as AxisLineProps } from '@src/axis/Line'
-import AxisMark, { type MarkProps as AxisMarkProps, type MarkTick } from '@src/axis/Mark'
+import AxisMark, {
+  type MarkProps as AxisMarkProps,
+  type MarkTick,
+} from '@src/axis/Mark'
 import AxisTooltip, {
   type TooltipProps as AxisTooltipProps,
   type TooltipPayload,
@@ -22,8 +25,32 @@ import AxisTooltip, {
 import AxisValueLine, {
   type ValueLineProps as AxisValueLineProps,
 } from '@src/axis/ValueLine'
-import Chart, { type ChartProps } from '@src/components/Chart'
+import type { StandardSchemaV1 } from '@standard-schema/spec'
+import PolarAngleAxis, {
+  type PolarAngleAxisProps,
+} from '@src/axis/polar/PolarAngleAxis'
+import PolarAngleLabel, {
+  type PolarAngleLabelProps,
+} from '@src/axis/polar/PolarAngleLabel'
+import PolarCrosshair, {
+  type PolarCrosshairProps,
+} from '@src/axis/polar/PolarCrosshair'
+import PolarGrid, { type PolarGridProps } from '@src/axis/polar/PolarGrid'
+import PolarLayout, { type PolarLayoutProps } from '@src/axis/polar/PolarLayout'
+import PolarRadiusAxis, {
+  type PolarRadiusAxisProps,
+} from '@src/axis/polar/PolarRadiusAxis'
+import PolarRadiusLabel, {
+  type PolarRadiusLabelProps,
+} from '@src/axis/polar/PolarRadiusLabel'
+import PolarTooltip, {
+  type PolarTooltipProps,
+} from '@src/axis/polar/PolarTooltip'
 import Brush, { type BrushProps } from '@src/components/Brush'
+import Chart, {
+  type ChartEventPayload,
+  type ChartProps,
+} from '@src/components/Chart'
 import Legend, {
   type LegendProps,
   type LegendItemRenderer,
@@ -38,15 +65,13 @@ import {
   type SyncInteraction,
   useChartContext,
 } from '@src/components/context'
-import { type SyncMethod, type SyncHandlerParam, type SyncPayload } from '@src/lib/sync'
 import {
-  type PlotArea,
-  type ClosestTick,
   type ClosestPolarTick,
+  type ClosestTick,
+  type PlotArea,
   useAxisValues,
   useChartSize,
   useClosestTick,
-  usePolarClosestTick,
   useData,
   useDomain,
   useInverseScale,
@@ -55,6 +80,7 @@ import {
   usePlotArea,
   usePointerInChart,
   usePointerPosition,
+  usePolarClosestTick,
   useScale,
   useSvgPointerPosition,
   useXScale,
@@ -80,11 +106,18 @@ import createPoints from '@src/lib/createPoints'
 import createScale from '@src/lib/createScale'
 import createSeries from '@src/lib/createSeries'
 import {
-  Dot,
-  BarShape,
+  LabelLine,
+  type LabelLineDatum,
+  type LabelLineProps,
+  type LabelLineRenderer,
+} from '@src/lib/labels'
+import { LegendItemContent } from '@src/lib/legend'
+import {
   type BarDatum,
+  BarShape,
   type BarShapeProps,
   type BarShapeRenderer,
+  Dot,
   type DotDatum,
   type DotProps,
   type DotRenderer,
@@ -92,6 +125,12 @@ import {
   type PointEventHandler,
   type PointEvents,
 } from '@src/lib/markers'
+import {
+  type PolarLayout as PolarLayoutContext,
+  usePolarLayout,
+} from '@src/lib/polar/context'
+import createPolarPoints from '@src/lib/polar/createPolarPoints'
+import { polarToCartesian } from '@src/lib/polar/utils'
 import {
   type Scale,
   buildScale,
@@ -101,16 +140,14 @@ import {
   projectScale,
   scaleTicks,
 } from '@src/lib/scale'
-import type { OverrideProps } from '@src/lib/types'
-import { accessData, axisValues, toNumeric } from '@src/lib/utils'
+import type { SyncHandlerParam, SyncMethod, SyncPayload } from '@src/lib/sync'
 import {
   TooltipContent,
   type TooltipSeriesItem,
   buildTooltipPayload,
 } from '@src/lib/tooltip'
-import {
-  LegendItemContent,
-} from '@src/lib/legend'
+import type { OverrideProps } from '@src/lib/types'
+import { accessData, axisValues, toNumeric } from '@src/lib/utils'
 import ReferenceArea, {
   type ReferenceAreaProps,
 } from '@src/reference/ReferenceArea'
@@ -125,52 +162,20 @@ import Bar, { type BarProps } from '@src/series/Bar'
 import Bubble, { type BubbleDatum, type BubbleProps } from '@src/series/Bubble'
 import Line, { type LineProps } from '@src/series/Line'
 import Pie, { type PieProps } from '@src/series/Pie'
-import PolarAngleAxis, {
-  type PolarAngleAxisProps,
-} from '@src/axis/polar/PolarAngleAxis'
-import PolarAngleLabel, {
-  type PolarAngleLabelProps,
-} from '@src/axis/polar/PolarAngleLabel'
-import PolarGrid, { type PolarGridProps } from '@src/axis/polar/PolarGrid'
-import PolarLayout, {
-  type PolarLayoutProps,
-} from '@src/axis/polar/PolarLayout'
-import PolarRadiusAxis, {
-  type PolarRadiusAxisProps,
-} from '@src/axis/polar/PolarRadiusAxis'
-import PolarRadiusLabel, {
-  type PolarRadiusLabelProps,
-} from '@src/axis/polar/PolarRadiusLabel'
-import PolarCrosshair, {
-  type PolarCrosshairProps,
-} from '@src/axis/polar/PolarCrosshair'
-import PolarTooltip, {
-  type PolarTooltipProps,
-} from '@src/axis/polar/PolarTooltip'
-import { usePolarLayout, type PolarLayout as PolarLayoutContext } from '@src/lib/polar/context'
-import createPolarPoints from '@src/lib/polar/createPolarPoints'
-import { polarToCartesian } from '@src/lib/polar/utils'
-import PolarPolygon, {
-  type PolarPolygonProps,
-} from '@src/shapes/PolarPolygon'
-import Radar, { type RadarProps } from '@src/series/Radar'
 import Point, { type PointDatum, type PointProps } from '@src/series/Point'
+import Radar, { type RadarProps } from '@src/series/Radar'
 import SeriesLabel, {
   type SeriesLabelDatum,
   type SeriesLabelProps,
 } from '@src/series/SeriesLabel'
-import {
-  LabelLine,
-  type LabelLineDatum,
-  type LabelLineProps,
-  type LabelLineRenderer,
-} from '@src/lib/labels'
 import type { CurveProps } from '@src/shapes/Curve'
+import PolarPolygon, { type PolarPolygonProps } from '@src/shapes/PolarPolygon'
 import Rectangle, { type RectangleProps } from '@src/shapes/Rectangle'
 import Sector, { type SectorProps } from '@src/shapes/Sector'
 
 export type {
   // Chart
+  ChartEventPayload,
   ChartProps,
   BrushProps,
   BrushRange,
@@ -183,6 +188,8 @@ export type {
   SyncHandlerParam,
   SyncPayload,
   SyncInteraction,
+  // Standard Schema
+  StandardSchemaV1,
   // Animation
   AnimationEasing,
   AnimationOptions,

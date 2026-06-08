@@ -1,5 +1,6 @@
 import { combineStyle } from '@corvu/utils/dom'
 import { mergeRefs } from '@corvu/utils/reactivity'
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 import {
   type AxisConfig,
   type AxisOrientation,
@@ -31,14 +32,37 @@ import {
   onCleanup,
   splitProps,
 } from 'solid-js'
+import { isDev } from 'solid-js/web'
+
+/** Context provided to chart-level event callbacks. */
+export type ChartEventPayload<TData extends unknown[] = unknown[]> = {
+  /** The original pointer event. */
+  event: PointerEvent
+  /** Pointer position in SVG viewBox coordinates. */
+  x: number
+  y: number
+  /** Index of the closest datum, or `null` if outside the plot area. */
+  index: number | null
+  /** Full data row at the active index. */
+  datum: TData[number] | undefined
+  /** Visible series with values resolved at `index`. */
+  series: (SeriesMeta & { value: unknown })[]
+}
 
 const DEFAULT_INSET = 8
 
-export type ChartProps = OverrideProps<
+export type ChartProps<TData extends unknown[] = unknown[]> = OverrideProps<
   Omit<ComponentProps<'svg'>, 'viewBox'>,
   {
     /** Data array — either a flat array of numbers or an array of objects. */
-    data: number[] | object[]
+    data: TData
+    /**
+     * Optional Standard Schema validator for `data`. When provided in dev
+     * mode, the data is validated at mount and console warnings are emitted
+     * for validation issues. Works with Zod, Valibot, ArkType, or any
+     * Standard Schema–compatible library.
+     */
+    schema?: StandardSchemaV1<TData>
     /** viewBox width. `'responsive'` tracks the container. @defaultValue `'responsive'` */
     width?: 'responsive' | number
     /** viewBox height. `'responsive'` tracks the container. @defaultValue `'responsive'` */
@@ -49,6 +73,12 @@ export type ChartProps = OverrideProps<
       | { top?: number; right?: number; bottom?: number; left?: number }
     /** Global bar series configuration. */
     barConfig?: Partial<BarConfig>
+    /**
+     * Stack offset mode.
+     * - `'none'` (default): raw cumulative stacking.
+     * - `'expand'`: normalize stacked values to 0–1 (percentage stacking).
+     */
+    stackOffset?: 'none' | 'expand'
     /**
      * Sync identifier. Charts sharing the same `syncId` synchronise their
      * tooltips and crosshairs — hovering one chart shows the tooltip on all.
@@ -61,6 +91,16 @@ export type ChartProps = OverrideProps<
      * - `function`: custom callback receiving (ticks, handlerParam) → index
      */
     syncMethod?: SyncMethod
+    /** Fired when the pointer is clicked on the chart. */
+    onChartClick?: (payload: ChartEventPayload<TData>) => void
+    /** Fired when the pointer moves over the chart. */
+    onChartPointerMove?: (payload: ChartEventPayload<TData>) => void
+    /** Fired when the pointer leaves the chart. */
+    onChartPointerLeave?: (payload: ChartEventPayload<TData>) => void
+    /** Fired when a pointer button is pressed on the chart. */
+    onChartPointerDown?: (payload: ChartEventPayload<TData>) => void
+    /** Fired when a pointer button is released on the chart. */
+    onChartPointerUp?: (payload: ChartEventPayload<TData>) => void
     /** @hidden */
     children?: JSX.Element
   }
@@ -72,7 +112,29 @@ export type ChartProps = OverrideProps<
  * @data `data-pc-chart` - Present on every chart svg element.
  * @data `data-pc-wrapper` - Present on every chart wrapper element.
  */
-const Chart = (props: ChartProps) => {
+const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
+  if (isDev && !Array.isArray(props.data)) {
+    throw new Error(
+      `[peculiar-charts]: <Chart> requires a data array, got ${typeof props.data}`,
+    )
+  }
+
+  if (isDev && props.schema) {
+    const result = (props.schema as StandardSchemaV1)['~standard'].validate(
+      props.data,
+    )
+    if (result instanceof Promise) {
+      console.warn(
+        '[peculiar-charts]: Async schema validation is not supported at render time. Data will not be validated.',
+      )
+    } else if (result.issues?.length) {
+      console.warn(
+        '[peculiar-charts]: Schema validation issues:',
+        result.issues,
+      )
+    }
+  }
+
   const defaultedProps = mergeProps(
     {
       width: 'responsive' as const,
@@ -85,15 +147,25 @@ const Chart = (props: ChartProps) => {
 
   const [localProps, otherProps] = splitProps(defaultedProps, [
     'data',
+    'schema',
     'width',
     'height',
     'inset',
     'barConfig',
+    'stackOffset',
     'ref',
     'style',
     'syncId',
     'syncMethod',
+    'onChartClick',
+    'onChartPointerMove',
+    'onChartPointerLeave',
+    'onChartPointerDown',
+    'onChartPointerUp',
   ])
+
+  // Keep a typed reference to the data — mergeProps/splitProps widen generics.
+  const data = () => props.data
 
   // --- emitter symbol (self-guard for sync; one per chart instance) --------
   const emitterSymbol = Symbol('peculiar-chart-emitter')
@@ -140,7 +212,7 @@ const Chart = (props: ChartProps) => {
 
   const displayedData = createMemo(() => {
     const range = brushRange()
-    const d = localProps.data
+    const d = data()
     if (!range) return d
     return d.slice(range.startIndex, range.endIndex + 1)
   })
@@ -338,7 +410,7 @@ const Chart = (props: ChartProps) => {
   })
 
   const xAxisValues = createMemo(() =>
-    axisValues({ getAxisConfig, displayedData } as any, 'x', 'x'),
+    axisValues({ getAxisConfig, displayedData }, 'x', 'x'),
   )
 
   // --- sync emission helpers ----------------------------------------------
@@ -483,10 +555,93 @@ const Chart = (props: ChartProps) => {
     onCleanup(() => syncBus.off(listener))
   })
 
+  // --- chart-level event payload ------------------------------------------
+  const buildChartEventPayload = (event: PointerEvent): ChartEventPayload<TData> => {
+    const svg = svgRef()
+    if (!svg) {
+      return { event, x: 0, y: 0, index: null, datum: undefined, series: [] }
+    }
+    const rect = svg.getBoundingClientRect()
+    const containerX = event.clientX - rect.left
+    const containerY = event.clientY - rect.top
+    const svgX = toSvgPosition(containerX, 'width')
+    const svgY = toSvgPosition(containerY, 'height')
+
+    const data = displayedData()
+    const ticks = xAxisValues()
+    const idx = ticks.length
+      ? findClosestTickIndex(xScale(), ticks, svgX)
+      : null
+
+    const visibleSeries = seriesMeta()
+      .filter((s) => !hiddenSeries().has(s.id))
+      .map((s) => ({
+        ...s,
+        value:
+          idx != null && s.dataKey !== undefined
+            ? accessData<unknown>(data, s.dataKey)[idx]
+            : undefined,
+      }))
+
+    return {
+      event,
+      x: svgX,
+      y: svgY,
+      index: idx,
+      datum: idx != null ? data[idx] : undefined,
+      series: visibleSeries,
+    }
+  }
+
+  const fireChartPointerMove = (event: MouseEvent) => {
+    const svg = svgRef()
+    if (!svg) return
+    const rect = svg.getBoundingClientRect()
+    setPointerPosition({
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    })
+    if (localProps.syncId != null && !isReceivingSync()) {
+      const svgX = toSvgPosition(event.clientX - rect.left, 'width')
+      const idx = findClosestTickIndex(xScale(), xAxisValues(), svgX)
+      const label = String(xAxisValues()[idx] ?? '')
+      emitSync(true, idx, label)
+    }
+    localProps.onChartPointerMove?.(
+      buildChartEventPayload(event as unknown as PointerEvent),
+    )
+  }
+
+  const fireChartPointerLeave = (event: MouseEvent) => {
+    setPointerPosition(null)
+    emitSync(false, null, undefined)
+    localProps.onChartPointerLeave?.(
+      buildChartEventPayload(event as unknown as PointerEvent),
+    )
+  }
+
+  const fireChartClick = (event: MouseEvent) => {
+    localProps.onChartClick?.(
+      buildChartEventPayload(event as unknown as PointerEvent),
+    )
+  }
+
+  const fireChartPointerDown = (event: MouseEvent) => {
+    localProps.onChartPointerDown?.(
+      buildChartEventPayload(event as unknown as PointerEvent),
+    )
+  }
+
+  const fireChartPointerUp = (event: MouseEvent) => {
+    localProps.onChartPointerUp?.(
+      buildChartEventPayload(event as unknown as PointerEvent),
+    )
+  }
+
   return (
     <ChartContext.Provider
       value={{
-        data: () => localProps.data,
+        data,
         displayedData,
         brushRange,
         setBrushRange,
@@ -533,6 +688,7 @@ const Chart = (props: ChartProps) => {
           }),
         getDomain,
         stacks,
+        stackOffset: () => localProps.stackOffset,
         registerStack: (stackId, dataKey, seriesId, values) =>
           setStacks((prev) => {
             const stack = prev.get(stackId) ?? new Map<string, StackEntry>()
@@ -610,23 +766,11 @@ const Chart = (props: ChartProps) => {
             localProps.style,
           )}
           viewBox={`0 0 ${svgSize()[0]} ${svgSize()[1]}`}
-          onMouseMove={(event) => {
-            const rect = event.currentTarget.getBoundingClientRect()
-            setPointerPosition({
-              x: event.clientX - rect.left,
-              y: event.clientY - rect.top,
-            })
-            if (localProps.syncId != null && !isReceivingSync()) {
-              const svgX = toSvgPosition(event.clientX - rect.left, 'width')
-              const idx = findClosestTickIndex(xScale(), xAxisValues(), svgX)
-              const label = String(xAxisValues()[idx] ?? '')
-              emitSync(true, idx, label)
-            }
-          }}
-          onMouseLeave={() => {
-            setPointerPosition(null)
-            emitSync(false, null, undefined)
-          }}
+          onPointerMove={fireChartPointerMove}
+          onPointerLeave={fireChartPointerLeave}
+          onClick={fireChartClick}
+          onPointerDown={fireChartPointerDown}
+          onPointerUp={fireChartPointerUp}
           data-pc-chart=""
           {...otherProps}
         >

@@ -19,9 +19,9 @@ export type TooltipSeriesItem = SeriesMeta & {
 }
 
 /** Context passed to tooltip renderers — the active datum plus registered series. */
-export type TooltipPayload = {
+export type TooltipPayload<TData extends unknown[] = unknown[]> = {
   /** Full data row at the active index. */
-  data: any
+  data: TData[number]
   /** Index of the active datum along the tooltip axis. */
   index: number
   /** Domain label for the active tick (e.g. the x-axis category). */
@@ -30,15 +30,15 @@ export type TooltipPayload = {
   series: TooltipSeriesItem[]
 }
 
-export type TooltipRenderer = ContentRenderer<TooltipPayload>
+export type TooltipRenderer<TData extends unknown[] = unknown[]> = ContentRenderer<TooltipPayload<TData>>
 
 /** Builds the tooltip payload for the datum nearest the pointer on an axis. */
-export const buildTooltipPayload = (
-  ctx: ChartContextType,
+export const buildTooltipPayload = <TData extends unknown[] = unknown[]>(
+  ctx: ChartContextType<TData>,
   axisId: string,
   orientation: AxisOrientation,
   index: number,
-): TooltipPayload => {
+): TooltipPayload<TData> => {
   const data = ctx.displayedData()
   const row = data[index]
   const labels = axisValues(ctx, axisId, orientation)
@@ -55,7 +55,7 @@ export const buildTooltipPayload = (
     }))
 
   return {
-    data: row,
+    data: row as TData[number],
     index,
     label: labels[index],
     series,
@@ -70,7 +70,7 @@ export const buildTooltipPayload = (
  * @data `data-pc-tooltip-row` - Series value row.
  * @data `data-pc-tooltip-swatch` - Colour swatch.
  */
-export const TooltipContent = (props: { payload: TooltipPayload }) => (
+export const TooltipContent = (props: { payload: TooltipPayload<any> }) => (
   <>
     <div data-pc-tooltip-header="">{String(props.payload.label ?? '')}</div>
     <For each={props.payload.series}>
@@ -91,11 +91,11 @@ export const TooltipContent = (props: { payload: TooltipPayload }) => (
   </>
 )
 
-export const resolveTooltipRenderer = resolveContentRenderer<TooltipPayload>
+export const resolveTooltipRenderer = resolveContentRenderer<TooltipPayload<any>>
 
 export const renderTooltipBody = (
-  renderer: TooltipRenderer,
-  payload: TooltipPayload,
+  renderer: TooltipRenderer<any>,
+  payload: TooltipPayload<any>,
 ) =>
   renderContent(renderer, payload, ({ payload: p }) => (
     <TooltipContent payload={p} />

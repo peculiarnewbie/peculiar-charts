@@ -1,13 +1,28 @@
 import type { AxisOrientation, ChartContextType } from '@src/components/context'
 import { scaleBand } from 'd3-scale'
 
+/** Narrow view of the chart context used by {@link axisValues}. */
+type AxisValuesContext = Pick<ChartContextType, 'getAxisConfig' | 'displayedData'>
+
 /** Reads a (optionally dot-pathed) key out of each datum, or returns the
  * array as-is when no key is given (data is a plain array of values). */
 export const accessData = <T>(
   data: unknown,
   dataKey: string | undefined,
 ): T[] => {
-  if (!dataKey) return data as T[]
+  if (!dataKey) {
+    if (!Array.isArray(data)) {
+      throw new Error(
+        `[peculiar-charts]: Expected data to be an array when no dataKey is set, got ${typeof data}`,
+      )
+    }
+    return data as T[]
+  }
+  if (!Array.isArray(data)) {
+    throw new Error(
+      `[peculiar-charts]: Expected data to be an array, got ${typeof data}`,
+    )
+  }
   const keys = dataKey.split('.')
   return (data as Record<string, any>[]).map((entry) =>
     keys.reduce((acc, key) => acc?.[key], entry),
@@ -17,16 +32,19 @@ export const accessData = <T>(
 /** The per-datum domain values for an axis — the values read from the axis's
  * `dataKey`, or the data indices when no key is set. Shared by point projection
  * and pointer hit-testing so they agree on where each datum sits. Reads from
- * `displayedData` so the brush range is respected. */
+ * `displayedData` so the brush range is respected. When `seriesData` is
+ * provided it is used instead of `displayedData` (per-series data override). */
 export const axisValues = (
-  ctx: ChartContextType,
+  ctx: AxisValuesContext,
   axisId: string,
   orientation: AxisOrientation,
+  seriesData?: unknown[],
 ): any[] => {
   const config = ctx.getAxisConfig(axisId, orientation)
+  const source = seriesData ?? ctx.displayedData()
   return config.dataKey
-    ? accessData<any>(ctx.displayedData(), config.dataKey)
-    : ctx.displayedData().map((_, i) => i)
+    ? accessData<any>(source, config.dataKey)
+    : source.map((_, i) => i)
 }
 
 /** Coerce a domain value to a finite number (Date → epoch ms), or `null`. */
@@ -53,9 +71,15 @@ export const gapToPadding = (gap: number | `${number}%`, bandwidth: number) => {
   return Number.parseInt(gap.slice(0, -1)) / 100
 }
 
+/** Narrow view of the chart context used by {@link getBarPadding}. */
+type BarPaddingContext = Pick<
+  ChartContextType,
+  'bars' | 'getInset' | 'width' | 'displayedData' | 'barConfig'
+>
+
 /** Half a band's width — the amount point/linear x-scales are inset by so
  * that line/area markers centre over bar bands when bars are present. */
-export const getBarPadding = (chartContext: ChartContextType) => {
+export const getBarPadding = (chartContext: BarPaddingContext) => {
   if (chartContext.bars().size === 0) return 0
 
   const left = chartContext.getInset('left')

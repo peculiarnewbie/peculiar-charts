@@ -138,9 +138,9 @@ export const useChartSize = (): Accessor<{ width: number; height: number }> => {
 }
 
 /** The chart's data array. */
-export const useData = <T = any>(): Accessor<T[]> => {
-  const ctx = useChartContext()
-  return ctx.data as Accessor<T[]>
+export const useData = <TData extends unknown[] = unknown[]>(): Accessor<TData> => {
+  const ctx = useChartContext<TData>()
+  return ctx.data
 }
 
 /**
@@ -148,11 +148,11 @@ export const useData = <T = any>(): Accessor<T[]> => {
  * `dataKey`, or the data indices when no key is set. Pair with {@link useScale}
  * + `projectScale` to place a marker on every datum.
  */
-export const useAxisValues = (
+export const useAxisValues = <TData extends unknown[] = unknown[]>(
   axisId?: string,
   orientation: AxisOrientation = 'x',
 ): Accessor<any[]> => {
-  const ctx = useChartContext()
+  const ctx = useChartContext<TData>()
   return createMemo(() => axisValues(ctx, axisId ?? orientation, orientation))
 }
 
@@ -192,11 +192,11 @@ export const useSvgPointerPosition = (): Accessor<{
  * tooltips use internally. Returns the datum index, its domain value, pixel
  * position, and the full data row.
  */
-export type ClosestTick = {
+export type ClosestTick<TData extends unknown[] = unknown[]> = {
   index: number
   value: any
   position: number
-  datum: any
+  datum: TData[number]
 }
 
 export type { ClosestPolarTick }
@@ -234,13 +234,13 @@ export const usePolarClosestTick = (
   })
 }
 
-export const useClosestTick = (
+export const useClosestTick = <TData extends unknown[] = unknown[]>(
   axisId?: string,
   orientation: 'x' | 'y' = 'x',
-): Accessor<ClosestTick | undefined> => {
-  const ctx = useChartContext()
+): Accessor<ClosestTick<TData> | undefined> => {
+  const ctx = useChartContext<TData>()
   const scale = useScale(axisId, orientation)
-  const values = useAxisValues(axisId, orientation)
+  const values = useAxisValues<TData>(axisId, orientation)
   const closest = createClosestTick({
     axis: () => orientation,
     scale,
@@ -255,7 +255,7 @@ export const useClosestTick = (
       index: tick.index,
       value: values()[tick.index],
       position: tick.position,
-      datum: rows[tick.index],
+      datum: rows[tick.index]!,
     }
   })
 }

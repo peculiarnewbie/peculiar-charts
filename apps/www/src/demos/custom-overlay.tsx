@@ -21,7 +21,7 @@ import { monthLabel, priceSeries } from '../data'
  * so its markers land exactly on the data. No registration, no fork.
  */
 function PeakTrough() {
-  const data = useData<(typeof priceSeries)[number]>()
+  const data = useData<typeof priceSeries>()
   const x = useXScale()
   const y = useYScale()
   const plot = usePlotArea()

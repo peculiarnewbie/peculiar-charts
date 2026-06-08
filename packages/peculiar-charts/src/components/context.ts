@@ -18,6 +18,8 @@ export type AxisConfig = {
   /** User-forced numeric domain, `'min'`/`'max'` keep the data-derived bound. */
   range: [number | 'min', number | 'max'] | null
   reverse: boolean
+  /** Pixel padding applied to the axis range edges. */
+  padding?: { left?: number; right?: number; top?: number; bottom?: number }
 }
 
 export type BarConfig = {
@@ -56,12 +58,12 @@ export type SyncInteraction = {
   sourceViewBox: SyncPayload['sourceViewBox']
 }
 
-export type ChartContextType = {
-  data: Accessor<any[]>
+export type ChartContextType<TData extends unknown[] = unknown[]> = {
+  data: Accessor<TData>
   /** Data visible in the main chart area — sliced by brush range when a brush
    *  is present, otherwise identical to `data()`. Series and axes should read
    *  from this instead of `data()` so they respect the brush selection. */
-  displayedData: Accessor<any[]>
+  displayedData: Accessor<TData>
   /** The active brush range, or `null` when no brush is rendered. */
   brushRange: Accessor<BrushRange | null>
   /** @internal Used by `<Brush>` to update the range. */
@@ -93,6 +95,7 @@ export type ChartContextType = {
   getDomain: (axisId: string, orientation: AxisOrientation) => Domain
 
   // --- stacks -------------------------------------------------------------
+  stackOffset: Accessor<'none' | 'expand' | undefined>
   stacks: Accessor<Map<string, Map<string, StackEntry>>>
   registerStack: (
     stackId: string,
@@ -138,9 +141,9 @@ export type ChartContextType = {
   ) => number
 }
 
-export const ChartContext = createContext<ChartContextType>()
+export const ChartContext = createContext<ChartContextType<any>>()
 
-export const useChartContext = () => {
+export const useChartContext = <TData extends unknown[] = unknown[]>(): ChartContextType<TData> => {
   const context = useContext(ChartContext)
   if (!context) {
     throw new Error(
