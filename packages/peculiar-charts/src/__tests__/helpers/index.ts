@@ -1,0 +1,5 @@
+export { expectLines } from './expectLines'
+export { expectBars } from './expectBars'
+export { expectDots } from './expectDots'
+export { expectPieSectors } from './expectPieSectors'
+export { expectAxisTicks } from './expectAxisTicks'

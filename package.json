@@ -20,7 +20,9 @@
   },
   "devDependencies": {
     "@solidjs/testing-library": "^0.8.10",
+    "@testing-library/jest-dom": "^6.9.1",
     "@typescript/native-preview": "7.0.0-dev.20260607.1",
+    "@vitest/coverage-v8": "^4.1.8",
     "happy-dom": "^20.10.2",
     "oxfmt": "^0.53.0",
     "oxlint": "^1.68.0",

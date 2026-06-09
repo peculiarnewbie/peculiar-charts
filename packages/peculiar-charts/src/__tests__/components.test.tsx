@@ -11,12 +11,17 @@ import Axis from '@src/axis/Axis'
 import PolarLayout from '@src/axis/polar/PolarLayout'
 import PolarAngleAxis from '@src/axis/polar/PolarAngleAxis'
 import PolarRadiusAxis from '@src/axis/polar/PolarRadiusAxis'
-
-const data = [
-  { x: 'A', y: 10 },
-  { x: 'B', y: 20 },
-  { x: 'C', y: 15 },
-]
+import {
+  expectLines,
+  expectBars,
+  expectPieSectors,
+} from './helpers'
+import {
+  cartesianData as data,
+  bubbleData,
+  pieData,
+  radarData,
+} from './helpers/_data'
 
 describe('Chart', () => {
   it('renders an SVG with data-pc-chart attribute', () => {
@@ -63,10 +68,7 @@ describe('Line', () => {
       </Chart>
     ))
 
-    const line = container.querySelector('[data-pc-line]')
-    expect(line).not.toBeNull()
-    expect(line?.tagName).toBe('path')
-    expect(line?.getAttribute('d')).toBeTruthy()
+    expectLines(container, [{ d: expect.any(String) }])
   })
 
   it('applies stroke and fill props', () => {
@@ -78,8 +80,7 @@ describe('Line', () => {
       </Chart>
     ))
 
-    const line = container.querySelector('[data-pc-line]')
-    expect(line?.getAttribute('stroke')).toBe('red')
+    expectLines(container, [{ stroke: 'red' }])
   })
 })
 
@@ -96,8 +97,7 @@ describe('Bar', () => {
     const group = container.querySelector('[data-pc-bar-group]')
     expect(group).not.toBeNull()
 
-    const rects = container.querySelectorAll('[data-pc-bar]')
-    expect(rects.length).toBe(data.length)
+    expectBars(container, [{}, {}, {}])
   })
 
   it('bars have non-zero dimensions', () => {
@@ -156,12 +156,6 @@ describe('Point', () => {
 })
 
 describe('Bubble', () => {
-  const bubbleData = [
-    { x: 'A', y: 10, z: 100 },
-    { x: 'B', y: 20, z: 200 },
-    { x: 'C', y: 15, z: 150 },
-  ]
-
   it('renders circle elements with data-pc-bubble', () => {
     const { container } = render(() => (
       <Chart data={bubbleData} width={400} height={300}>
@@ -212,12 +206,6 @@ describe('Bubble', () => {
 })
 
 describe('Pie', () => {
-  const pieData = [
-    { name: 'A', value: 30 },
-    { name: 'B', value: 50 },
-    { name: 'C', value: 20 },
-  ]
-
   it('renders slice paths with data-pc-pie-slice', () => {
     const { container } = render(() => (
       <Chart data={pieData} width={400} height={400}>
@@ -228,8 +216,7 @@ describe('Pie', () => {
     const group = container.querySelector('[data-pc-pie-group]')
     expect(group).not.toBeNull()
 
-    const slices = container.querySelectorAll('[data-pc-pie-slice]')
-    expect(slices.length).toBe(pieData.length)
+    expectPieSectors(container, [{}, {}, {}])
   })
 
   it('slices have d attribute (arc paths)', () => {
@@ -239,10 +226,11 @@ describe('Pie', () => {
       </Chart>
     ))
 
-    const slices = container.querySelectorAll('[data-pc-pie-slice]')
-    for (const slice of slices) {
-      expect(slice.getAttribute('d')).toBeTruthy()
-    }
+    expectPieSectors(container, [
+      { d: expect.any(String) },
+      { d: expect.any(String) },
+      { d: expect.any(String) },
+    ])
   })
 
   it('slices have fill colours', () => {
@@ -267,11 +255,11 @@ describe('Pie', () => {
       </Chart>
     ))
 
-    const slices = container.querySelectorAll('[data-pc-pie-slice]')
-    slices.forEach((slice, i) => {
-      expect(slice.hasAttribute('data-key')).toBe(true)
-      expect(slice.hasAttribute('data-index')).toBe(true)
-    })
+    expectPieSectors(container, [
+      { key: 'A', index: 0 },
+      { key: 'B', index: 1 },
+      { key: 'C', index: 2 },
+    ])
   })
 
   it('renders donut with innerRadius', () => {
@@ -281,10 +269,7 @@ describe('Pie', () => {
       </Chart>
     ))
 
-    const slices = container.querySelectorAll('[data-pc-pie-slice]')
-    expect(slices.length).toBe(pieData.length)
-    // Donut slices should have different arc paths than a full pie
-    // (just verify they render — the arc geometry is a d3 concern)
+    expectPieSectors(container, [{}, {}, {}])
   })
 
   it('respects custom colors', () => {
@@ -295,22 +280,15 @@ describe('Pie', () => {
       </Chart>
     ))
 
-    const slices = container.querySelectorAll('[data-pc-pie-slice]')
-    const fills = [...slices].map((s) => s.getAttribute('fill'))
-    expect(fills).toContain('#ff0000')
-    expect(fills).toContain('#00ff00')
-    expect(fills).toContain('#0000ff')
+    expectPieSectors(container, [
+      { fill: '#ff0000' },
+      { fill: '#00ff00' },
+      { fill: '#0000ff' },
+    ])
   })
 })
 
 describe('Radar', () => {
-  const radarData = [
-    { cat: 'A', val: 80 },
-    { cat: 'B', val: 60 },
-    { cat: 'C', val: 90 },
-    { cat: 'D', val: 70 },
-  ]
-
   it('renders a polygon path with data-pc-radar', () => {
     const { container } = render(() => (
       <Chart data={radarData} width={400} height={400}>
