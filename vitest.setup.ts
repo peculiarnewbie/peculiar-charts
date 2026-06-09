@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest'
-import { afterEach, beforeEach, vi } from 'vitest'
+import { afterEach, beforeEach, expect, vi } from 'vitest'
+import { toMatchImageSnapshot } from '@src/__tests__/helpers/toMatchImageSnapshot'
 
 function mockGetBoundingClientRect() {
   vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({
@@ -47,3 +48,5 @@ function setupConsoleWarningToError() {
 
 mockGetBoundingClientRect()
 setupConsoleWarningToError()
+
+expect.extend({ toMatchImageSnapshot })
