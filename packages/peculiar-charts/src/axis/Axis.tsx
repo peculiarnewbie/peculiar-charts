@@ -19,8 +19,13 @@ export type AxisProps = {
   tickValues?: any[]
   /** Format tick values for default axis labels. */
   tickFormatter?: (value: any) => string
-  /** Numeric domain override. @defaultValue `'auto'` */
-  axisRange?: 'auto' | [number | 'min', number | 'max']
+  /**
+   * Numeric domain override. Numbers set literal bounds; `'min'`/`'max'`
+   * keep the data-derived bound. String expressions like `'dataMax + 1000'`
+   * or `'dataMin - 50'` are evaluated against the computed data extent.
+   * @defaultValue `'auto'`
+   */
+  axisRange?: 'auto' | [number | 'min' | string, number | 'max' | string]
   /** Reverse the axis direction. */
   reverse?: boolean
   /** Pixel padding at axis edges. Prevents data points from sitting flush

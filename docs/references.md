@@ -44,3 +44,4 @@ under `references/` so `.gitignore` stays predictable.
 
 - `docs/extensibility.md` — extensibility comparison (hooks, render-props, custom series)
 - `docs/feature-parity.md` — Line & Area chart feature parity vs Recharts' 33 examples
+- `docs/testing.md` — testing strategy based on recharts and ag-charts patterns

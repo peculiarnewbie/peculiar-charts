@@ -1,6 +1,6 @@
 node_modules
 dist
-.turbo
+turbo
 .tmp
 *.log
 .DS_Store
@@ -9,3 +9,7 @@ dist
 /references
 /solid-charts
 apps/www/.wrangler
+
+# Playwright
+test-results/
+playwright-report/

@@ -16,6 +16,8 @@ import AnimatedPie from "./demos/animated-pie";
 import animatedPieCode from "./demos/animated-pie?raw";
 import Annotations from "./demos/annotations";
 import annotationsCode from "./demos/annotations?raw";
+import AxisDomainExpression from "./demos/axis-domain-expression";
+import axisDomainExpressionCode from "./demos/axis-domain-expression?raw";
 import AxisFormatting from "./demos/axis-formatting";
 import axisFormattingCode from "./demos/axis-formatting?raw";
 import AxisPadding from "./demos/axis-padding";
@@ -445,6 +447,14 @@ const FEATURE_PARITY_DEMOS: Demo[] = [
     desc: "Covers the Recharts `padding` parity gap. Set `padding={{ left, right }}` on `<Axis>` to prevent data points from sitting flush against the chart boundary.",
     Comp: AxisPadding,
     code: axisPaddingCode,
+  },
+  {
+    id: "axis-domain-expression",
+    group: "Axis",
+    title: "Axis domain expressions",
+    desc: 'Covers the Recharts `domain={[0, \'dataMax + 1000\']}` parity gap. String expressions like `\'dataMax + 1000\'` or `\'dataMin - 50\'` are evaluated against the computed data extent, so the axis extends beyond the data range without hardcoding numeric bounds.',
+    Comp: AxisDomainExpression,
+    code: axisDomainExpressionCode,
   },
   {
     id: "reference-line-segment",
@@ -888,7 +898,7 @@ function AllDemos() {
       <div class="mx-auto grid max-w-6xl grid-cols-1 gap-4 md:grid-cols-2">
         <For each={DEMOS}>
           {(d) => (
-            <div class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+            <div data-testid={`demo-${d.id}`} class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
               <p class="mb-2 text-xs font-medium text-zinc-500">{d.title}</p>
               <div class="relative h-[240px]">
                 <Dynamic component={d.Comp} />

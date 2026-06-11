@@ -13,6 +13,7 @@ import {
 } from '@src/components/context'
 import createSize from '@src/lib/dom/createSize'
 import { paletteColor } from '@src/lib/palette'
+import { resolveRangeValue } from '@src/lib/parseAxisRange'
 import { type Scale, buildScale, projectScale } from '@src/lib/scale'
 import { type SyncMethod, type SyncPayload, syncBus } from '@src/lib/sync'
 import type { OverrideProps } from '@src/lib/types'
@@ -375,10 +376,14 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
 
     const userMin = config.range?.[0]
     const userMax = config.range?.[1]
+    const resolvedMin =
+      userMin !== undefined ? resolveRangeValue(userMin, agg.min, agg.max) : undefined
+    const resolvedMax =
+      userMax !== undefined ? resolveRangeValue(userMax, agg.min, agg.max) : undefined
     return {
       kind: 'numeric' as const,
-      min: typeof userMin === 'number' ? userMin : agg.min,
-      max: typeof userMax === 'number' ? userMax : agg.max,
+      min: resolvedMin ?? agg.min,
+      max: resolvedMax ?? agg.max,
       userDefined: config.range !== null,
     }
   }

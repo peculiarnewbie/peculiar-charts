@@ -15,10 +15,12 @@
     "format:check": "oxfmt --check .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "typecheck": "pnpm --filter peculiar-charts build && pnpm --filter @peculiar-charts/www typecheck",
     "publish:lib": "pnpm --filter peculiar-charts release"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@resvg/resvg-js": "^2.6.2",
     "@solidjs/testing-library": "^0.8.10",
     "@testing-library/jest-dom": "^6.9.1",

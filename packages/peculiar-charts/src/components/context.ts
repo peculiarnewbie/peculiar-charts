@@ -15,8 +15,12 @@ export type AxisConfig = {
   type: ScaleType
   /** Key used to read categorical values / x-values from the chart data. */
   dataKey?: string
-  /** User-forced numeric domain, `'min'`/`'max'` keep the data-derived bound. */
-  range: [number | 'min', number | 'max'] | null
+  /**
+   * User-forced numeric domain. `'min'`/`'max'` keep the data-derived bound.
+   * String expressions like `'dataMax + 1000'` or `'dataMin - 50'` are
+   * evaluated against the computed data extent.
+   */
+  range: [number | 'min' | string, number | 'max' | string] | null
   reverse: boolean
   /** Pixel padding applied to the axis range edges. */
   padding?: { left?: number; right?: number; top?: number; bottom?: number }

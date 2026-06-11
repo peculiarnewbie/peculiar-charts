@@ -58,7 +58,7 @@ document only so the landing page stays focused on polished product examples.
 | **Axis padding**                         | `padding={{ left: 30, right: 30 }}` on XAxis/YAxis                                                                      | `padding={{ left, right, top, bottom }}` on `<Axis>`                                                               | **Parity**                   |
 | **ReferenceLine `segment`**              | line between two arbitrary `{x, y}` points                                                                              | `segment` prop with two data-space endpoints                                                                       | **Parity**                   |
 | **Per-series data**                      | `<Line data={seriesData}>` — each series carries own data                                                               | `data` prop on Line/Area/Point/Bar                                                                                 | **Parity**                   |
-| **Axis domain expressions**              | `domain={[0, 'dataMax + 1000']}` with string expressions                                                                | `axisRange` takes numeric bounds only                                                                              | **Missing**                  |
+| **Axis domain expressions**              | `domain={[0, 'dataMax + 1000']}` with string expressions                                                                | `axisRange` accepts string expressions (`'dataMax + 1000'`, `'dataMin - 50'`) evaluated against the data extent   | **Parity**                   |
 | **`allowDataOverflow`**                  | clips rendered geometry to axis domain                                                                                  | Not verified                                                                                                       | **Unknown**                  |
 | **`tickFormatter` on axis**              | custom tick label formatting function                                                                                   | `tickFormatter` on `<Axis>` + local `<AxisLabel format>` override                                                  | **Parity**                   |
 | **Tooltip `defaultIndex`**               | show tooltip at a position on load                                                                                      | Not verified                                                                                                       | **Unknown**                  |
@@ -363,6 +363,33 @@ the chart-level `data`. The category axis tick labels still come from the chart-
 
 ---
 
+### 11. Axis domain expressions ✅
+
+Recharts' `domain` prop accepts string expressions like `'dataMax + 1000'` or `'dataMin - 50'`
+that reference the computed data extent and apply arithmetic offsets. This lets the axis
+extend beyond the data range without hardcoding numeric bounds:
+
+```tsx
+// Recharts
+<XAxis type="number" domain={[0, 'dataMax + 1000']} />
+```
+
+Peculiar-charts' `axisRange` prop now accepts the same string expressions. A `parseAxisRange`
+utility parses `'dataMin'` / `'dataMax'` with optional `+`/`-` offsets and evaluates them
+against the data-derived min/max in `getDomain()`.
+
+```tsx
+// Peculiar-charts
+<Axis axis="x" position="bottom" type="linear" axisRange={[0, 'dataMax + 1000']}>
+  <AxisLabel />
+  <AxisGrid class="stroke-black/10" />
+</Axis>
+```
+
+**Affects:** Vertical Line Chart With Specified Domain.
+
+---
+
 ## Recharts examples → features mapping
 
 Each Recharts example and which features it exercises:
@@ -480,6 +507,10 @@ Completed since this plan was written:
   `onChartPointerLeave`. Each fires with a `ChartEventPayload` containing SVG
   coordinates, closest datum index, the data row, and visible series values. The SVG
   uses `PointerEvent` (unified mouse + touch + pen) internally.
+- **Axis domain expressions** — `axisRange` on `<Axis>` now accepts string expressions
+  (`'dataMax + 1000'`, `'dataMin - 50'`, `'dataMin'`, `'dataMax'`) that are evaluated
+  against the computed data extent. A `parseAxisRange` utility parses the expression and
+  `getDomain()` in the chart context resolves it to a numeric bound.
 
 ---
 
