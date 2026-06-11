@@ -10,10 +10,10 @@ import {
   usePlotArea,
   useXScale,
   useYScale,
-} from 'peculiar-charts'
-import { curveNatural } from 'peculiar-charts/curves'
-import { For } from 'solid-js'
-import { monthLabel, priceSeries } from '../data'
+} from "peculiar-charts";
+import { curveNatural } from "peculiar-charts/curves";
+import { For } from "solid-js";
+import { monthLabel, priceSeries } from "../data";
 
 /**
  * A custom overlay authored entirely in user-land — it is just a child of
@@ -21,24 +21,24 @@ import { monthLabel, priceSeries } from '../data'
  * so its markers land exactly on the data. No registration, no fork.
  */
 function PeakTrough() {
-  const data = useData<typeof priceSeries>()
-  const x = useXScale()
-  const y = useYScale()
-  const plot = usePlotArea()
+  const data = useData<typeof priceSeries>();
+  const x = useXScale();
+  const y = useYScale();
+  const plot = usePlotArea();
 
   const extremes = () => {
-    const rows = data()
-    let lo = rows[0]!
-    let hi = rows[0]!
+    const rows = data();
+    let lo = rows[0]!;
+    let hi = rows[0]!;
     for (const r of rows) {
-      if (r.price < lo.price) lo = r
-      if (r.price > hi.price) hi = r
+      if (r.price < lo.price) lo = r;
+      if (r.price > hi.price) hi = r;
     }
     return [
-      { row: hi, label: `peak ${hi.price}`, cls: 'fill-rose-500' },
-      { row: lo, label: `low ${lo.price}`, cls: 'fill-sky-500' },
-    ]
-  }
+      { row: hi, label: `peak ${hi.price}`, cls: "fill-rose-500" },
+      { row: lo, label: `low ${lo.price}`, cls: "fill-sky-500" },
+    ];
+  };
 
   return (
     <g data-demo-overlay="">
@@ -53,8 +53,8 @@ function PeakTrough() {
       />
       <For each={extremes()}>
         {(e) => {
-          const cx = () => projectScale(x(), e.row.t)
-          const cy = () => projectScale(y(), e.row.price)
+          const cx = () => projectScale(x(), e.row.t);
+          const cy = () => projectScale(y(), e.row.price);
           return (
             <>
               <circle cx={cx()} cy={cy()} r={5} class={e.cls} />
@@ -67,11 +67,11 @@ function PeakTrough() {
                 {e.label}
               </text>
             </>
-          )
+          );
         }}
       </For>
     </g>
-  )
+  );
 }
 
 export default function CustomOverlay() {
@@ -85,13 +85,8 @@ export default function CustomOverlay() {
         <AxisLabel format={monthLabel} />
         <AxisLine class="stroke-black" />
       </Axis>
-      <Line
-        dataKey="price"
-        curve={curveNatural}
-        class="text-indigo-600"
-        stroke-width={2}
-      />
+      <Line dataKey="price" curve={curveNatural} class="text-indigo-600" stroke-width={2} />
       <PeakTrough />
     </Chart>
-  )
+  );
 }

@@ -1,21 +1,14 @@
-import {
-  type AxisOrientation,
-  type Domain,
-  useChartContext,
-} from '@src/components/context'
-import createScale from '@src/lib/createScale'
-import createClosestTick from '@src/lib/createClosestTick'
+import { type AxisOrientation, type Domain, useChartContext } from "@src/components/context";
+import createScale from "@src/lib/createScale";
+import createClosestTick from "@src/lib/createClosestTick";
 import createPolarClosestTick, {
   type ClosestPolarTick,
-} from '@src/lib/polar/createPolarClosestTick'
-import { usePolarLayout } from '@src/lib/polar/context'
-import {
-  createPolarAngleScale,
-  type PolarAngleScale,
-} from '@src/lib/polar/scale'
-import { type Scale, invertScale } from '@src/lib/scale'
-import { axisValues } from '@src/lib/utils'
-import { type Accessor, createMemo } from 'solid-js'
+} from "@src/lib/polar/createPolarClosestTick";
+import { usePolarLayout } from "@src/lib/polar/context";
+import { createPolarAngleScale, type PolarAngleScale } from "@src/lib/polar/scale";
+import { type Scale, invertScale } from "@src/lib/scale";
+import { axisValues } from "@src/lib/utils";
+import { type Accessor, createMemo } from "solid-js";
 
 /**
  * The plot rectangle — the drawable area inside the axis insets, in SVG
@@ -24,15 +17,15 @@ import { type Accessor, createMemo } from 'solid-js'
  * convenience.
  */
 export type PlotArea = {
-  x: number
-  y: number
-  width: number
-  height: number
-  left: number
-  right: number
-  top: number
-  bottom: number
-}
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+};
 
 /**
  * Reactive access to an axis scale, the same primitive `<Axis>` and every
@@ -50,25 +43,20 @@ export type PlotArea = {
  * @param axisId Axis to read. Defaults to `'x'`/`'y'` based on `orientation`.
  * @param orientation `'x'` or `'y'`. @defaultValue `'x'`
  */
-export const useScale = (
-  axisId?: string,
-  orientation: AxisOrientation = 'x',
-): Accessor<Scale> => {
-  const ctx = useChartContext()
+export const useScale = (axisId?: string, orientation: AxisOrientation = "x"): Accessor<Scale> => {
+  const ctx = useChartContext();
   return createScale({
     axisId: () => axisId ?? orientation,
     orientation: () => orientation,
     chartContext: ctx,
-  })
-}
+  });
+};
 
 /** The x-axis scale. @param axisId @defaultValue `'x'` */
-export const useXScale = (axisId = 'x'): Accessor<Scale> =>
-  useScale(axisId, 'x')
+export const useXScale = (axisId = "x"): Accessor<Scale> => useScale(axisId, "x");
 
 /** The value-axis scale. @param axisId @defaultValue `'y'` */
-export const useYScale = (axisId = 'y'): Accessor<Scale> =>
-  useScale(axisId, 'y')
+export const useYScale = (axisId = "y"): Accessor<Scale> => useScale(axisId, "y");
 
 /**
  * Maps a pixel position back to a domain value on an axis scale — the inverse
@@ -81,43 +69,43 @@ export const useYScale = (axisId = 'y'): Accessor<Scale> =>
  */
 export const useInverseScale = (
   axisId?: string,
-  orientation: AxisOrientation = 'x',
+  orientation: AxisOrientation = "x",
 ): Accessor<(pixel: number) => any> => {
-  const scale = useScale(axisId, orientation)
+  const scale = useScale(axisId, orientation);
   return createMemo(() => {
-    const s = scale()
-    return (pixel: number) => invertScale(s, pixel)
-  })
-}
+    const s = scale();
+    return (pixel: number) => invertScale(s, pixel);
+  });
+};
 
 /** Pixel→data on the x-axis. @param axisId @defaultValue `'x'` */
-export const useInverseXScale = (axisId = 'x'): Accessor<(pixel: number) => any> =>
-  useInverseScale(axisId, 'x')
+export const useInverseXScale = (axisId = "x"): Accessor<(pixel: number) => any> =>
+  useInverseScale(axisId, "x");
 
 /** Pixel→data on the value axis. @param axisId @defaultValue `'y'` */
-export const useInverseYScale = (axisId = 'y'): Accessor<(pixel: number) => any> =>
-  useInverseScale(axisId, 'y')
+export const useInverseYScale = (axisId = "y"): Accessor<(pixel: number) => any> =>
+  useInverseScale(axisId, "y");
 
 /** The resolved domain for an axis (categorical values or numeric min/max). */
 export const useDomain = (
   axisId?: string,
-  orientation: AxisOrientation = 'x',
+  orientation: AxisOrientation = "x",
 ): Accessor<Domain> => {
-  const ctx = useChartContext()
-  return createMemo(() => ctx.getDomain(axisId ?? orientation, orientation))
-}
+  const ctx = useChartContext();
+  return createMemo(() => ctx.getDomain(axisId ?? orientation, orientation));
+};
 
 /**
  * The plot rectangle (drawable area inside the axis insets). Use it to size
  * full-bleed overlays, background bands, or to clamp custom drawing.
  */
 export const usePlotArea = (): Accessor<PlotArea> => {
-  const ctx = useChartContext()
+  const ctx = useChartContext();
   return createMemo(() => {
-    const left = ctx.getInset('left')
-    const right = ctx.getInset('right')
-    const top = ctx.getInset('top')
-    const bottom = ctx.getInset('bottom')
+    const left = ctx.getInset("left");
+    const right = ctx.getInset("right");
+    const top = ctx.getInset("top");
+    const bottom = ctx.getInset("bottom");
     return {
       x: left,
       y: top,
@@ -127,21 +115,21 @@ export const usePlotArea = (): Accessor<PlotArea> => {
       right,
       top,
       bottom,
-    }
-  })
-}
+    };
+  });
+};
 
 /** The chart's outer pixel size (the SVG viewport, insets included). */
 export const useChartSize = (): Accessor<{ width: number; height: number }> => {
-  const ctx = useChartContext()
-  return createMemo(() => ({ width: ctx.width(), height: ctx.height() }))
-}
+  const ctx = useChartContext();
+  return createMemo(() => ({ width: ctx.width(), height: ctx.height() }));
+};
 
 /** The chart's data array. */
 export const useData = <TData extends unknown[] = unknown[]>(): Accessor<TData> => {
-  const ctx = useChartContext<TData>()
-  return ctx.data
-}
+  const ctx = useChartContext<TData>();
+  return ctx.data;
+};
 
 /**
  * The per-datum domain values for an axis — the values read from the axis's
@@ -150,42 +138,42 @@ export const useData = <TData extends unknown[] = unknown[]>(): Accessor<TData> 
  */
 export const useAxisValues = <TData extends unknown[] = unknown[]>(
   axisId?: string,
-  orientation: AxisOrientation = 'x',
+  orientation: AxisOrientation = "x",
 ): Accessor<any[]> => {
-  const ctx = useChartContext<TData>()
-  return createMemo(() => axisValues(ctx, axisId ?? orientation, orientation))
-}
+  const ctx = useChartContext<TData>();
+  return createMemo(() => axisValues(ctx, axisId ?? orientation, orientation));
+};
 
 /** Pointer position in container (HTML) coordinates, or `null` when outside. */
 export const usePointerPosition = (): Accessor<{
-  x: number
-  y: number
+  x: number;
+  y: number;
 } | null> => {
-  const ctx = useChartContext()
-  return ctx.pointerPosition
-}
+  const ctx = useChartContext();
+  return ctx.pointerPosition;
+};
 
 /** Whether the pointer is currently over the chart plot area. */
 export const usePointerInChart = (): Accessor<boolean> => {
-  const ctx = useChartContext()
-  return ctx.pointerInChart
-}
+  const ctx = useChartContext();
+  return ctx.pointerInChart;
+};
 
 /** Pointer position converted to SVG coordinates. */
 export const useSvgPointerPosition = (): Accessor<{
-  x: number
-  y: number
+  x: number;
+  y: number;
 } | null> => {
-  const ctx = useChartContext()
+  const ctx = useChartContext();
   return createMemo(() => {
-    const pointer = ctx.pointerPosition()
-    if (!pointer) return null
+    const pointer = ctx.pointerPosition();
+    if (!pointer) return null;
     return {
-      x: ctx.toSvgPosition(pointer.x, 'width'),
-      y: ctx.toSvgPosition(pointer.y, 'height'),
-    }
-  })
-}
+      x: ctx.toSvgPosition(pointer.x, "width"),
+      y: ctx.toSvgPosition(pointer.y, "height"),
+    };
+  });
+};
 
 /**
  * The datum nearest the pointer along an axis — the same logic crosshairs and
@@ -193,69 +181,69 @@ export const useSvgPointerPosition = (): Accessor<{
  * position, and the full data row.
  */
 export type ClosestTick<TData extends unknown[] = unknown[]> = {
-  index: number
-  value: any
-  position: number
-  datum: TData[number]
-}
+  index: number;
+  value: any;
+  position: number;
+  datum: TData[number];
+};
 
-export type { ClosestPolarTick }
+export type { ClosestPolarTick };
 
 /**
  * The category spoke nearest the pointer on a polar angle axis — same logic
  * {@link PolarTooltip} and {@link PolarCrosshair} use internally.
  */
 export const usePolarClosestTick = (
-  angleAxisId = 'angle',
+  angleAxisId = "angle",
 ): Accessor<ClosestPolarTick | undefined> => {
-  const ctx = useChartContext()
-  const layout = usePolarLayout()
+  const ctx = useChartContext();
+  const layout = usePolarLayout();
   const scale = createPolarAngleScale({
     axisId: () => angleAxisId,
     layout,
     chartContext: ctx,
-  })
-  const values = useAxisValues(angleAxisId, 'angle')
+  });
+  const values = useAxisValues(angleAxisId, "angle");
   const closest = createPolarClosestTick({
     layout,
     scale: () => scale() as PolarAngleScale,
     values,
     chartContext: ctx,
-  })
+  });
   return createMemo(() => {
-    const tick = closest()
-    if (!tick) return undefined
+    const tick = closest();
+    if (!tick) return undefined;
     return {
       index: tick.index,
       value: values()[tick.index],
       angle: tick.angle,
       datum: ctx.data()[tick.index],
-    }
-  })
-}
+    };
+  });
+};
 
 export const useClosestTick = <TData extends unknown[] = unknown[]>(
   axisId?: string,
-  orientation: 'x' | 'y' = 'x',
+  orientation: "x" | "y" = "x",
 ): Accessor<ClosestTick<TData> | undefined> => {
-  const ctx = useChartContext<TData>()
-  const scale = useScale(axisId, orientation)
-  const values = useAxisValues<TData>(axisId, orientation)
+  const ctx = useChartContext<TData>();
+  const scale = useScale(axisId, orientation);
+  const values = useAxisValues<TData>(axisId, orientation);
   const closest = createClosestTick({
     axis: () => orientation,
     scale,
     values,
     chartContext: ctx,
-  })
+  });
   return createMemo(() => {
-    const tick = closest()
-    if (!tick) return undefined
-    const rows = ctx.displayedData()
+    const tick = closest();
+    if (!tick) return undefined;
+    const rows = ctx.displayedData();
     return {
       index: tick.index,
       value: values()[tick.index],
       position: tick.position,
       datum: rows[tick.index]!,
-    }
-  })
-}
+    };
+  });
+};

@@ -1,5 +1,5 @@
-import { Axis, AxisGrid, AxisLabel, AxisLine, Bubble, Chart } from 'peculiar-charts'
-import { createSignal } from 'solid-js'
+import { Axis, AxisGrid, AxisLabel, AxisLine, Bubble, Chart } from "peculiar-charts";
+import { createSignal } from "solid-js";
 
 const dataA = [
   { x: 12, y: 34, z: 8 },
@@ -9,16 +9,16 @@ const dataA = [
   { x: 18, y: 41, z: 12 },
   { x: 50, y: 30, z: 10 },
   { x: 8, y: 72, z: 25 },
-]
+];
 
 const dataB = [
   { x: 20, y: 40, z: 10 },
   { x: 35, y: 50, z: 18 },
   { x: 15, y: 60, z: 6 },
-]
+];
 
 export default function AnimatedBubble() {
-  const [data, setData] = createSignal(dataA)
+  const [data, setData] = createSignal(dataA);
   return (
     <div class="flex h-full flex-col gap-3">
       <div class="flex gap-2">
@@ -55,11 +55,11 @@ export default function AnimatedBubble() {
           class="text-blue-400"
           animation={{
             duration: 500,
-            easing: 'ease-out',
-            exit: { duration: 400, easing: 'ease-in' },
+            easing: "ease-out",
+            exit: { duration: 400, easing: "ease-in" },
           }}
         />
       </Chart>
     </div>
-  )
+  );
 }

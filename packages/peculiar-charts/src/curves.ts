@@ -18,4 +18,4 @@ export {
   curveStep,
   curveStepAfter,
   curveStepBefore,
-} from 'd3-shape'
+} from "d3-shape";

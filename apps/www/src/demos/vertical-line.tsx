@@ -1,14 +1,5 @@
-import {
-  Axis,
-  AxisGrid,
-  AxisLabel,
-  AxisLine,
-  Chart,
-  Legend,
-  Line,
-  Point,
-} from 'peculiar-charts'
-import { sales } from '../data'
+import { Axis, AxisGrid, AxisLabel, AxisLine, Chart, Legend, Line, Point } from "peculiar-charts";
+import { sales } from "../data";
 
 export default function VerticalLine() {
   return (
@@ -46,12 +37,7 @@ export default function VerticalLine() {
         stroke-width={2}
         r={3}
       />
-      <Axis
-        axis="x"
-        position="bottom"
-        type="linear"
-        tickCount={5}
-      >
+      <Axis axis="x" position="bottom" type="linear" tickCount={5}>
         <AxisLabel />
         <AxisGrid class="stroke-black/10" />
       </Axis>
@@ -60,5 +46,5 @@ export default function VerticalLine() {
         <AxisLine class="stroke-black" />
       </Axis>
     </Chart>
-  )
+  );
 }

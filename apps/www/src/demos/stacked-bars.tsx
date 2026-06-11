@@ -9,9 +9,9 @@ import {
   Chart,
   Legend,
   Line,
-} from 'peculiar-charts'
-import { TOOLTIP_SHELL } from '../demoStyles'
-import { sales } from '../data'
+} from "peculiar-charts";
+import { TOOLTIP_SHELL } from "../demoStyles";
+import { sales } from "../data";
 
 export default function StackedBars() {
   return (
@@ -30,5 +30,5 @@ export default function StackedBars() {
         <AxisTooltip class={TOOLTIP_SHELL} />
       </Axis>
     </Chart>
-  )
+  );
 }

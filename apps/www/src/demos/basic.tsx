@@ -8,8 +8,8 @@ import {
   Chart,
   Line,
   Point,
-} from 'peculiar-charts'
-import { sales } from '../data'
+} from "peculiar-charts";
+import { sales } from "../data";
 
 export default function BasicLine() {
   return (
@@ -24,7 +24,7 @@ export default function BasicLine() {
         <AxisCrosshair stroke-dasharray="6,6" class="stroke-black/60" />
         <AxisTooltip class="flex flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-lg">
           {(p) => {
-            const row = p.data as (typeof sales)[number]
+            const row = p.data as (typeof sales)[number];
             return (
               <>
                 <div class="border-b border-zinc-200 bg-zinc-50 p-2 text-xs font-medium">
@@ -36,17 +36,11 @@ export default function BasicLine() {
                   <span>{row.coffee}</span>
                 </div>
               </>
-            )
+            );
           }}
         </AxisTooltip>
       </Axis>
-      <Line
-        dataKey="coffee"
-        name="Coffee"
-        class="text-blue-500"
-        color="#3b82f6"
-        stroke-width={3}
-      />
+      <Line dataKey="coffee" name="Coffee" class="text-blue-500" color="#3b82f6" stroke-width={3} />
       <Point
         dataKey="coffee"
         class="text-blue-600 stroke-white transition-all"
@@ -56,5 +50,5 @@ export default function BasicLine() {
         activeProps={{ r: 6 }}
       />
     </Chart>
-  )
+  );
 }

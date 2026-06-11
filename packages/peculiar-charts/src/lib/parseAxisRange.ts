@@ -12,26 +12,26 @@ export type DomainExpression =
   | `dataMin`
   | `dataMax`
   | `dataMin - ${number}`
-  | `dataMax + ${number}`
+  | `dataMax + ${number}`;
 
-const RE = /^data(Min|Max)\s*([+-])?\s*([\d.]+)?$/
+const RE = /^data(Min|Max)\s*([+-])?\s*([\d.]+)?$/;
 
 export function parseAxisRange(
   expr: string,
 ): ((dataMin: number, dataMax: number) => number) | null {
-  const m = RE.exec(expr.trim())
-  if (!m) return null
+  const m = RE.exec(expr.trim());
+  if (!m) return null;
 
-  const bound = m[1] === 'Min' ? 'min' : 'max'
-  const op = m[2]
-  const num = m[3] !== undefined ? +m[3] : undefined
+  const bound = m[1] === "Min" ? "min" : "max";
+  const op = m[2];
+  const num = m[3] !== undefined ? +m[3] : undefined;
 
   return (dataMin: number, dataMax: number) => {
-    const base = bound === 'min' ? dataMin : dataMax
-    if (op === '-' && num !== undefined) return base - num
-    if (op === '+' && num !== undefined) return base + num
-    return base
-  }
+    const base = bound === "min" ? dataMin : dataMax;
+    if (op === "-" && num !== undefined) return base - num;
+    if (op === "+" && num !== undefined) return base + num;
+    return base;
+  };
 }
 
 /**
@@ -41,14 +41,14 @@ export function parseAxisRange(
  * string, evaluates it against the data bounds.
  */
 export function resolveRangeValue(
-  value: number | 'min' | 'max' | string,
+  value: number | "min" | "max" | string,
   dataMin: number,
   dataMax: number,
 ): number | undefined {
-  if (typeof value === 'number') return value
-  if (value === 'min') return undefined
-  if (value === 'max') return undefined
-  const fn = parseAxisRange(value)
-  if (fn) return fn(dataMin, dataMax)
-  return undefined
+  if (typeof value === "number") return value;
+  if (value === "min") return undefined;
+  if (value === "max") return undefined;
+  const fn = parseAxisRange(value);
+  if (fn) return fn(dataMin, dataMax);
+  return undefined;
 }

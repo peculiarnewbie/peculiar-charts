@@ -8,8 +8,8 @@ import {
   Chart,
   Legend,
   Line,
-} from 'peculiar-charts'
-import { sales } from '../data'
+} from "peculiar-charts";
+import { sales } from "../data";
 
 export default function GroupedBars() {
   return (
@@ -28,5 +28,5 @@ export default function GroupedBars() {
       <Bar dataKey="tea" name="Tea" class="text-emerald-400" color="#34d399" />
       <Line dataKey="coffee" class="text-blue-700" color="#1d4ed8" stroke-width={3} />
     </Chart>
-  )
+  );
 }

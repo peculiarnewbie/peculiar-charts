@@ -17,24 +17,24 @@ type AnimationEasing =
   | "ease-in"
   | "ease-out"
   | "ease-in-out"
-  | `cubic-bezier(${number}, ${number}, ${number}, ${number})`
+  | `cubic-bezier(${number}, ${number}, ${number}, ${number})`;
 
 type PhaseConfig = {
-  duration?: number
-  easing?: AnimationEasing
-  delay?: number
-}
+  duration?: number;
+  easing?: AnimationEasing;
+  delay?: number;
+};
 
 type AnimationOptions =
   | boolean
   | {
-      enabled?: boolean | "auto"
-      duration?: number
-      easing?: AnimationEasing
-      delay?: number
-      enter?: PhaseConfig
-      exit?: PhaseConfig
-    }
+      enabled?: boolean | "auto";
+      duration?: number;
+      easing?: AnimationEasing;
+      delay?: number;
+      enter?: PhaseConfig;
+      exit?: PhaseConfig;
+    };
 ```
 
 Example usage:
@@ -91,15 +91,15 @@ Each series computes final SVG geometry through reactive memos, then passes it t
 data → geometry memo → createTweenedArray/createPresence → <svg elements>
 ```
 
-| Series   | Animated properties                        | Enter animation                | Exit animation              |
-| -------- | ------------------------------------------ | ------------------------------ | --------------------------- |
-| Bar      | `x`, `y`, `width`, `height`               | Grow from baseline (h=0)       | Shrink to baseline (h=0)    |
-| Point    | `cx`, `cy`, `r`                           | Scale from r=0                 | Scale to r=0                |
-| Bubble   | `cx`, `cy`, `r`                           | Scale from r=0                 | Scale to r=0                |
-| Pie      | `startAngle`, `endAngle`                   | Grow from zero angular span    | Shrink to zero angular span |
-| Line     | `[x, y]` point coordinates                 | Points appear at final position | N/A (path snaps)            |
-| Area     | `[x, y]` points + baseline                 | Points appear at final position | N/A (path snaps)            |
-| Radar    | —                                          | —                               | Not yet supported           |
+| Series | Animated properties         | Enter animation                 | Exit animation              |
+| ------ | --------------------------- | ------------------------------- | --------------------------- |
+| Bar    | `x`, `y`, `width`, `height` | Grow from baseline (h=0)        | Shrink to baseline (h=0)    |
+| Point  | `cx`, `cy`, `r`             | Scale from r=0                  | Scale to r=0                |
+| Bubble | `cx`, `cy`, `r`             | Scale from r=0                  | Scale to r=0                |
+| Pie    | `startAngle`, `endAngle`    | Grow from zero angular span     | Shrink to zero angular span |
+| Line   | `[x, y]` point coordinates  | Points appear at final position | N/A (path snaps)            |
+| Area   | `[x, y]` points + baseline  | Points appear at final position | N/A (path snaps)            |
+| Radar  | —                           | —                               | Not yet supported           |
 
 Line and Area do not support per-point exit animations because the path would distort during the
 transition. Use the `animation` prop for enter/update tweening only.
@@ -118,7 +118,7 @@ import {
   interpolateNumber,
   interpolatePoint,
   resolveAnimation,
-} from "peculiar-charts"
+} from "peculiar-charts";
 
 // Types also exported: AnimationOptions, AnimationEasing, ResolvedAnimationOptions,
 // PhaseConfig, ResolvedPhaseConfig, PresenceItem, PresenceMode

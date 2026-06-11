@@ -1,13 +1,5 @@
-import {
-  Axis,
-  AxisGrid,
-  AxisLabel,
-  AxisLine,
-  Bar,
-  Chart,
-  Legend,
-} from 'peculiar-charts'
-import { sales } from '../data'
+import { Axis, AxisGrid, AxisLabel, AxisLine, Bar, Chart, Legend } from "peculiar-charts";
+import { sales } from "../data";
 
 export default function HorizontalBars() {
   return (
@@ -30,5 +22,5 @@ export default function HorizontalBars() {
         <AxisLine class="stroke-black" />
       </Axis>
     </Chart>
-  )
+  );
 }

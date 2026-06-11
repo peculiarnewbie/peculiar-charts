@@ -1,68 +1,67 @@
-import { createWritableMemo } from '@solid-primitives/memo'
-import { PolarAxisContext } from '@src/axis/polar/context'
-import { useChartContext } from '@src/components/context'
-import { usePolarLayout } from '@src/lib/polar/context'
-import { createPolarRadiusScale, polarScaleTicks } from '@src/lib/polar/scale'
-import { type JSX, createEffect, mergeProps, onCleanup } from 'solid-js'
+import { createWritableMemo } from "@solid-primitives/memo";
+import { PolarAxisContext } from "@src/axis/polar/context";
+import { useChartContext } from "@src/components/context";
+import { usePolarLayout } from "@src/lib/polar/context";
+import { createPolarRadiusScale, polarScaleTicks } from "@src/lib/polar/scale";
+import { type JSX, createEffect, mergeProps, onCleanup } from "solid-js";
 
 export type PolarRadiusAxisProps = {
   /** Axis id series bind to. @defaultValue `'radius'` */
-  axisId?: string
+  axisId?: string;
   /** Target number of ticks. @defaultValue `5` */
-  tickCount?: number
+  tickCount?: number;
   /** Force specific tick values. */
-  tickValues?: any[]
+  tickValues?: any[];
   /** Numeric domain override. @defaultValue `'auto'` */
-  axisRange?: 'auto' | [number | 'min', number | 'max']
+  axisRange?: "auto" | [number | "min", number | "max"];
   /** Angle in radians where radius ticks are drawn. @defaultValue `0` (right) */
-  angle?: number
-  children?: JSX.Element
-}
+  angle?: number;
+  children?: JSX.Element;
+};
 
 /** Radial value axis — maps data magnitudes to distance from centre. */
 const PolarRadiusAxis = (props: PolarRadiusAxisProps) => {
   const defaultedProps = mergeProps(
     {
-      axisId: 'radius',
+      axisId: "radius",
       tickCount: 5,
-      axisRange: 'auto' as const,
+      axisRange: "auto" as const,
       angle: 0,
     },
     props,
-  )
-  const chartContext = useChartContext()
-  const layout = usePolarLayout()
+  );
+  const chartContext = useChartContext();
+  const layout = usePolarLayout();
 
   createEffect(() => {
     chartContext.registerAxisConfig(defaultedProps.axisId, {
-      orientation: 'radius',
-      type: 'linear',
-      range:
-        defaultedProps.axisRange === 'auto' ? null : defaultedProps.axisRange,
+      orientation: "radius",
+      type: "linear",
+      range: defaultedProps.axisRange === "auto" ? null : defaultedProps.axisRange,
       reverse: false,
-    })
-    onCleanup(() => chartContext.unregisterAxisConfig(defaultedProps.axisId))
-  })
+    });
+    onCleanup(() => chartContext.unregisterAxisConfig(defaultedProps.axisId));
+  });
 
   const scale = createPolarRadiusScale({
     axisId: () => defaultedProps.axisId,
     layout,
     chartContext,
-  })
+  });
 
   const ticks = () => {
-    const forced = defaultedProps.tickValues
-    if (forced) return forced
-    return polarScaleTicks(scale(), defaultedProps.tickCount)
-  }
+    const forced = defaultedProps.tickValues;
+    if (forced) return forced;
+    return polarScaleTicks(scale(), defaultedProps.tickCount);
+  };
 
-  const [labelTicks, setLabelTicks] = createWritableMemo(() => ticks())
+  const [labelTicks, setLabelTicks] = createWritableMemo(() => ticks());
 
   return (
     <PolarAxisContext.Provider
       value={{
         axisId: () => defaultedProps.axisId,
-        axis: () => 'radius',
+        axis: () => "radius",
         scale,
         ticks,
         labelTicks,
@@ -72,7 +71,7 @@ const PolarRadiusAxis = (props: PolarRadiusAxisProps) => {
     >
       {defaultedProps.children}
     </PolarAxisContext.Provider>
-  )
-}
+  );
+};
 
-export default PolarRadiusAxis
+export default PolarRadiusAxis;

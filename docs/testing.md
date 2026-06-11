@@ -4,14 +4,14 @@ Research from recharts and ag-charts reference clones, adapted for peculiar-char
 
 ## Current State
 
-| What | Detail |
-|---|---|
-| Runner | Vitest 4.x with `happy-dom` |
-| Files | 12 test files (1 component, 11 unit) |
-| Helpers | `createMockChartContext()` only |
-| Coverage | Not configured |
-| Snapshots | None |
-| Setup file | None |
+| What       | Detail                               |
+| ---------- | ------------------------------------ |
+| Runner     | Vitest 4.x with `happy-dom`          |
+| Files      | 12 test files (1 component, 11 unit) |
+| Helpers    | `createMockChartContext()` only      |
+| Coverage   | Not configured                       |
+| Snapshots  | None                                 |
+| Setup file | None                                 |
 
 ## What to Borrow
 
@@ -23,21 +23,24 @@ Recharts has 291 test files. Their SVG-first approach maps directly to our archi
 
 ```ts
 // references/recharts/test/helper/expectBars.ts
-export function expectBars(container: Element, expected: Array<{
-  d?: string
-  x?: string | number
-  y?: string | number
-  width?: string | number
-  height?: string | number
-}>) {
-  const bars = container.querySelectorAll('.recharts-bar-rectangle')
-  expect(bars).toHaveLength(expected.length)
+export function expectBars(
+  container: Element,
+  expected: Array<{
+    d?: string;
+    x?: string | number;
+    y?: string | number;
+    width?: string | number;
+    height?: string | number;
+  }>,
+) {
+  const bars = container.querySelectorAll(".recharts-bar-rectangle");
+  expect(bars).toHaveLength(expected.length);
   expected.forEach((exp, i) => {
-    const rect = bars[i].querySelector('rect') ?? bars[i].querySelector('path')
-    if (exp.d) expect(rect).toHaveAttribute('d', exp.d)
-    if (exp.x !== undefined) expect(rect).toHaveAttribute('x', String(exp.x))
+    const rect = bars[i].querySelector("rect") ?? bars[i].querySelector("path");
+    if (exp.d) expect(rect).toHaveAttribute("d", exp.d);
+    if (exp.x !== undefined) expect(rect).toHaveAttribute("x", String(exp.x));
     // ...
-  })
+  });
 }
 ```
 
@@ -48,11 +51,17 @@ Adapt this pattern for our elements: `expectLines()`, `expectBars()`, `expectDot
 ```ts
 // references/recharts/test/helper/mockGetBoundingClientRect.ts
 export function mockGetBoundingClientRect() {
-  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({
-    x: 0, y: 0, width: 800, height: 600,
-    top: 0, right: 800, bottom: 600, left: 0,
+  vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue({
+    x: 0,
+    y: 0,
+    width: 800,
+    height: 600,
+    top: 0,
+    right: 800,
+    bottom: 600,
+    left: 0,
     toJSON() {},
-  })
+  });
 }
 ```
 
@@ -61,22 +70,22 @@ export function mockGetBoundingClientRect() {
 ```ts
 // references/recharts/test/helper/consoleWarningToError.ts
 export function setupConsoleWarningToError() {
-  const originalWarn = console.warn
-  const originalError = console.error
+  const originalWarn = console.warn;
+  const originalError = console.error;
   beforeEach(() => {
     console.warn = (...args: unknown[]) => {
-      if (isIgnored(args)) return originalWarn(...args)
-      throw new Error(`Unexpected console.warn: ${args.join(' ')}`)
-    }
+      if (isIgnored(args)) return originalWarn(...args);
+      throw new Error(`Unexpected console.warn: ${args.join(" ")}`);
+    };
     console.error = (...args: unknown[]) => {
-      if (isIgnored(args)) return originalError(...args)
-      throw new Error(`Unexpected console.error: ${args.join(' ')}`)
-    }
-  })
+      if (isIgnored(args)) return originalError(...args);
+      throw new Error(`Unexpected console.error: ${args.join(" ")}`);
+    };
+  });
   afterEach(() => {
-    console.warn = originalWarn
-    console.error = originalError
-  })
+    console.warn = originalWarn;
+    console.error = originalError;
+  });
 }
 ```
 
@@ -85,14 +94,16 @@ export function setupConsoleWarningToError() {
 ```ts
 // references/recharts/test/helper/parameterizedTestCases.tsx
 const allCartesianChartCases = [
-  { name: 'LineChart', ChartComponent: LineChart },
-  { name: 'BarChart', ChartComponent: BarChart },
-  { name: 'AreaChart', ChartComponent: AreaChart },
-]
+  { name: "LineChart", ChartComponent: LineChart },
+  { name: "BarChart", ChartComponent: BarChart },
+  { name: "AreaChart", ChartComponent: AreaChart },
+];
 
-describe.each(allCartesianChartCases)('$name', ({ ChartComponent }) => {
-  it('renders with data', () => { /* ... */ })
-})
+describe.each(allCartesianChartCases)("$name", ({ ChartComponent }) => {
+  it("renders with data", () => {
+    /* ... */
+  });
+});
 ```
 
 ### From AG Charts (Canvas-based, heavier)
@@ -155,23 +166,23 @@ Only worth building if our `createTweened` / `createPresence` animations become 
 
 ## Key Differences from Recharts
 
-| Aspect | Recharts | peculiar-charts |
-|---|---|---|
-| Framework | React | SolidJS |
-| DOM env | jsdom | happy-dom |
-| Rendering | `@testing-library/react` `render()` | `@solidjs/testing-library` `render()` |
-| State | Redux selectors | Solid signals/memos |
-| Selector testing | `createSelectorTestCase` with spy | Test signal values directly via `createRoot` |
-| Animation | Custom `MockProgressAnimationManager` | `createTweened` — simpler, may not need mocking yet |
+| Aspect           | Recharts                              | peculiar-charts                                     |
+| ---------------- | ------------------------------------- | --------------------------------------------------- |
+| Framework        | React                                 | SolidJS                                             |
+| DOM env          | jsdom                                 | happy-dom                                           |
+| Rendering        | `@testing-library/react` `render()`   | `@solidjs/testing-library` `render()`               |
+| State            | Redux selectors                       | Solid signals/memos                                 |
+| Selector testing | `createSelectorTestCase` with spy     | Test signal values directly via `createRoot`        |
+| Animation        | Custom `MockProgressAnimationManager` | `createTweened` — simpler, may not need mocking yet |
 
 ## Key Differences from AG Charts
 
-| Aspect | AG Charts | peculiar-charts |
-|---|---|---|
-| Rendering | Canvas (skia-canvas in Node) | SVG |
-| Test infra | Dedicated `ag-charts-test` package | Helpers in `__tests__/helpers/` |
-| Image snapshots | Core testing strategy | Nice-to-have, not essential |
-| Memory benchmarks | `sizeOf()` deep object analysis | Not needed yet |
+| Aspect            | AG Charts                          | peculiar-charts                 |
+| ----------------- | ---------------------------------- | ------------------------------- |
+| Rendering         | Canvas (skia-canvas in Node)       | SVG                             |
+| Test infra        | Dedicated `ag-charts-test` package | Helpers in `__tests__/helpers/` |
+| Image snapshots   | Core testing strategy              | Nice-to-have, not essential     |
+| Memory benchmarks | `sizeOf()` deep object analysis    | Not needed yet                  |
 
 ## File Layout
 

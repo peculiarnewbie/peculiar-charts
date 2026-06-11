@@ -10,50 +10,42 @@ import {
   ReferenceLine,
   useClosestTick,
   usePointerInChart,
-} from 'peculiar-charts'
-import { Show, createMemo } from 'solid-js'
+} from "peculiar-charts";
+import { Show, createMemo } from "solid-js";
 
 const data = [
-  { month: 'Jan', current: 118, compare: 128 },
-  { month: 'Feb', current: 132, compare: 136 },
-  { month: 'Mar', current: 126, compare: 144 },
-  { month: 'Apr', current: 148, compare: 154 },
-  { month: 'May', current: 164, compare: 162 },
-  { month: 'Jun', current: 176, compare: 170 },
-]
+  { month: "Jan", current: 118, compare: 128 },
+  { month: "Feb", current: 132, compare: 136 },
+  { month: "Mar", current: 126, compare: 144 },
+  { month: "Apr", current: 148, compare: 154 },
+  { month: "May", current: 164, compare: 162 },
+  { month: "Jun", current: 176, compare: 170 },
+];
 
 function HoverComparison() {
-  const tick = useClosestTick<typeof data>('x', 'x')
-  const pointerInChart = usePointerInChart()
+  const tick = useClosestTick<typeof data>("x", "x");
+  const pointerInChart = usePointerInChart();
   const hoverPercentage = createMemo(() => {
-    if (!pointerInChart()) return 100
-    const index = tick()?.index ?? data.length - 1
-    return (index / (data.length - 1)) * 100
-  })
+    if (!pointerInChart()) return 100;
+    const index = tick()?.index ?? data.length - 1;
+    return (index / (data.length - 1)) * 100;
+  });
   const segment = createMemo(() => {
-    const active = tick()?.datum
-    if (!pointerInChart() || !active) return undefined
+    const active = tick()?.datum;
+    if (!pointerInChart() || !active) return undefined;
     return [
       { x: active.month, y: active.compare },
       { x: active.month, y: active.current },
-    ] as [{ x: string; y: number }, { x: string; y: number }]
-  })
+    ] as [{ x: string; y: number }, { x: string; y: number }];
+  });
 
   return (
     <>
       <defs>
         <linearGradient id="compareLineColor" x1="0%" y1="0" x2="100%" y2="0">
           <stop offset="0%" stop-color="#e11d48" stop-opacity="1" />
-          <stop
-            offset={`${hoverPercentage()}%`}
-            stop-color="#e11d48"
-            stop-opacity="1"
-          />
-          <stop
-            offset={`${hoverPercentage()}%`}
-            stop-color="#e11d48"
-            stop-opacity="0.2"
-          />
+          <stop offset={`${hoverPercentage()}%`} stop-color="#e11d48" stop-opacity="1" />
+          <stop offset={`${hoverPercentage()}%`} stop-color="#e11d48" stop-opacity="0.2" />
           <stop offset="100%" stop-color="#e11d48" stop-opacity="0.2" />
         </linearGradient>
       </defs>
@@ -69,7 +61,7 @@ function HoverComparison() {
         )}
       </Show>
     </>
-  )
+  );
 }
 
 export default function ReferenceLineSegment() {
@@ -85,12 +77,12 @@ export default function ReferenceLineSegment() {
         <AxisCrosshair class="stroke-black/35" />
         <AxisTooltip class="rounded-lg border border-zinc-200 bg-white px-2 py-1 text-xs shadow-lg">
           {(p) => {
-            const row = p.data as (typeof data)[number]
+            const row = p.data as (typeof data)[number];
             return (
               <span>
                 {row.month}: <b>{row.current}</b> vs {row.compare}
               </span>
-            )
+            );
           }}
         </AxisTooltip>
       </Axis>
@@ -105,8 +97,8 @@ export default function ReferenceLineSegment() {
         stroke-linecap="round"
         activeDot={{
           r: 4,
-          class: 'fill-rose-500 stroke-white',
-          'stroke-width': 2,
+          class: "fill-rose-500 stroke-white",
+          "stroke-width": 2,
         }}
       />
       <Line
@@ -117,10 +109,10 @@ export default function ReferenceLineSegment() {
         dot={false}
         activeDot={{
           r: 4,
-          class: 'fill-indigo-600 stroke-white',
-          'stroke-width': 2,
+          class: "fill-indigo-600 stroke-white",
+          "stroke-width": 2,
         }}
       />
     </Chart>
-  )
+  );
 }

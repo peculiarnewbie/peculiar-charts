@@ -1,12 +1,5 @@
-import {
-  Axis,
-  AxisGrid,
-  AxisLabel,
-  AxisLine,
-  Bubble,
-  Chart,
-} from 'peculiar-charts'
-import { bubbles } from '../data'
+import { Axis, AxisGrid, AxisLabel, AxisLine, Bubble, Chart } from "peculiar-charts";
+import { bubbles } from "../data";
 
 export default function BubbleChart() {
   return (
@@ -16,13 +9,7 @@ export default function BubbleChart() {
         <AxisGrid class="stroke-black/10" />
       </Axis>
       {/* numeric x — each bubble sits at its real (price, rating) coordinate */}
-      <Axis
-        dataKey="price"
-        axis="x"
-        type="linear"
-        position="bottom"
-        tickCount={6}
-      >
+      <Axis dataKey="price" axis="x" type="linear" position="bottom" tickCount={6}>
         <AxisLabel />
         <AxisLine class="stroke-black" />
         <AxisGrid class="stroke-black/10" />
@@ -35,8 +22,8 @@ export default function BubbleChart() {
         class="text-violet-500"
         stroke="white"
         stroke-width={1}
-        activeProps={{ 'fill-opacity': 0.9 }}
+        activeProps={{ "fill-opacity": 0.9 }}
       />
     </Chart>
-  )
+  );
 }

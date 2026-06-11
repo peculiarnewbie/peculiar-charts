@@ -16,20 +16,20 @@ Props are reactive objects. Do not destructure them directly.
 
 ```tsx
 // Avoid: loses reactivity
-const { dataKey } = props
-const dataKey = props.dataKey
+const { dataKey } = props;
+const dataKey = props.dataKey;
 
 // Prefer
-const dataKey = () => props.dataKey
+const dataKey = () => props.dataKey;
 
 // Or, for components
-const [localProps, otherProps] = splitProps(props, ['dataKey'])
+const [localProps, otherProps] = splitProps(props, ["dataKey"]);
 ```
 
 Use `mergeProps` for defaults because it preserves reactivity.
 
 ```tsx
-const defaultedProps = mergeProps({ xAxisId: 'x' }, props)
+const defaultedProps = mergeProps({ xAxisId: "x" }, props);
 ```
 
 Use `splitProps` for local/event/rest prop groups.
@@ -37,9 +37,9 @@ Use `splitProps` for local/event/rest prop groups.
 ```tsx
 const [localProps, eventProps, otherProps] = splitProps(
   defaultedProps,
-  ['dataKey', 'xAxisId'],
-  ['onPointClick'],
-)
+  ["dataKey", "xAxisId"],
+  ["onPointClick"],
+);
 ```
 
 ## Accessors
@@ -49,9 +49,9 @@ Pass changing values as accessors, especially through helpers and context.
 ```tsx
 createScale({
   axisId: () => localProps.xAxisId,
-  orientation: () => 'x',
+  orientation: () => "x",
   chartContext,
-})
+});
 ```
 
 Avoid capturing reactive props as plain values unless they are intentionally structural and static, such as axis orientation or layout position.
@@ -61,7 +61,7 @@ Avoid capturing reactive props as plain values unless they are intentionally str
 Use `createMemo` for derived values.
 
 ```tsx
-const data = createMemo(() => accessData(chartContext.data(), localProps.dataKey))
+const data = createMemo(() => accessData(chartContext.data(), localProps.dataKey));
 ```
 
 Keep memos pure: no signal writes, DOM reads, registrations, or side effects.
@@ -70,9 +70,9 @@ Use `createEffect` for synchronization with external systems or registries, and 
 
 ```tsx
 createEffect(() => {
-  chartContext.registerSeriesMeta(seriesId, meta())
-  onCleanup(() => chartContext.unregisterSeriesMeta(seriesId))
-})
+  chartContext.registerSeriesMeta(seriesId, meta());
+  onCleanup(() => chartContext.unregisterSeriesMeta(seriesId));
+});
 ```
 
 ## Lists
@@ -108,10 +108,10 @@ Wrap `useContext` in a project hook that throws a useful error.
 
 ```tsx
 export const useChartContext = () => {
-  const context = useContext(ChartContext)
-  if (!context) throw new Error('Chart context not found')
-  return context
-}
+  const context = useContext(ChartContext);
+  if (!context) throw new Error("Chart context not found");
+  return context;
+};
 ```
 
 Context values should expose accessors for reactive state.

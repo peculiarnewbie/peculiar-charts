@@ -8,10 +8,10 @@
     "directory": "dist/client",
     "binding": "ASSETS",
     "html_handling": "none",
-    "not_found_handling": "none"
+    "not_found_handling": "none",
   },
   "observability": {
-    "enabled": true
+    "enabled": true,
   },
-  "routes": [{ "pattern": "charts.peculiarnewbie.com", "custom_domain": true }]
+  "routes": [{ "pattern": "charts.peculiarnewbie.com", "custom_domain": true }],
 }

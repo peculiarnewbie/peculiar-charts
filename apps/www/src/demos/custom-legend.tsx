@@ -1,14 +1,5 @@
-import {
-  Axis,
-  AxisGrid,
-  AxisLabel,
-  AxisLine,
-  Bar,
-  Chart,
-  Legend,
-  Line,
-} from 'peculiar-charts'
-import { sales } from '../data'
+import { Axis, AxisGrid, AxisLabel, AxisLine, Bar, Chart, Legend, Line } from "peculiar-charts";
+import { sales } from "../data";
 
 export default function CustomLegend() {
   return (
@@ -40,5 +31,5 @@ export default function CustomLegend() {
       </Axis>
       <Line dataKey="coffee" class="text-blue-700" color="#1d4ed8" stroke-width={2} />
     </Chart>
-  )
+  );
 }

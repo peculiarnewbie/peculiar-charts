@@ -8,9 +8,9 @@ import {
   AxisTooltip,
   Chart,
   Line,
-} from 'peculiar-charts'
-import { curveNatural } from 'peculiar-charts/curves'
-import { monthLabel, priceSeries } from '../data'
+} from "peculiar-charts";
+import { curveNatural } from "peculiar-charts/curves";
+import { monthLabel, priceSeries } from "../data";
 
 export default function DatetimeAxis() {
   return (
@@ -26,12 +26,12 @@ export default function DatetimeAxis() {
         <AxisCrosshair class="stroke-black/50" stroke-dasharray="4,4" />
         <AxisTooltip class="rounded-lg border border-zinc-200 bg-white px-2 py-1 text-xs shadow-lg">
           {(p) => {
-            const row = p.data as (typeof priceSeries)[number]
+            const row = p.data as (typeof priceSeries)[number];
             return (
               <span>
                 {monthLabel(new Date(row.t))}: <b>{row.price}</b>
               </span>
-            )
+            );
           }}
         </AxisTooltip>
       </Axis>
@@ -44,5 +44,5 @@ export default function DatetimeAxis() {
         stroke-width={2}
       />
     </Chart>
-  )
+  );
 }

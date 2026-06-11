@@ -1,26 +1,14 @@
-import {
-  Axis,
-  AxisGrid,
-  AxisLabel,
-  AxisLine,
-  Bar,
-  Chart,
-  Legend,
-} from 'peculiar-charts'
-import { createSignal } from 'solid-js'
-import { sales } from '../data'
+import { Axis, AxisGrid, AxisLabel, AxisLine, Bar, Chart, Legend } from "peculiar-charts";
+import { createSignal } from "solid-js";
+import { sales } from "../data";
 
 export default function CustomBarShapes() {
-  const [picked, setPicked] = createSignal<{ day: string; v: number } | null>(
-    null,
-  )
+  const [picked, setPicked] = createSignal<{ day: string; v: number } | null>(null);
 
   return (
     <div>
       <p class="mb-2 h-4 text-xs text-black/60">
-        {picked()
-          ? `clicked ${picked()!.day}: ${picked()!.v} coffees`
-          : 'click a bar →'}
+        {picked() ? `clicked ${picked()!.day}: ${picked()!.v} coffees` : "click a bar →"}
       </p>
       <Chart data={sales}>
         <Legend class="text-xs" />
@@ -30,9 +18,7 @@ export default function CustomBarShapes() {
           class="text-blue-500"
           color="#3b82f6"
           shape={{ rx: 6, ry: 6 }}
-          onPointClick={(d) =>
-            setPicked({ day: sales[d.index]!.day, v: d.value })
-          }
+          onPointClick={(d) => setPicked({ day: sales[d.index]!.day, v: d.value })}
         />
         <Bar
           dataKey="tea"
@@ -61,5 +47,5 @@ export default function CustomBarShapes() {
         </Axis>
       </Chart>
     </div>
-  )
+  );
 }

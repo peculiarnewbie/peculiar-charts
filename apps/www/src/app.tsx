@@ -452,7 +452,7 @@ const FEATURE_PARITY_DEMOS: Demo[] = [
     id: "axis-domain-expression",
     group: "Axis",
     title: "Axis domain expressions",
-    desc: 'Covers the Recharts `domain={[0, \'dataMax + 1000\']}` parity gap. String expressions like `\'dataMax + 1000\'` or `\'dataMin - 50\'` are evaluated against the computed data extent, so the axis extends beyond the data range without hardcoding numeric bounds.',
+    desc: "Covers the Recharts `domain={[0, 'dataMax + 1000']}` parity gap. String expressions like `'dataMax + 1000'` or `'dataMin - 50'` are evaluated against the computed data extent, so the axis extends beyond the data range without hardcoding numeric bounds.",
     Comp: AxisDomainExpression,
     code: axisDomainExpressionCode,
   },
@@ -898,7 +898,10 @@ function AllDemos() {
       <div class="mx-auto grid max-w-6xl grid-cols-1 gap-4 md:grid-cols-2">
         <For each={DEMOS}>
           {(d) => (
-            <div data-testid={`demo-${d.id}`} class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+            <div
+              data-testid={`demo-${d.id}`}
+              class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm"
+            >
               <p class="mb-2 text-xs font-medium text-zinc-500">{d.title}</p>
               <div class="relative h-[240px]">
                 <Dynamic component={d.Comp} />

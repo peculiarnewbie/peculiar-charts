@@ -1,15 +1,7 @@
-import {
-  Area,
-  Axis,
-  AxisGrid,
-  AxisLabel,
-  AxisLine,
-  Chart,
-  Legend,
-} from 'peculiar-charts'
-import { sales } from '../data'
+import { Area, Axis, AxisGrid, AxisLabel, AxisLine, Chart, Legend } from "peculiar-charts";
+import { sales } from "../data";
 
-const toPercent = (v: number) => `${Math.round(v * 100)}%`
+const toPercent = (v: number) => `${Math.round(v * 100)}%`;
 
 export default function PercentArea() {
   return (
@@ -39,16 +31,10 @@ export default function PercentArea() {
         <AxisLabel />
         <AxisGrid class="stroke-black/10" />
       </Axis>
-      <Axis
-        axis="y"
-        position="left"
-        type="linear"
-        tickCount={6}
-        tickFormatter={toPercent}
-      >
+      <Axis axis="y" position="left" type="linear" tickCount={6} tickFormatter={toPercent}>
         <AxisLabel />
         <AxisLine class="stroke-black" />
       </Axis>
     </Chart>
-  )
+  );
 }

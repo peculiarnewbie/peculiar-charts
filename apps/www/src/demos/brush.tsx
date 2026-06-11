@@ -9,13 +9,13 @@ import {
   Chart,
   Line,
   Point,
-} from 'peculiar-charts'
-import { TOOLTIP_SHELL } from '../demoStyles'
+} from "peculiar-charts";
+import { TOOLTIP_SHELL } from "../demoStyles";
 
 const data = Array.from({ length: 24 }, (_, i) => ({
   month: `M${i + 1}`,
   value: Math.round(60 + Math.sin(i / 2.5) * 30 + (i % 3) * 8),
-}))
+}));
 
 export default function BrushDemo() {
   return (
@@ -30,13 +30,7 @@ export default function BrushDemo() {
         <AxisCrosshair stroke-dasharray="6,6" class="stroke-black/60" />
         <AxisTooltip class={TOOLTIP_SHELL} />
       </Axis>
-      <Line
-        dataKey="value"
-        name="Value"
-        class="text-blue-500"
-        color="#3b82f6"
-        stroke-width={2}
-      />
+      <Line dataKey="value" name="Value" class="text-blue-500" color="#3b82f6" stroke-width={2} />
       <Point
         dataKey="value"
         class="text-blue-600 stroke-white"
@@ -46,13 +40,8 @@ export default function BrushDemo() {
         activeProps={{ r: 5 }}
       />
       <Brush>
-        <Line
-          dataKey="value"
-          class="text-blue-400"
-          color="#93c5fd"
-          stroke-width={1}
-        />
+        <Line dataKey="value" class="text-blue-400" color="#93c5fd" stroke-width={1} />
       </Brush>
     </Chart>
-  )
+  );
 }

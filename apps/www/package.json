@@ -1,8 +1,8 @@
 {
   "name": "@peculiar-charts/www",
   "private": true,
-  "type": "module",
   "homepage": "https://charts.peculiarnewbie.com",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

@@ -1,9 +1,9 @@
-import { useChartContext } from '@src/components/context'
-import createClosestTick from '@src/lib/createClosestTick'
-import createScale from '@src/lib/createScale'
-import { Dot, type DotRenderer, type PointEvents } from '@src/lib/markers'
-import { axisValues, pointDefined } from '@src/lib/utils'
-import { type Accessor, For, Show } from 'solid-js'
+import { useChartContext } from "@src/components/context";
+import createClosestTick from "@src/lib/createClosestTick";
+import createScale from "@src/lib/createScale";
+import { Dot, type DotRenderer, type PointEvents } from "@src/lib/markers";
+import { axisValues, pointDefined } from "@src/lib/utils";
+import { type Accessor, For, Show } from "solid-js";
 
 /**
  * Overlays markers on a line/area series: a `dot` at every point, and an
@@ -14,46 +14,44 @@ import { type Accessor, For, Show } from 'solid-js'
  * @data `data-pc-dot-group` - Present on the dot group element.
  */
 const DotsLayer = (props: {
-  points: Accessor<[number, number][]>
-  data: Accessor<number[]>
-  xAxisId: Accessor<string>
-  yAxisId?: Accessor<string>
-  layout?: Accessor<'vertical' | 'horizontal'>
-  dot?: DotRenderer
-  activeDot?: DotRenderer
-  events: PointEvents
+  points: Accessor<[number, number][]>;
+  data: Accessor<number[]>;
+  xAxisId: Accessor<string>;
+  yAxisId?: Accessor<string>;
+  layout?: Accessor<"vertical" | "horizontal">;
+  dot?: DotRenderer;
+  activeDot?: DotRenderer;
+  events: PointEvents;
 }) => {
-  const ctx = useChartContext()
-  const layout = () => props.layout?.() ?? 'vertical'
-  const categoryAxis = () => (layout() === 'horizontal' ? 'y' : 'x')
+  const ctx = useChartContext();
+  const layout = () => props.layout?.() ?? "vertical";
+  const categoryAxis = () => (layout() === "horizontal" ? "y" : "x");
   const categoryAxisId = () =>
-    layout() === 'horizontal'
-      ? (props.yAxisId?.() ?? 'y')
-      : props.xAxisId()
+    layout() === "horizontal" ? (props.yAxisId?.() ?? "y") : props.xAxisId();
 
   const categoryScale = createScale({
     axisId: categoryAxisId,
     orientation: categoryAxis,
     chartContext: ctx,
-  })
+  });
 
   const closestTick = createClosestTick({
     axis: categoryAxis,
     scale: categoryScale,
     values: () => axisValues(ctx, categoryAxisId(), categoryAxis()),
     chartContext: ctx,
-  })
+  });
 
   // The active marker, or null. Returns an object (not a bare index) so an
   // active index of 0 isn't read as falsy by `<Show>`.
   const active = () => {
-    if (!props.activeDot || !ctx.pointerInChart()) return null
-    const i = closestTick()?.index
-    if (i === undefined) return null
-    const point = props.points()[i]
-    if (!point || !pointDefined(point)) return null
-    return { i, point }
-  }
+    if (!props.activeDot || !ctx.pointerInChart()) return null;
+    const i = closestTick()?.index;
+    if (i === undefined) return null;
+    const point = props.points()[i];
+    if (!point || !pointDefined(point)) return null;
+    return { i, point };
+  };
 
   return (
     <>
@@ -80,7 +78,7 @@ const DotsLayer = (props: {
           // The active marker is a hover affordance: it sits on top of its dot,
           // so it must not intercept the pointer — otherwise it would steal the
           // hover (causing flicker) and swallow clicks meant for the dot.
-          <g data-pc-active-dot="" style={{ 'pointer-events': 'none' }}>
+          <g data-pc-active-dot="" style={{ "pointer-events": "none" }}>
             <Dot
               renderer={props.activeDot}
               point={a().point}
@@ -92,7 +90,7 @@ const DotsLayer = (props: {
         )}
       </Show>
     </>
-  )
-}
+  );
+};
 
-export default DotsLayer
+export default DotsLayer;

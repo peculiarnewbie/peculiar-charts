@@ -10,9 +10,9 @@ import {
   PolarRadiusLabel,
   PolarTooltip,
   Radar,
-} from 'peculiar-charts'
-import { TOOLTIP_SHELL } from '../demoStyles'
-import { radarSkills } from '../data'
+} from "peculiar-charts";
+import { TOOLTIP_SHELL } from "../demoStyles";
+import { radarSkills } from "../data";
 
 export default function RadarDemo() {
   return (
@@ -46,5 +46,5 @@ export default function RadarDemo() {
         />
       </PolarLayout>
     </Chart>
-  )
+  );
 }

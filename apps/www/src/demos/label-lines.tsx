@@ -7,8 +7,8 @@ import {
   Line,
   Point,
   SeriesLabel,
-} from 'peculiar-charts'
-import { sales } from '../data'
+} from "peculiar-charts";
+import { sales } from "../data";
 
 export default function LabelLines() {
   return (
@@ -39,5 +39,5 @@ export default function LabelLines() {
         )}
       />
     </Chart>
-  )
+  );
 }

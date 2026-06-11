@@ -6,11 +6,11 @@ package and are **gitignored** — clone them yourself when you need them.
 
 ## Layout
 
-| Path | Upstream | Use when |
-|---|---|---|
-| `references/solid-charts/` | [corvudev/solid-charts](https://github.com/corvudev/solid-charts) | SolidJS API shape, component composition, playground patterns |
-| `references/recharts/` | [recharts/recharts](https://github.com/recharts/recharts) | Extensibility surface (hooks, render-props, `syncId`), polar/radar behaviour |
-| `references/ag-charts/` | [ag-grid/ag-charts](https://github.com/ag-grid/ag-charts) | Animation / scene-graph ideas (Canvas, different model) |
+| Path                       | Upstream                                                          | Use when                                                                     |
+| -------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `references/solid-charts/` | [corvudev/solid-charts](https://github.com/corvudev/solid-charts) | SolidJS API shape, component composition, playground patterns                |
+| `references/recharts/`     | [recharts/recharts](https://github.com/recharts/recharts)         | Extensibility surface (hooks, render-props, `syncId`), polar/radar behaviour |
+| `references/ag-charts/`    | [ag-grid/ag-charts](https://github.com/ag-grid/ag-charts)         | Animation / scene-graph ideas (Canvas, different model)                      |
 
 ## Clone commands
 

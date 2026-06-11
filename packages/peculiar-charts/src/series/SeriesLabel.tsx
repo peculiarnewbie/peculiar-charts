@@ -1,8 +1,8 @@
-import { useChartContext } from '@src/components/context'
-import createPoints from '@src/lib/createPoints'
-import { LabelLine, type LabelLineRenderer } from '@src/lib/labels'
-import type { OverrideProps } from '@src/lib/types'
-import { accessData, pointDefined } from '@src/lib/utils'
+import { useChartContext } from "@src/components/context";
+import createPoints from "@src/lib/createPoints";
+import { LabelLine, type LabelLineRenderer } from "@src/lib/labels";
+import type { OverrideProps } from "@src/lib/types";
+import { accessData, pointDefined } from "@src/lib/utils";
 import {
   type ComponentProps,
   For,
@@ -11,38 +11,38 @@ import {
   createMemo,
   mergeProps,
   splitProps,
-} from 'solid-js'
+} from "solid-js";
 
 /** A label's anchor point plus the datum it came from. */
 export type SeriesLabelDatum = {
-  point: [number, number]
+  point: [number, number];
   /** Where the label sits — end of the connector when `labelLine` is set. */
-  labelPoint: [number, number]
-  value: number
-  index: number
-}
+  labelPoint: [number, number];
+  value: number;
+  index: number;
+};
 
 export type SeriesLabelProps = OverrideProps<
-  Omit<ComponentProps<'text'>, 'x' | 'y'>,
+  Omit<ComponentProps<"text">, "x" | "y">,
   {
     /** Data key for the y-values. Omit for plain number arrays. */
-    dataKey?: string
+    dataKey?: string;
     /** Bound x-axis id. @defaultValue `'x'` */
-    xAxisId?: string
+    xAxisId?: string;
     /** Bound value-axis id. @defaultValue `'y'` */
-    yAxisId?: string
+    yAxisId?: string;
     /** Stack id — must match the labelled series' stack. */
-    stackId?: string
+    stackId?: string;
     /** Pixel offset above each point (away from the plot). @defaultValue `8` */
-    offset?: number
+    offset?: number;
     /** Format a value to its label string. @defaultValue `String` */
-    format?: (value: number, index: number) => string
+    format?: (value: number, index: number) => string;
     /** Connector from point to label — bool, props-object, or function. */
-    labelLine?: LabelLineRenderer
+    labelLine?: LabelLineRenderer;
     /** Render each label yourself instead of the default `<text>`. */
-    children?: (datum: SeriesLabelDatum) => JSX.Element
+    children?: (datum: SeriesLabelDatum) => JSX.Element;
   }
->
+>;
 
 /** Renders a value label at each data point of a series.
  *
@@ -52,30 +52,30 @@ export type SeriesLabelProps = OverrideProps<
 const SeriesLabel = (props: SeriesLabelProps) => {
   const defaultedProps = mergeProps(
     {
-      xAxisId: 'x',
-      yAxisId: 'y',
+      xAxisId: "x",
+      yAxisId: "y",
       offset: 8,
       format: (value: number) => String(value),
-      fill: 'currentColor',
-      'text-anchor': 'middle' as const,
+      fill: "currentColor",
+      "text-anchor": "middle" as const,
     },
     props,
-  )
+  );
   const [localProps, otherProps] = splitProps(defaultedProps, [
-    'dataKey',
-    'xAxisId',
-    'yAxisId',
-    'stackId',
-    'offset',
-    'format',
-    'labelLine',
-    'children',
-  ])
-  const chartContext = useChartContext()
+    "dataKey",
+    "xAxisId",
+    "yAxisId",
+    "stackId",
+    "offset",
+    "format",
+    "labelLine",
+    "children",
+  ]);
+  const chartContext = useChartContext();
 
   const data = createMemo(() =>
     accessData<number>(chartContext.displayedData(), localProps.dataKey),
-  )
+  );
 
   const points = createPoints({
     xAxisId: () => localProps.xAxisId,
@@ -84,23 +84,19 @@ const SeriesLabel = (props: SeriesLabelProps) => {
     stackId: () => localProps.stackId,
     data,
     chartContext,
-  })
+  });
 
   const labelPoint = (point: [number, number]): [number, number] => [
     point[0],
     point[1] - localProps.offset,
-  ]
+  ];
 
-  const datum = (
-    point: [number, number],
-    value: number,
-    index: number,
-  ): SeriesLabelDatum => ({
+  const datum = (point: [number, number], value: number, index: number): SeriesLabelDatum => ({
     point,
     labelPoint: labelPoint(point),
     value,
     index,
-  })
+  });
 
   return (
     <g data-pc-series-label-group="">
@@ -108,14 +104,11 @@ const SeriesLabel = (props: SeriesLabelProps) => {
         {(point, index) => (
           <Show when={pointDefined(point)}>
             {(() => {
-              const d = datum(point, data()[index()] as number, index())
+              const d = datum(point, data()[index()] as number, index());
               return (
                 <>
                   <Show when={localProps.labelLine}>
-                    <LabelLine
-                      renderer={localProps.labelLine!}
-                      datum={d}
-                    />
+                    <LabelLine renderer={localProps.labelLine!} datum={d} />
                   </Show>
                   <Show
                     when={localProps.children}
@@ -133,13 +126,13 @@ const SeriesLabel = (props: SeriesLabelProps) => {
                     {(children) => children()(d)}
                   </Show>
                 </>
-              )
+              );
             })()}
           </Show>
         )}
       </For>
     </g>
-  )
-}
+  );
+};
 
-export default SeriesLabel
+export default SeriesLabel;

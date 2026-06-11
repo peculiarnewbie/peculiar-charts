@@ -1,4 +1,4 @@
-import { useChartContext } from '@src/components/context'
+import { useChartContext } from "@src/components/context";
 import {
   type AnimationOptions,
   type ResolvedAnimationOptions,
@@ -6,16 +6,16 @@ import {
   createTweenedArray,
   interpolatePoint,
   resolveAnimation,
-} from '@src/lib/animation'
-import type { BarLayout } from '@src/lib/createBands'
-import createPoints from '@src/lib/createPoints'
-import createSeries from '@src/lib/createSeries'
-import type { DotRenderer, PointEvents } from '@src/lib/markers'
-import type { OverrideProps } from '@src/lib/types'
-import { accessData } from '@src/lib/utils'
-import DotsLayer from '@src/series/Dots'
-import Curve from '@src/shapes/Curve'
-import type { CurveFactory } from 'd3-shape'
+} from "@src/lib/animation";
+import type { BarLayout } from "@src/lib/createBands";
+import createPoints from "@src/lib/createPoints";
+import createSeries from "@src/lib/createSeries";
+import type { DotRenderer, PointEvents } from "@src/lib/markers";
+import type { OverrideProps } from "@src/lib/types";
+import { accessData } from "@src/lib/utils";
+import DotsLayer from "@src/series/Dots";
+import Curve from "@src/shapes/Curve";
+import type { CurveFactory } from "d3-shape";
 import {
   type ComponentProps,
   type JSX,
@@ -25,117 +25,113 @@ import {
   createUniqueId,
   mergeProps,
   splitProps,
-} from 'solid-js'
+} from "solid-js";
 
 /** Props forwarded to a custom Line shape function. */
 export type LineShapeProps = ShapeAnimationProps &
-  Omit<ComponentProps<'path'>, 'd'> & {
-    points: [number, number][]
-  }
+  Omit<ComponentProps<"path">, "d"> & {
+    points: [number, number][];
+  };
 
 /**
  * How to render a custom Line shape:
  * - a function — receives {@link LineShapeProps}, returns JSX.
  */
-export type LineShapeRenderer = (props: LineShapeProps) => JSX.Element
+export type LineShapeRenderer = (props: LineShapeProps) => JSX.Element;
 
 export type LineProps = OverrideProps<
-  Omit<ComponentProps<'path'>, 'd'>,
+  Omit<ComponentProps<"path">, "d">,
   {
     /** Data key for the y-values. Omit for plain number arrays. */
-    dataKey?: string
+    dataKey?: string;
     /** Per-series data array. Overrides chart-level `data` for this series. */
-    data?: unknown[]
+    data?: unknown[];
     /** Display name for legends/tooltips. @defaultValue `dataKey` */
-    name?: string
+    name?: string;
     /** Bound x-axis id. @defaultValue `'x'` */
-    xAxisId?: string
+    xAxisId?: string;
     /** Bound value-axis id. @defaultValue `'y'` */
-    yAxisId?: string
+    yAxisId?: string;
     /** Stack id — series sharing one stack are stacked. */
-    stackId?: string
+    stackId?: string;
     /** Line orientation. `'horizontal'` swaps axes: categories on Y, values on X. @defaultValue `'vertical'` */
-    layout?: BarLayout
+    layout?: BarLayout;
     /** d3 curve interpolation factory. */
-    curve?: CurveFactory
+    curve?: CurveFactory;
     /** Connect across null/missing values. */
-    connectNulls?: boolean
+    connectNulls?: boolean;
     /** Marker at every point. `true`/props-object/function — see {@link DotRenderer}. */
-    dot?: DotRenderer
+    dot?: DotRenderer;
     /** Marker at the point nearest the pointer (hover highlight). */
-    activeDot?: DotRenderer
+    activeDot?: DotRenderer;
     /** Explicit colour for legend / tooltip swatches. */
-    color?: string
+    color?: string;
     /** Animation configuration. */
-    animation?: AnimationOptions
+    animation?: AnimationOptions;
     /**
      * Custom shape renderer. Replaces the default `<Curve>` path.
      * Receives the computed pixel-space points, SVG path props, and animation state.
      */
-    shape?: LineShapeRenderer
+    shape?: LineShapeRenderer;
   } & PointEvents
->
+>;
 
 /** Line series.
  *
  * @data `data-pc-line` - Present on every line path element.
  */
 const Line = (props: LineProps) => {
-  const seriesId = createUniqueId()
+  const seriesId = createUniqueId();
   const defaultedProps = mergeProps(
     {
-      xAxisId: 'x',
-      yAxisId: 'y',
-      layout: 'vertical' as const,
-      stroke: 'currentColor',
-      fill: 'none',
+      xAxisId: "x",
+      yAxisId: "y",
+      layout: "vertical" as const,
+      stroke: "currentColor",
+      fill: "none",
     },
     props,
-  )
+  );
   const [localProps, eventProps, otherProps] = splitProps(
     defaultedProps,
     [
-      'dataKey',
-      'name',
-      'data',
-      'xAxisId',
-      'yAxisId',
-      'stackId',
-      'layout',
-      'dot',
-      'activeDot',
-      'color',
-      'animation',
-      'shape',
+      "dataKey",
+      "name",
+      "data",
+      "xAxisId",
+      "yAxisId",
+      "stackId",
+      "layout",
+      "dot",
+      "activeDot",
+      "color",
+      "animation",
+      "shape",
     ],
-    ['onPointClick', 'onPointEnter', 'onPointLeave'],
-  )
-  const chartContext = useChartContext()
-  const horizontal = () => localProps.layout === 'horizontal'
+    ["onPointClick", "onPointEnter", "onPointLeave"],
+  );
+  const chartContext = useChartContext();
+  const horizontal = () => localProps.layout === "horizontal";
 
-  const seriesRawData = () => localProps.data
+  const seriesRawData = () => localProps.data;
 
   const data = createMemo(() =>
-    accessData<number>(
-      localProps.data ?? chartContext.displayedData(),
-      localProps.dataKey,
-    ),
-  )
+    accessData<number>(localProps.data ?? chartContext.displayedData(), localProps.dataKey),
+  );
 
   createSeries({
     seriesId,
-    name: () => localProps.name ?? localProps.dataKey ?? 'series',
-    type: 'line',
+    name: () => localProps.name ?? localProps.dataKey ?? "series",
+    type: "line",
     xAxisId: () => localProps.xAxisId,
     yAxisId: () => localProps.yAxisId,
-    valueAxisId: () =>
-      horizontal() ? localProps.xAxisId : localProps.yAxisId,
+    valueAxisId: () => (horizontal() ? localProps.xAxisId : localProps.yAxisId),
     dataKey: () => localProps.dataKey,
     stackId: () => localProps.stackId,
     data,
     color: () => localProps.color,
     chartContext,
-  })
+  });
 
   const points = createPoints({
     layout: () => localProps.layout,
@@ -146,17 +142,17 @@ const Line = (props: LineProps) => {
     data,
     seriesData: seriesRawData,
     chartContext,
-  })
+  });
 
   const animOpts = createMemo<ResolvedAnimationOptions>(() =>
     resolveAnimation(localProps.animation),
-  )
-  const NaN_POINT: [number, number] = [Number.NaN, Number.NaN]
+  );
+  const NaN_POINT: [number, number] = [Number.NaN, Number.NaN];
 
-  const [animElapsed, setAnimElapsed] = createSignal(1)
-  const [isAnimating, setIsAnimating] = createSignal(false)
-  const [isEntrance, setIsEntrance] = createSignal(false)
-  let firstAnimation = true
+  const [animElapsed, setAnimElapsed] = createSignal(1);
+  const [isAnimating, setIsAnimating] = createSignal(false);
+  const [isEntrance, setIsEntrance] = createSignal(false);
+  let firstAnimation = true;
 
   const animatedPoints = createTweenedArray(
     points,
@@ -164,30 +160,30 @@ const Line = (props: LineProps) => {
     interpolatePoint,
     (target) => (Number.isNaN(target[0]) ? NaN_POINT : target),
     (elapsed) => {
-      setAnimElapsed(elapsed)
+      setAnimElapsed(elapsed);
       if (elapsed < 1) {
-        setIsAnimating(true)
+        setIsAnimating(true);
       } else {
-        setIsAnimating(false)
-        firstAnimation = false
+        setIsAnimating(false);
+        firstAnimation = false;
       }
     },
-  )
+  );
 
-  const hasShape = () => localProps.shape !== undefined
+  const hasShape = () => localProps.shape !== undefined;
 
   return (
     <Show when={chartContext.isSeriesVisible(seriesId)}>
       {hasShape() ? (
         (() => {
-          if (firstAnimation && animOpts().enabled !== false) setIsEntrance(true)
+          if (firstAnimation && animOpts().enabled !== false) setIsEntrance(true);
           return localProps.shape!({
             points: animatedPoints(),
             animationElapsedTime: animElapsed(),
             isAnimating: isAnimating(),
             isEntrance: isEntrance(),
             ...otherProps,
-          })
+          });
         })()
       ) : (
         <Curve
@@ -210,7 +206,7 @@ const Line = (props: LineProps) => {
         />
       </Show>
     </Show>
-  )
-}
+  );
+};
 
-export default Line
+export default Line;

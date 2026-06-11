@@ -3,58 +3,33 @@ import Axis, {
   type XAxisProps,
   type YAxisProps,
   type ScaleType,
-} from '@src/axis/Axis'
-import AxisCrosshair, {
-  type CrosshairProps as AxisCrosshairProps,
-} from '@src/axis/Crosshair'
-import AxisGrid, { type GridProps as AxisGridProps } from '@src/axis/Grid'
+} from "@src/axis/Axis";
+import AxisCrosshair, { type CrosshairProps as AxisCrosshairProps } from "@src/axis/Crosshair";
+import AxisGrid, { type GridProps as AxisGridProps } from "@src/axis/Grid";
 import AxisLabel, {
   type LabelProps as AxisLabelProps,
   type LabelTick as AxisLabelTick,
-} from '@src/axis/Label'
-import AxisLine, { type LineProps as AxisLineProps } from '@src/axis/Line'
-import AxisMark, {
-  type MarkProps as AxisMarkProps,
-  type MarkTick,
-} from '@src/axis/Mark'
+} from "@src/axis/Label";
+import AxisLine, { type LineProps as AxisLineProps } from "@src/axis/Line";
+import AxisMark, { type MarkProps as AxisMarkProps, type MarkTick } from "@src/axis/Mark";
 import AxisTooltip, {
   type TooltipProps as AxisTooltipProps,
   type TooltipPayload,
   type TooltipRenderer,
-} from '@src/axis/Tooltip'
-import AxisValueLine, {
-  type ValueLineProps as AxisValueLineProps,
-} from '@src/axis/ValueLine'
-import type { StandardSchemaV1 } from '@standard-schema/spec'
-import PolarAngleAxis, {
-  type PolarAngleAxisProps,
-} from '@src/axis/polar/PolarAngleAxis'
-import PolarAngleLabel, {
-  type PolarAngleLabelProps,
-} from '@src/axis/polar/PolarAngleLabel'
-import PolarCrosshair, {
-  type PolarCrosshairProps,
-} from '@src/axis/polar/PolarCrosshair'
-import PolarGrid, { type PolarGridProps } from '@src/axis/polar/PolarGrid'
-import PolarLayout, { type PolarLayoutProps } from '@src/axis/polar/PolarLayout'
-import PolarRadiusAxis, {
-  type PolarRadiusAxisProps,
-} from '@src/axis/polar/PolarRadiusAxis'
-import PolarRadiusLabel, {
-  type PolarRadiusLabelProps,
-} from '@src/axis/polar/PolarRadiusLabel'
-import PolarTooltip, {
-  type PolarTooltipProps,
-} from '@src/axis/polar/PolarTooltip'
-import Brush, { type BrushProps } from '@src/components/Brush'
-import Chart, {
-  type ChartEventPayload,
-  type ChartProps,
-} from '@src/components/Chart'
-import Legend, {
-  type LegendProps,
-  type LegendItemRenderer,
-} from '@src/components/Legend'
+} from "@src/axis/Tooltip";
+import AxisValueLine, { type ValueLineProps as AxisValueLineProps } from "@src/axis/ValueLine";
+import type { StandardSchemaV1 } from "@standard-schema/spec";
+import PolarAngleAxis, { type PolarAngleAxisProps } from "@src/axis/polar/PolarAngleAxis";
+import PolarAngleLabel, { type PolarAngleLabelProps } from "@src/axis/polar/PolarAngleLabel";
+import PolarCrosshair, { type PolarCrosshairProps } from "@src/axis/polar/PolarCrosshair";
+import PolarGrid, { type PolarGridProps } from "@src/axis/polar/PolarGrid";
+import PolarLayout, { type PolarLayoutProps } from "@src/axis/polar/PolarLayout";
+import PolarRadiusAxis, { type PolarRadiusAxisProps } from "@src/axis/polar/PolarRadiusAxis";
+import PolarRadiusLabel, { type PolarRadiusLabelProps } from "@src/axis/polar/PolarRadiusLabel";
+import PolarTooltip, { type PolarTooltipProps } from "@src/axis/polar/PolarTooltip";
+import Brush, { type BrushProps } from "@src/components/Brush";
+import Chart, { type ChartEventPayload, type ChartProps } from "@src/components/Chart";
+import Legend, { type LegendProps, type LegendItemRenderer } from "@src/components/Legend";
 import {
   type AxisConfig,
   type AxisOrientation,
@@ -64,7 +39,7 @@ import {
   type SeriesMeta,
   type SyncInteraction,
   useChartContext,
-} from '@src/components/context'
+} from "@src/components/context";
 import {
   type ClosestPolarTick,
   type ClosestTick,
@@ -85,7 +60,7 @@ import {
   useSvgPointerPosition,
   useXScale,
   useYScale,
-} from '@src/hooks'
+} from "@src/hooks";
 import {
   type AnimationEasing,
   type AnimationOptions,
@@ -101,18 +76,18 @@ import {
   interpolateNumber,
   interpolatePoint,
   resolveAnimation,
-} from '@src/lib/animation'
-import type { BarLayout } from '@src/lib/createBands'
-import createPoints from '@src/lib/createPoints'
-import createScale from '@src/lib/createScale'
-import createSeries from '@src/lib/createSeries'
+} from "@src/lib/animation";
+import type { BarLayout } from "@src/lib/createBands";
+import createPoints from "@src/lib/createPoints";
+import createScale from "@src/lib/createScale";
+import createSeries from "@src/lib/createSeries";
 import {
   LabelLine,
   type LabelLineDatum,
   type LabelLineProps,
   type LabelLineRenderer,
-} from '@src/lib/labels'
-import { LegendItemContent } from '@src/lib/legend'
+} from "@src/lib/labels";
+import { LegendItemContent } from "@src/lib/legend";
 import {
   type BarDatum,
   BarShape,
@@ -125,13 +100,10 @@ import {
   type PointEventDatum,
   type PointEventHandler,
   type PointEvents,
-} from '@src/lib/markers'
-import {
-  type PolarLayout as PolarLayoutContext,
-  usePolarLayout,
-} from '@src/lib/polar/context'
-import createPolarPoints from '@src/lib/polar/createPolarPoints'
-import { polarToCartesian } from '@src/lib/polar/utils'
+} from "@src/lib/markers";
+import { type PolarLayout as PolarLayoutContext, usePolarLayout } from "@src/lib/polar/context";
+import createPolarPoints from "@src/lib/polar/createPolarPoints";
+import { polarToCartesian } from "@src/lib/polar/utils";
 import {
   type Scale,
   buildScale,
@@ -140,40 +112,35 @@ import {
   isNumeric,
   projectScale,
   scaleTicks,
-} from '@src/lib/scale'
-import type { SyncHandlerParam, SyncMethod, SyncPayload } from '@src/lib/sync'
-import {
-  TooltipContent,
-  type TooltipSeriesItem,
-  buildTooltipPayload,
-} from '@src/lib/tooltip'
-import type { OverrideProps } from '@src/lib/types'
-import { accessData, axisValues, toNumeric } from '@src/lib/utils'
-import ReferenceArea, {
-  type ReferenceAreaProps,
-} from '@src/reference/ReferenceArea'
-import ReferenceDot, {
-  type ReferenceDotProps,
-} from '@src/reference/ReferenceDot'
-import ReferenceLine, {
-  type ReferenceLineProps,
-} from '@src/reference/ReferenceLine'
-import Area, { type AreaProps, type AreaShapeProps, type AreaShapeRenderer } from '@src/series/Area'
-import Bar, { type BarProps } from '@src/series/Bar'
-import Bubble, { type BubbleDatum, type BubbleProps } from '@src/series/Bubble'
-import Line, { type LineProps, type LineShapeProps, type LineShapeRenderer } from '@src/series/Line'
-import Pie, { type PieProps } from '@src/series/Pie'
-import Point, { type PointDatum, type PointProps } from '@src/series/Point'
-import Radar, { type RadarProps } from '@src/series/Radar'
-import SeriesLabel, {
-  type SeriesLabelDatum,
-  type SeriesLabelProps,
-} from '@src/series/SeriesLabel'
-import Curve from '@src/shapes/Curve'
-import type { CurveProps } from '@src/shapes/Curve'
-import PolarPolygon, { type PolarPolygonProps } from '@src/shapes/PolarPolygon'
-import Rectangle, { type RectangleProps } from '@src/shapes/Rectangle'
-import Sector, { type SectorProps } from '@src/shapes/Sector'
+} from "@src/lib/scale";
+import type { SyncHandlerParam, SyncMethod, SyncPayload } from "@src/lib/sync";
+import { TooltipContent, type TooltipSeriesItem, buildTooltipPayload } from "@src/lib/tooltip";
+import type { OverrideProps } from "@src/lib/types";
+import { accessData, axisValues, toNumeric } from "@src/lib/utils";
+import ReferenceArea, { type ReferenceAreaProps } from "@src/reference/ReferenceArea";
+import ReferenceDot, { type ReferenceDotProps } from "@src/reference/ReferenceDot";
+import ReferenceLine, { type ReferenceLineProps } from "@src/reference/ReferenceLine";
+import Area, {
+  type AreaProps,
+  type AreaShapeProps,
+  type AreaShapeRenderer,
+} from "@src/series/Area";
+import Bar, { type BarProps } from "@src/series/Bar";
+import Bubble, { type BubbleDatum, type BubbleProps } from "@src/series/Bubble";
+import Line, {
+  type LineProps,
+  type LineShapeProps,
+  type LineShapeRenderer,
+} from "@src/series/Line";
+import Pie, { type PieProps } from "@src/series/Pie";
+import Point, { type PointDatum, type PointProps } from "@src/series/Point";
+import Radar, { type RadarProps } from "@src/series/Radar";
+import SeriesLabel, { type SeriesLabelDatum, type SeriesLabelProps } from "@src/series/SeriesLabel";
+import Curve from "@src/shapes/Curve";
+import type { CurveProps } from "@src/shapes/Curve";
+import PolarPolygon, { type PolarPolygonProps } from "@src/shapes/PolarPolygon";
+import Rectangle, { type RectangleProps } from "@src/shapes/Rectangle";
+import Sector, { type SectorProps } from "@src/shapes/Sector";
 
 export type {
   // Chart
@@ -276,7 +243,7 @@ export type {
   PlotArea,
   ClosestTick,
   ClosestPolarTick,
-}
+};
 
 export {
   Chart,
@@ -368,4 +335,4 @@ export {
   TooltipContent,
   LegendItemContent,
   buildTooltipPayload,
-}
+};

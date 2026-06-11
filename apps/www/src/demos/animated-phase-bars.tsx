@@ -1,32 +1,24 @@
-import {
-  Axis,
-  AxisGrid,
-  AxisLabel,
-  AxisLine,
-  Bar,
-  Chart,
-  Legend,
-} from 'peculiar-charts'
-import { createSignal } from 'solid-js'
+import { Axis, AxisGrid, AxisLabel, AxisLine, Bar, Chart, Legend } from "peculiar-charts";
+import { createSignal } from "solid-js";
 
 const dataA = [
-  { month: 'Jan', revenue: 42, costs: 28 },
-  { month: 'Feb', revenue: 55, costs: 32 },
-  { month: 'Mar', revenue: 38, costs: 25 },
-  { month: 'Apr', revenue: 71, costs: 40 },
-  { month: 'May', revenue: 88, costs: 45 },
-  { month: 'Jun', revenue: 62, costs: 35 },
-  { month: 'Jul', revenue: 50, costs: 30 },
-]
+  { month: "Jan", revenue: 42, costs: 28 },
+  { month: "Feb", revenue: 55, costs: 32 },
+  { month: "Mar", revenue: 38, costs: 25 },
+  { month: "Apr", revenue: 71, costs: 40 },
+  { month: "May", revenue: 88, costs: 45 },
+  { month: "Jun", revenue: 62, costs: 35 },
+  { month: "Jul", revenue: 50, costs: 30 },
+];
 
 const dataB = [
-  { month: 'Jan', revenue: 60, costs: 35 },
-  { month: 'Feb', revenue: 45, costs: 42 },
-  { month: 'Mar', revenue: 78, costs: 30 },
-]
+  { month: "Jan", revenue: 60, costs: 35 },
+  { month: "Feb", revenue: 45, costs: 42 },
+  { month: "Mar", revenue: 78, costs: 30 },
+];
 
 export default function AnimatedPhaseBars() {
-  const [data, setData] = createSignal(dataA)
+  const [data, setData] = createSignal(dataA);
   return (
     <div class="flex h-full flex-col gap-3">
       <div class="flex gap-2">
@@ -62,9 +54,9 @@ export default function AnimatedPhaseBars() {
           color="#3b82f6"
           animation={{
             duration: 400,
-            easing: 'ease-out',
-            enter: { duration: 600, easing: 'ease' },
-            exit: { duration: 350, easing: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)' },
+            easing: "ease-out",
+            enter: { duration: 600, easing: "ease" },
+            exit: { duration: 350, easing: "cubic-bezier(0.68, -0.55, 0.265, 1.55)" },
           }}
         />
         <Bar
@@ -74,12 +66,12 @@ export default function AnimatedPhaseBars() {
           color="#fb7185"
           animation={{
             duration: 400,
-            easing: 'ease-out',
-            enter: { duration: 600, easing: 'ease' },
-            exit: { duration: 350, easing: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)' },
+            easing: "ease-out",
+            enter: { duration: 600, easing: "ease" },
+            exit: { duration: 350, easing: "cubic-bezier(0.68, -0.55, 0.265, 1.55)" },
           }}
         />
       </Chart>
     </div>
-  )
+  );
 }

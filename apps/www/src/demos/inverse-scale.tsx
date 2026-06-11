@@ -9,27 +9,25 @@ import {
   usePlotArea,
   usePointerInChart,
   useSvgPointerPosition,
-} from 'peculiar-charts'
-import { Show } from 'solid-js'
-import { monthLabel, priceSeries } from '../data'
+} from "peculiar-charts";
+import { Show } from "solid-js";
+import { monthLabel, priceSeries } from "../data";
 
 /** Reads the y-value under the pointer via invertScale — no fork required. */
 function YReadout() {
-  const pointer = useSvgPointerPosition()
-  const invertY = useInverseYScale()
-  const plot = usePlotArea()
-  const active = usePointerInChart()
+  const pointer = useSvgPointerPosition();
+  const invertY = useInverseYScale();
+  const plot = usePlotArea();
+  const active = usePointerInChart();
 
   const value = () => {
-    const p = pointer()
-    if (!p || !active()) return null
-    const y = p.y
-    if (y < plot().top || y > plot().top + plot().height) return null
-    const raw = invertY()(y)
-    return typeof raw === 'number' && Number.isFinite(raw)
-      ? Math.round(raw)
-      : null
-  }
+    const p = pointer();
+    if (!p || !active()) return null;
+    const y = p.y;
+    if (y < plot().top || y > plot().top + plot().height) return null;
+    const raw = invertY()(y);
+    return typeof raw === "number" && Number.isFinite(raw) ? Math.round(raw) : null;
+  };
 
   return (
     <Show when={value() != null}>
@@ -63,7 +61,7 @@ function YReadout() {
         </g>
       )}
     </Show>
-  )
+  );
 }
 
 export default function InverseScale() {
@@ -80,5 +78,5 @@ export default function InverseScale() {
       <Line dataKey="price" class="text-indigo-600" stroke-width={2} />
       <YReadout />
     </Chart>
-  )
+  );
 }

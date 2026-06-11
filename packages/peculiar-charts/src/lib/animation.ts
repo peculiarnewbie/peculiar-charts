@@ -6,7 +6,7 @@ import {
   createSignal,
   onCleanup,
   untrack,
-} from 'solid-js'
+} from "solid-js";
 
 /**
  * Animation metadata forwarded to custom chart shapes.
@@ -19,55 +19,55 @@ export type ShapeAnimationProps = {
    * Raw animation progress in the `[0, 1]` range (before easing).
    * `0` at the start of the animation, `1` at the end.
    */
-  animationElapsedTime?: number
+  animationElapsedTime?: number;
   /** Whether the series is currently animating. */
-  isAnimating?: boolean
+  isAnimating?: boolean;
   /**
    * Whether this is the initial entrance animation (first render).
    * Subsequent data-change animations have `isEntrance = false`.
    */
-  isEntrance?: boolean
-}
+  isEntrance?: boolean;
+};
 
 export type AnimationEasing =
-  | 'linear'
-  | 'ease'
-  | 'ease-in'
-  | 'ease-out'
-  | 'ease-in-out'
-  | `cubic-bezier(${number}, ${number}, ${number}, ${number})`
+  | "linear"
+  | "ease"
+  | "ease-in"
+  | "ease-out"
+  | "ease-in-out"
+  | `cubic-bezier(${number}, ${number}, ${number}, ${number})`;
 
 export type PhaseConfig = {
-  duration?: number
-  easing?: AnimationEasing
-  delay?: number
-}
+  duration?: number;
+  easing?: AnimationEasing;
+  delay?: number;
+};
 
 export type AnimationOptions =
   | boolean
   | {
-      enabled?: boolean | 'auto'
-      duration?: number
-      easing?: AnimationEasing
-      delay?: number
-      enter?: PhaseConfig
-      exit?: PhaseConfig
-    }
+      enabled?: boolean | "auto";
+      duration?: number;
+      easing?: AnimationEasing;
+      delay?: number;
+      enter?: PhaseConfig;
+      exit?: PhaseConfig;
+    };
 
 export type ResolvedPhaseConfig = {
-  duration: number
-  easing: AnimationEasing
-  delay: number
-}
+  duration: number;
+  easing: AnimationEasing;
+  delay: number;
+};
 
 export type ResolvedAnimationOptions = {
-  enabled: boolean | 'auto'
-  duration: number
-  easing: AnimationEasing
-  delay: number
-  enter: ResolvedPhaseConfig
-  exit: ResolvedPhaseConfig
-}
+  enabled: boolean | "auto";
+  duration: number;
+  easing: AnimationEasing;
+  delay: number;
+  enter: ResolvedPhaseConfig;
+  exit: ResolvedPhaseConfig;
+};
 
 const mergePhase = (
   phase: PhaseConfig | undefined,
@@ -76,191 +76,188 @@ const mergePhase = (
   duration: phase?.duration ?? top.duration,
   easing: phase?.easing ?? top.easing,
   delay: phase?.delay ?? top.delay,
-})
+});
 
 export const resolveAnimation = (
   options: AnimationOptions | undefined,
 ): ResolvedAnimationOptions => {
   if (options === true) {
-    const top = { duration: 400, easing: 'ease-out' as const, delay: 0 }
+    const top = { duration: 400, easing: "ease-out" as const, delay: 0 };
     return {
       enabled: true,
       ...top,
       enter: { ...top },
       exit: { ...top },
-    }
+    };
   }
   if (!options) {
-    const top = { duration: 400, easing: 'ease-out' as const, delay: 0 }
+    const top = { duration: 400, easing: "ease-out" as const, delay: 0 };
     return {
       enabled: false,
       ...top,
       enter: { ...top },
       exit: { ...top },
-    }
+    };
   }
   const top = {
     duration: options.duration ?? 400,
-    easing: options.easing ?? 'ease-out',
+    easing: options.easing ?? "ease-out",
     delay: options.delay ?? 0,
-  }
+  };
   return {
-    enabled: options.enabled ?? 'auto',
+    enabled: options.enabled ?? "auto",
     ...top,
     enter: mergePhase(options.enter, top),
     exit: mergePhase(options.exit, top),
-  }
-}
+  };
+};
 
-export const interpolateNumber = (a: number, b: number, t: number): number =>
-  a + (b - a) * t
+export const interpolateNumber = (a: number, b: number, t: number): number => a + (b - a) * t;
 
 export const interpolatePoint = (
   a: [number, number],
   b: [number, number],
   t: number,
-): [number, number] => [
-  interpolateNumber(a[0], b[0], t),
-  interpolateNumber(a[1], b[1], t),
-]
+): [number, number] => [interpolateNumber(a[0], b[0], t), interpolateNumber(a[1], b[1], t)];
 
-type BezierFn = (t: number) => number
+type BezierFn = (t: number) => number;
 
 const bezier = (x1: number, y1: number, x2: number, y2: number): BezierFn => {
-  const cx = 3 * x1
-  const bx = 3 * (x2 - x1) - cx
-  const ax = 1 - cx - bx
-  const cy = 3 * y1
-  const by = 3 * (y2 - y1) - cy
-  const ay = 1 - cy - by
+  const cx = 3 * x1;
+  const bx = 3 * (x2 - x1) - cx;
+  const ax = 1 - cx - bx;
+  const cy = 3 * y1;
+  const by = 3 * (y2 - y1) - cy;
+  const ay = 1 - cy - by;
 
-  const sampleX = (t: number) => ((ax * t + bx) * t + cx) * t
-  const sampleY = (t: number) => ((ay * t + by) * t + cy) * t
+  const sampleX = (t: number) => ((ax * t + bx) * t + cx) * t;
+  const sampleY = (t: number) => ((ay * t + by) * t + cy) * t;
 
   const solve = (x: number): number => {
-    let t = x
+    let t = x;
     for (let i = 0; i < 8; i++) {
-      const err = sampleX(t) - x
-      if (Math.abs(err) < 1e-6) break
-      const dx = (3 * ax * t + 2 * bx) * t + cx
-      if (Math.abs(dx) < 1e-6) break
-      t -= err / dx
+      const err = sampleX(t) - x;
+      if (Math.abs(err) < 1e-6) break;
+      const dx = (3 * ax * t + 2 * bx) * t + cx;
+      if (Math.abs(dx) < 1e-6) break;
+      t -= err / dx;
     }
-    return sampleY(t)
-  }
+    return sampleY(t);
+  };
 
-  return solve
-}
+  return solve;
+};
 
 const EASINGS: Record<string, BezierFn> = {
   linear: (t: number) => t,
   ease: bezier(0.25, 0.1, 0.25, 1),
-  'ease-in': bezier(0.42, 0, 1, 1),
-  'ease-out': bezier(0, 0, 0.58, 1),
-  'ease-in-out': bezier(0.42, 0, 0.58, 1),
-}
+  "ease-in": bezier(0.42, 0, 1, 1),
+  "ease-out": bezier(0, 0, 0.58, 1),
+  "ease-in-out": bezier(0.42, 0, 0.58, 1),
+};
 
-const CUBIC_BEZIER_RE = /^cubic-bezier\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*,\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)$/
+const CUBIC_BEZIER_RE =
+  /^cubic-bezier\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*,\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)$/;
 
 const parseCubicBezier = (value: string): BezierFn | undefined => {
-  const m = CUBIC_BEZIER_RE.exec(value)
-  if (!m) return undefined
-  return bezier(+m[1]!, +m[2]!, +m[3]!, +m[4]!)
-}
+  const m = CUBIC_BEZIER_RE.exec(value);
+  if (!m) return undefined;
+  return bezier(+m[1]!, +m[2]!, +m[3]!, +m[4]!);
+};
 
-const easingCache = new Map<string, BezierFn>()
+const easingCache = new Map<string, BezierFn>();
 
 const getEasingFn = (easing: AnimationEasing): BezierFn => {
-  const cached = easingCache.get(easing)
-  if (cached) return cached
-  const fn = EASINGS[easing as AnimationEasing] ?? parseCubicBezier(easing) ?? EASINGS['ease-out']!
-  easingCache.set(easing, fn)
-  return fn
-}
+  const cached = easingCache.get(easing);
+  if (cached) return cached;
+  const fn = EASINGS[easing as AnimationEasing] ?? parseCubicBezier(easing) ?? EASINGS["ease-out"]!;
+  easingCache.set(easing, fn);
+  return fn;
+};
 
 const getReducedMotion = (): Accessor<boolean> => {
-  if (typeof window === 'undefined') return () => false
-  const mql = window.matchMedia('(prefers-reduced-motion: reduce)')
-  const [reduced, setReduced] = createSignal(mql.matches)
-  const handler = (e: MediaQueryListEvent) => setReduced(e.matches)
-  mql.addEventListener('change', handler)
-  onCleanup(() => mql.removeEventListener('change', handler))
-  return reduced
-}
+  if (typeof window === "undefined") return () => false;
+  const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const [reduced, setReduced] = createSignal(mql.matches);
+  const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
+  mql.addEventListener("change", handler);
+  onCleanup(() => mql.removeEventListener("change", handler));
+  return reduced;
+};
 
-const reducedMotion = getReducedMotion()
+const reducedMotion = getReducedMotion();
 
 export const createTweened = <T>(
   source: Accessor<T>,
   options: Accessor<ResolvedAnimationOptions>,
   interpolate: (a: T, b: T, t: number) => T,
 ): Accessor<T> => {
-  const initial = source()
-  const [animated, setAnimated] = createSignal<T>(initial)
-  const [target, setTarget] = createSignal<T>(initial)
-  const [startValue, setStartValue] = createSignal<T>(initial)
+  const initial = source();
+  const [animated, setAnimated] = createSignal<T>(initial);
+  const [target, setTarget] = createSignal<T>(initial);
+  const [startValue, setStartValue] = createSignal<T>(initial);
 
-  let raf: number | undefined
-  let startTime: number | undefined
+  let raf: number | undefined;
+  let startTime: number | undefined;
 
   const cancelAnim = () => {
     if (raf !== undefined) {
-      cancelAnimationFrame(raf)
-      raf = undefined
+      cancelAnimationFrame(raf);
+      raf = undefined;
     }
-    startTime = undefined
-  }
+    startTime = undefined;
+  };
 
   const animate = (duration: number, easing: BezierFn, delay: number) => {
-    cancelAnim()
+    cancelAnim();
     const run = () => {
       raf = requestAnimationFrame((now) => {
-        if (startTime === undefined) startTime = now - delay
-        const elapsed = now - startTime
+        if (startTime === undefined) startTime = now - delay;
+        const elapsed = now - startTime;
         if (elapsed < 0) {
-          raf = undefined
-          run()
-          return
+          raf = undefined;
+          run();
+          return;
         }
-        const progress = duration > 0 ? Math.min(elapsed / duration, 1) : 1
-        const t = easing(progress)
-        setAnimated(() => interpolate(untrack(startValue), untrack(target), t))
+        const progress = duration > 0 ? Math.min(elapsed / duration, 1) : 1;
+        const t = easing(progress);
+        setAnimated(() => interpolate(untrack(startValue), untrack(target), t));
         if (progress < 1) {
-          raf = undefined
-          run()
+          raf = undefined;
+          run();
         } else {
-          cancelAnim()
+          cancelAnim();
         }
-      })
-    }
-    run()
-  }
+      });
+    };
+    run();
+  };
 
   createEffect(() => {
-    source()
-    const opts = options()
+    source();
+    const opts = options();
 
-    setStartValue(() => untrack(animated))
-    setTarget(() => source())
+    setStartValue(() => untrack(animated));
+    setTarget(() => source());
 
     const disabled =
       opts.enabled === false ||
-      (opts.enabled === 'auto' && untrack(reducedMotion)) ||
-      opts.duration <= 0
+      (opts.enabled === "auto" && untrack(reducedMotion)) ||
+      opts.duration <= 0;
 
     if (disabled) {
-      cancelAnim()
-      setAnimated(() => source())
-      return
+      cancelAnim();
+      setAnimated(() => source());
+      return;
     }
 
-    animate(opts.duration, getEasingFn(opts.easing), opts.delay)
-  })
+    animate(opts.duration, getEasingFn(opts.easing), opts.delay);
+  });
 
-  onCleanup(cancelAnim)
+  onCleanup(cancelAnim);
 
-  return animated
-}
+  return animated;
+};
 
 export const createTweenedArray = <T>(
   source: Accessor<T[]>,
@@ -269,106 +266,106 @@ export const createTweenedArray = <T>(
   enterValue: (target: T, index: number, prev: T[]) => T,
   onProgress?: (elapsed: number) => void,
 ): Accessor<T[]> => {
-  const initial = source()
-  const [animated, setAnimated] = createSignal<T[]>(initial)
-  const [target, setTarget] = createSignal<T[]>(initial)
-  const [startValue, setStartValue] = createSignal<T[]>(initial)
+  const initial = source();
+  const [animated, setAnimated] = createSignal<T[]>(initial);
+  const [target, setTarget] = createSignal<T[]>(initial);
+  const [startValue, setStartValue] = createSignal<T[]>(initial);
 
-  let raf: number | undefined
-  let startTime: number | undefined
+  let raf: number | undefined;
+  let startTime: number | undefined;
 
   const cancelAnim = () => {
     if (raf !== undefined) {
-      cancelAnimationFrame(raf)
-      raf = undefined
+      cancelAnimationFrame(raf);
+      raf = undefined;
     }
-    startTime = undefined
-  }
+    startTime = undefined;
+  };
 
   const animate = (duration: number, easing: BezierFn, delay: number) => {
-    cancelAnim()
+    cancelAnim();
     const run = () => {
       raf = requestAnimationFrame((now) => {
-        if (startTime === undefined) startTime = now - delay
-        const elapsed = now - startTime
+        if (startTime === undefined) startTime = now - delay;
+        const elapsed = now - startTime;
         if (elapsed < 0) {
-          raf = undefined
-          run()
-          return
+          raf = undefined;
+          run();
+          return;
         }
-        const progress = duration > 0 ? Math.min(elapsed / duration, 1) : 1
-        const t = easing(progress)
-        const from = untrack(startValue)
-        const to = untrack(target)
-        const len = Math.min(from.length, to.length)
-        const arr: T[] = []
-        for (let i = 0; i < len; i++) arr.push(interpolate(from[i]!, to[i]!, t))
-        for (let i = len; i < to.length; i++) arr.push(to[i]!)
-        setAnimated(arr)
-        onProgress?.(progress)
+        const progress = duration > 0 ? Math.min(elapsed / duration, 1) : 1;
+        const t = easing(progress);
+        const from = untrack(startValue);
+        const to = untrack(target);
+        const len = Math.min(from.length, to.length);
+        const arr: T[] = [];
+        for (let i = 0; i < len; i++) arr.push(interpolate(from[i]!, to[i]!, t));
+        for (let i = len; i < to.length; i++) arr.push(to[i]!);
+        setAnimated(arr);
+        onProgress?.(progress);
         if (progress < 1) {
-          raf = undefined
-          run()
+          raf = undefined;
+          run();
         } else {
-          cancelAnim()
+          cancelAnim();
         }
-      })
-    }
-    run()
-  }
+      });
+    };
+    run();
+  };
 
   const enterFor = (targetArr: T[]): T[] => {
-    const prev = untrack(animated)
-    if (targetArr.length <= prev.length) return targetArr
-    const result = prev.slice(0, targetArr.length)
+    const prev = untrack(animated);
+    if (targetArr.length <= prev.length) return targetArr;
+    const result = prev.slice(0, targetArr.length);
     for (let i = prev.length; i < targetArr.length; i++)
-      result.push(enterValue(targetArr[i]!, i, prev))
-    return result
-  }
+      result.push(enterValue(targetArr[i]!, i, prev));
+    return result;
+  };
 
   createEffect(() => {
-    const src = source()
-    const opts = options()
+    const src = source();
+    const opts = options();
 
-    setStartValue(() => untrack(animated))
-    setTarget(() => enterFor(src))
+    setStartValue(() => untrack(animated));
+    setTarget(() => enterFor(src));
 
     const disabled =
       opts.enabled === false ||
-      (opts.enabled === 'auto' && untrack(reducedMotion)) ||
-      opts.duration <= 0
+      (opts.enabled === "auto" && untrack(reducedMotion)) ||
+      opts.duration <= 0;
 
     if (disabled) {
-      cancelAnim()
-      setAnimated(() => src)
-      onProgress?.(1)
-      return
+      cancelAnim();
+      setAnimated(() => src);
+      onProgress?.(1);
+      return;
     }
 
-    animate(opts.duration, getEasingFn(opts.easing), opts.delay)
-  })
+    animate(opts.duration, getEasingFn(opts.easing), opts.delay);
+  });
 
-  onCleanup(cancelAnim)
+  onCleanup(cancelAnim);
 
-  return animated
-}
+  return animated;
+};
 
-export type PresenceMode = 'enter' | 'update' | 'exit'
+export type PresenceMode = "enter" | "update" | "exit";
 
 export type PresenceItem<T> = {
-  value: T
-  mode: PresenceMode
-}
+  value: T;
+  mode: PresenceMode;
+};
 
 type InternalPresenceItem<T> = {
-  value: T
-  target: T
-  mode: PresenceMode
-  startTime: number
-  duration: number
-  easing: BezierFn
-  delay: number
-}
+  value: T;
+  target: T;
+  mode: PresenceMode;
+  startTime: number;
+  duration: number;
+  easing: BezierFn;
+  delay: number;
+};
 
 export const createPresence = <T>(
   source: Accessor<T[]>,
@@ -377,37 +374,36 @@ export const createPresence = <T>(
   enterValue: (target: T) => T,
   exitValue: (current: T) => T,
 ): Accessor<PresenceItem<T>[]> => {
-  const [items, setItems] = createSignal<InternalPresenceItem<T>[]>([])
+  const [items, setItems] = createSignal<InternalPresenceItem<T>[]>([]);
 
-  let raf: number | undefined
+  let raf: number | undefined;
 
   const cancelAnim = () => {
     if (raf !== undefined) {
-      cancelAnimationFrame(raf)
-      raf = undefined
+      cancelAnimationFrame(raf);
+      raf = undefined;
     }
-  }
+  };
 
   const tick = (now: number) => {
-    const current = untrack(items)
-    let hasActive = false
-    const next: InternalPresenceItem<T>[] = []
+    const current = untrack(items);
+    let hasActive = false;
+    const next: InternalPresenceItem<T>[] = [];
 
     for (const item of current) {
-      const elapsed = now - item.startTime + item.delay
+      const elapsed = now - item.startTime + item.delay;
       if (elapsed < 0) {
-        next.push(item)
-        hasActive = true
-        continue
+        next.push(item);
+        hasActive = true;
+        continue;
       }
-      const progress =
-        item.duration > 0 ? Math.min(elapsed / item.duration, 1) : 1
-      const t = item.easing(progress)
-      const value = interpolate(item.value, item.target, t)
+      const progress = item.duration > 0 ? Math.min(elapsed / item.duration, 1) : 1;
+      const t = item.easing(progress);
+      const value = interpolate(item.value, item.target, t);
       if (progress < 1) {
-        next.push({ ...item, value })
-        hasActive = true
-      } else if (item.mode !== 'exit') {
+        next.push({ ...item, value });
+        hasActive = true;
+      } else if (item.mode !== "exit") {
         next.push({
           value: item.target,
           target: item.target,
@@ -416,83 +412,83 @@ export const createPresence = <T>(
           duration: item.duration,
           easing: item.easing,
           delay: item.delay,
-        })
+        });
       }
     }
 
-    setItems(next)
+    setItems(next);
 
     if (hasActive) {
-      raf = requestAnimationFrame(tick)
+      raf = requestAnimationFrame(tick);
     } else {
-      raf = undefined
+      raf = undefined;
     }
-  }
+  };
 
   const start = () => {
-    cancelAnim()
-    raf = requestAnimationFrame(tick)
-  }
+    cancelAnim();
+    raf = requestAnimationFrame(tick);
+  };
 
   createEffect(() => {
-    const src = source()
-    const opts = options()
+    const src = source();
+    const opts = options();
 
     const disabled =
       opts.enabled === false ||
-      (opts.enabled === 'auto' && untrack(reducedMotion)) ||
-      opts.duration <= 0
+      (opts.enabled === "auto" && untrack(reducedMotion)) ||
+      opts.duration <= 0;
 
-    const prev = untrack(items)
+    const prev = untrack(items);
 
     if (disabled) {
-      cancelAnim()
+      cancelAnim();
       setItems(
         src.map((v) => ({
           value: v,
           target: v,
-          mode: 'update' as const,
+          mode: "update" as const,
           startTime: 0,
           duration: 0,
-          easing: EASINGS['ease-out']!,
+          easing: EASINGS["ease-out"]!,
           delay: 0,
         })),
-      )
-      return
+      );
+      return;
     }
 
-    const now = performance.now()
-    const updateEasing = getEasingFn(opts.easing)
-    const enterEasing = getEasingFn(opts.enter.easing)
-    const exitEasing = getEasingFn(opts.exit.easing)
-    const next: InternalPresenceItem<T>[] = []
+    const now = performance.now();
+    const updateEasing = getEasingFn(opts.easing);
+    const enterEasing = getEasingFn(opts.enter.easing);
+    const exitEasing = getEasingFn(opts.exit.easing);
+    const next: InternalPresenceItem<T>[] = [];
 
-    const overlap = Math.min(prev.length, src.length)
+    const overlap = Math.min(prev.length, src.length);
     for (let i = 0; i < overlap; i++) {
-      const prevItem = prev[i]!
-      if (prevItem.mode === 'exit') {
+      const prevItem = prev[i]!;
+      if (prevItem.mode === "exit") {
         next.push({
           value: enterValue(src[i]!),
           target: src[i]!,
-          mode: 'enter',
+          mode: "enter",
           startTime: now,
           duration: opts.enter.duration,
           easing: enterEasing,
           delay: opts.enter.delay,
-        })
+        });
       } else {
         next.push({
           value:
-            prevItem.mode === 'enter' || prevItem.mode === 'update'
+            prevItem.mode === "enter" || prevItem.mode === "update"
               ? prevItem.value
               : prevItem.target,
           target: src[i]!,
-          mode: 'update',
+          mode: "update",
           startTime: now,
           duration: opts.duration,
           easing: updateEasing,
           delay: opts.delay,
-        })
+        });
       }
     }
 
@@ -500,44 +496,44 @@ export const createPresence = <T>(
       next.push({
         value: enterValue(src[i]!),
         target: src[i]!,
-        mode: 'enter',
+        mode: "enter",
         startTime: now,
         duration: opts.enter.duration,
         easing: enterEasing,
         delay: opts.enter.delay,
-      })
+      });
     }
 
     for (let i = src.length; i < prev.length; i++) {
-      const prevItem = prev[i]!
-      if (prevItem.mode === 'exit') {
-        next.push(prevItem)
+      const prevItem = prev[i]!;
+      if (prevItem.mode === "exit") {
+        next.push(prevItem);
       } else {
         const currentVal =
-          prevItem.mode === 'enter' || prevItem.mode === 'update'
+          prevItem.mode === "enter" || prevItem.mode === "update"
             ? prevItem.value
-            : prevItem.target
+            : prevItem.target;
         next.push({
           value: currentVal,
           target: exitValue(currentVal),
-          mode: 'exit',
+          mode: "exit",
           startTime: now,
           duration: opts.exit.duration,
           easing: exitEasing,
           delay: opts.exit.delay,
-        })
+        });
       }
     }
 
-    setItems(next)
-    start()
-  })
+    setItems(next);
+    start();
+  });
 
-  onCleanup(cancelAnim)
+  onCleanup(cancelAnim);
 
   return () =>
     items().map((item) => ({
       value: item.value,
       mode: item.mode,
-    }))
-}
+    }));
+};

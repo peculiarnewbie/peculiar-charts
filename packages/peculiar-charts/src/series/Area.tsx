@@ -1,4 +1,4 @@
-import { useChartContext } from '@src/components/context'
+import { useChartContext } from "@src/components/context";
 import {
   type AnimationOptions,
   type ResolvedAnimationOptions,
@@ -6,19 +6,19 @@ import {
   createTweenedArray,
   interpolatePoint,
   resolveAnimation,
-} from '@src/lib/animation'
-import type { BarLayout } from '@src/lib/createBands'
-import createBaseLine from '@src/lib/createBaseLine'
-import createPoints from '@src/lib/createPoints'
-import createScale from '@src/lib/createScale'
-import createSeries from '@src/lib/createSeries'
-import type { DotRenderer, PointEvents } from '@src/lib/markers'
-import { projectScale } from '@src/lib/scale'
-import type { OverrideProps } from '@src/lib/types'
-import { accessData } from '@src/lib/utils'
-import DotsLayer from '@src/series/Dots'
-import Curve from '@src/shapes/Curve'
-import type { CurveFactory } from 'd3-shape'
+} from "@src/lib/animation";
+import type { BarLayout } from "@src/lib/createBands";
+import createBaseLine from "@src/lib/createBaseLine";
+import createPoints from "@src/lib/createPoints";
+import createScale from "@src/lib/createScale";
+import createSeries from "@src/lib/createSeries";
+import type { DotRenderer, PointEvents } from "@src/lib/markers";
+import { projectScale } from "@src/lib/scale";
+import type { OverrideProps } from "@src/lib/types";
+import { accessData } from "@src/lib/utils";
+import DotsLayer from "@src/series/Dots";
+import Curve from "@src/shapes/Curve";
+import type { CurveFactory } from "d3-shape";
 import {
   type ComponentProps,
   type JSX,
@@ -30,131 +30,130 @@ import {
   mergeProps,
   onCleanup,
   splitProps,
-} from 'solid-js'
+} from "solid-js";
 
 /** Props forwarded to a custom Area shape function. */
 export type AreaShapeProps = ShapeAnimationProps &
-  Omit<ComponentProps<'path'>, 'd'> & {
-    points: [number, number][]
-    baseLine: number | number[]
-  }
+  Omit<ComponentProps<"path">, "d"> & {
+    points: [number, number][];
+    baseLine: number | number[];
+  };
 
 /**
  * How to render a custom Area shape:
  * - a function — receives {@link AreaShapeProps}, returns JSX.
  */
-export type AreaShapeRenderer = (props: AreaShapeProps) => JSX.Element
+export type AreaShapeRenderer = (props: AreaShapeProps) => JSX.Element;
 
 export type AreaProps = OverrideProps<
-  Omit<ComponentProps<'path'>, 'd'>,
+  Omit<ComponentProps<"path">, "d">,
   {
     /** Data key for the y-values. Omit for plain number arrays. */
-    dataKey?: string
+    dataKey?: string;
     /** Per-series data array. Overrides chart-level `data` for this series. */
-    data?: unknown[]
+    data?: unknown[];
     /** Display name for legends/tooltips. @defaultValue `dataKey` */
-    name?: string
+    name?: string;
     /** Bound x-axis id. @defaultValue `'x'` */
-    xAxisId?: string
+    xAxisId?: string;
     /** Bound value-axis id. @defaultValue `'y'` */
-    yAxisId?: string
+    yAxisId?: string;
     /** Stack id — series sharing one stack are stacked. */
-    stackId?: string
+    stackId?: string;
     /** Area orientation. `'horizontal'` swaps axes: categories on Y, values on X. @defaultValue `'vertical'` */
-    layout?: BarLayout
+    layout?: BarLayout;
     /** d3 curve interpolation factory. */
-    curve?: CurveFactory
+    curve?: CurveFactory;
     /** Connect across null/missing values. */
-    connectNulls?: boolean
+    connectNulls?: boolean;
     /** Fill for the portion above the zero baseline. Enables fill-by-value
      * (the area is split at zero), overriding `fill`. */
-    positiveFill?: string
+    positiveFill?: string;
     /** Fill for the portion below the zero baseline. Enables fill-by-value. */
-    negativeFill?: string
+    negativeFill?: string;
     /** Marker at every point. `true`/props-object/function — see {@link DotRenderer}. */
-    dot?: DotRenderer
+    dot?: DotRenderer;
     /** Marker at the point nearest the pointer (hover highlight). */
-    activeDot?: DotRenderer
+    activeDot?: DotRenderer;
     /** Explicit colour for legend / tooltip swatches. */
-    color?: string
+    color?: string;
     /** Animation configuration. */
-    animation?: AnimationOptions
+    animation?: AnimationOptions;
     /**
      * Custom shape renderer. Replaces the default `<Curve>` path.
      * Receives the computed pixel-space points, baseline, SVG path props, and animation state.
      */
-    shape?: AreaShapeRenderer
+    shape?: AreaShapeRenderer;
   } & PointEvents
->
+>;
 
 /** Area series.
  *
  * @data `data-pc-area` - Present on every area path element.
  */
 const Area = (props: AreaProps) => {
-  const seriesId = createUniqueId()
-  const clipId = createUniqueId()
+  const seriesId = createUniqueId();
+  const clipId = createUniqueId();
   const defaultedProps = mergeProps(
     {
-      xAxisId: 'x',
-      yAxisId: 'y',
-      layout: 'vertical' as const,
-      fill: 'currentColor',
-      stroke: 'none',
+      xAxisId: "x",
+      yAxisId: "y",
+      layout: "vertical" as const,
+      fill: "currentColor",
+      stroke: "none",
     },
     props,
-  )
+  );
   const [localProps, eventProps, otherProps] = splitProps(
     defaultedProps,
     [
-      'dataKey',
-      'name',
-      'data',
-      'xAxisId',
-      'yAxisId',
-      'stackId',
-      'layout',
-      'positiveFill',
-      'negativeFill',
-      'dot',
-      'activeDot',
-      'color',
-      'animation',
-      'shape',
+      "dataKey",
+      "name",
+      "data",
+      "xAxisId",
+      "yAxisId",
+      "stackId",
+      "layout",
+      "positiveFill",
+      "negativeFill",
+      "dot",
+      "activeDot",
+      "color",
+      "animation",
+      "shape",
     ],
-    ['onPointClick', 'onPointEnter', 'onPointLeave'],
-  )
-  const chartContext = useChartContext()
-  const horizontal = () => localProps.layout === 'horizontal'
-  const valueAxisId = () =>
-    horizontal() ? localProps.xAxisId : localProps.yAxisId
+    ["onPointClick", "onPointEnter", "onPointLeave"],
+  );
+  const chartContext = useChartContext();
+  const horizontal = () => localProps.layout === "horizontal";
+  const valueAxisId = () => (horizontal() ? localProps.xAxisId : localProps.yAxisId);
 
-  const seriesRawData = () => localProps.data
+  const seriesRawData = () => localProps.data;
 
   const rawData = createMemo(() =>
     accessData<number | [number, number]>(
       localProps.data ?? chartContext.displayedData(),
       localProps.dataKey,
     ),
-  )
+  );
 
-  const isRange = createMemo(() => Array.isArray(rawData()[0]))
+  const isRange = createMemo(() => Array.isArray(rawData()[0]));
 
   const data = createMemo(() => {
-    const raw = rawData()
-    if (!isRange()) return raw as number[]
-    return (raw as [number, number][]).map((pair) => pair[1])
-  })
+    const raw = rawData();
+    if (!isRange()) return raw as number[];
+    return (raw as [number, number][]).map((pair) => pair[1]);
+  });
 
   const rangeBaseLine = createMemo(() => {
-    if (!isRange()) return null
-    return (rawData() as [number, number][]).map((pair) => pair[0])
-  })
+    if (!isRange()) return null;
+    return (rawData() as [number, number][]).map((pair) => pair[0]);
+  });
 
   createSeries({
     seriesId,
-    name: () => localProps.name ?? localProps.dataKey ?? 'series',
-    type: 'area',
+    name: () => localProps.name ?? localProps.dataKey ?? "series",
+    type: "area",
     xAxisId: () => localProps.xAxisId,
     yAxisId: () => localProps.yAxisId,
     valueAxisId,
@@ -163,27 +162,27 @@ const Area = (props: AreaProps) => {
     data,
     color: () => localProps.color,
     chartContext,
-  })
+  });
 
   const rangeExtent = createMemo(() => {
-    if (!isRange()) return null
-    const raw = rawData() as [number, number][]
+    if (!isRange()) return null;
+    const raw = rawData() as [number, number][];
     return {
       min: Math.min(...raw.map((pair) => pair[0])),
       max: Math.max(...raw.map((pair) => pair[1])),
-    }
-  })
+    };
+  });
   const valueScale = createScale({
     axisId: valueAxisId,
-    orientation: () => (horizontal() ? 'x' : 'y'),
+    orientation: () => (horizontal() ? "x" : "y"),
     chartContext,
-  })
+  });
   createEffect(() => {
-    const ext = rangeExtent()
-    if (!ext) return
-    chartContext.registerExtent(valueAxisId(), seriesId, ext)
-    onCleanup(() => chartContext.unregisterExtent(valueAxisId(), seriesId))
-  })
+    const ext = rangeExtent();
+    if (!ext) return;
+    chartContext.registerExtent(valueAxisId(), seriesId, ext);
+    onCleanup(() => chartContext.unregisterExtent(valueAxisId(), seriesId));
+  });
 
   const points = createPoints({
     layout: () => localProps.layout,
@@ -194,7 +193,7 @@ const Area = (props: AreaProps) => {
     data,
     seriesData: seriesRawData,
     chartContext,
-  })
+  });
 
   const stackedBaseLine = createBaseLine({
     layout: () => localProps.layout,
@@ -204,24 +203,24 @@ const Area = (props: AreaProps) => {
     stackId: () => localProps.stackId,
     data,
     chartContext,
-  })
+  });
 
   const baseLine = createMemo<number | number[]>(() => {
-    const lower = rangeBaseLine()
-    if (!lower) return stackedBaseLine()
-    const _valueScale = valueScale()
-    return lower.map((v) => projectScale(_valueScale, v))
-  })
+    const lower = rangeBaseLine();
+    if (!lower) return stackedBaseLine();
+    const _valueScale = valueScale();
+    return lower.map((v) => projectScale(_valueScale, v));
+  });
 
   const animOpts = createMemo<ResolvedAnimationOptions>(() =>
     resolveAnimation(localProps.animation),
-  )
-  const NaN_POINT: [number, number] = [Number.NaN, Number.NaN]
+  );
+  const NaN_POINT: [number, number] = [Number.NaN, Number.NaN];
 
-  const [animElapsed, setAnimElapsed] = createSignal(1)
-  const [isAnimating, setIsAnimating] = createSignal(false)
-  const [isEntrance, setIsEntrance] = createSignal(false)
-  let firstAnimation = true
+  const [animElapsed, setAnimElapsed] = createSignal(1);
+  const [isAnimating, setIsAnimating] = createSignal(false);
+  const [isEntrance, setIsEntrance] = createSignal(false);
+  let firstAnimation = true;
 
   const animatedPoints = createTweenedArray(
     points,
@@ -229,43 +228,42 @@ const Area = (props: AreaProps) => {
     interpolatePoint,
     (target) => (Number.isNaN(target[0]) ? NaN_POINT : target),
     (elapsed) => {
-      setAnimElapsed(elapsed)
+      setAnimElapsed(elapsed);
       if (elapsed < 1) {
-        setIsAnimating(true)
+        setIsAnimating(true);
       } else {
-        setIsAnimating(false)
-        firstAnimation = false
+        setIsAnimating(false);
+        firstAnimation = false;
       }
     },
-  )
+  );
   const animatedBaseLine = createTweenedArray(
     () => {
-      const bl = baseLine()
-      return Array.isArray(bl) ? bl : [bl]
+      const bl = baseLine();
+      return Array.isArray(bl) ? bl : [bl];
     },
     animOpts,
     (a, b, t) => a + (b - a) * t,
     (target) => target,
-  )
+  );
   const resolvedAnimatedBaseLine = () => {
-    const bl = baseLine()
-    if (!Array.isArray(bl)) return bl
-    return animatedBaseLine()
-  }
+    const bl = baseLine();
+    if (!Array.isArray(bl)) return bl;
+    return animatedBaseLine();
+  };
 
   const fillByValue = () =>
-    localProps.positiveFill !== undefined ||
-    localProps.negativeFill !== undefined
+    localProps.positiveFill !== undefined || localProps.negativeFill !== undefined;
 
-  const zeroPos = () => projectScale(valueScale(), 0)
+  const zeroPos = () => projectScale(valueScale(), 0);
 
-  const hasShape = () => localProps.shape !== undefined
+  const hasShape = () => localProps.shape !== undefined;
 
   return (
     <Show when={chartContext.isSeriesVisible(seriesId)}>
       {hasShape() ? (
         (() => {
-          if (firstAnimation && animOpts().enabled !== false) setIsEntrance(true)
+          if (firstAnimation && animOpts().enabled !== false) setIsEntrance(true);
           return localProps.shape!({
             points: animatedPoints(),
             baseLine: resolvedAnimatedBaseLine(),
@@ -273,7 +271,7 @@ const Area = (props: AreaProps) => {
             isAnimating: isAnimating(),
             isEntrance: isEntrance(),
             ...otherProps,
-          })
+          });
         })()
       ) : (
         <Show
@@ -298,22 +296,12 @@ const Area = (props: AreaProps) => {
                   height={chartContext.height()}
                 />
               ) : (
-                <rect
-                  x={0}
-                  y={0}
-                  width={chartContext.width()}
-                  height={zeroPos()}
-                />
+                <rect x={0} y={0} width={chartContext.width()} height={zeroPos()} />
               )}
             </clipPath>
             <clipPath id={`${clipId}-neg`}>
               {horizontal() ? (
-                <rect
-                  x={0}
-                  y={0}
-                  width={zeroPos()}
-                  height={chartContext.height()}
-                />
+                <rect x={0} y={0} width={zeroPos()} height={chartContext.height()} />
               ) : (
                 <rect
                   x={0}
@@ -330,7 +318,7 @@ const Area = (props: AreaProps) => {
             layout={localProps.layout}
             data-pc-area=""
             {...otherProps}
-            fill={localProps.positiveFill ?? 'none'}
+            fill={localProps.positiveFill ?? "none"}
             clip-path={`url(#${clipId}-pos)`}
           />
           <Curve
@@ -339,7 +327,7 @@ const Area = (props: AreaProps) => {
             layout={localProps.layout}
             data-pc-area=""
             {...otherProps}
-            fill={localProps.negativeFill ?? 'none'}
+            fill={localProps.negativeFill ?? "none"}
             clip-path={`url(#${clipId}-neg)`}
           />
         </Show>
@@ -357,7 +345,7 @@ const Area = (props: AreaProps) => {
         />
       </Show>
     </Show>
-  )
-}
+  );
+};
 
-export default Area
+export default Area;

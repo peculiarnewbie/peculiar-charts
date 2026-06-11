@@ -1,19 +1,19 @@
-import { dataIf } from '@corvu/utils'
-import { useChartContext } from '@src/components/context'
+import { dataIf } from "@corvu/utils";
+import { useChartContext } from "@src/components/context";
 import {
   type AnimationOptions,
   type ResolvedAnimationOptions,
   createPresence,
   resolveAnimation,
-} from '@src/lib/animation'
-import type { BarLayout } from '@src/lib/createBands'
-import createClosestTick from '@src/lib/createClosestTick'
-import createPoints from '@src/lib/createPoints'
-import createScale from '@src/lib/createScale'
-import createSeries from '@src/lib/createSeries'
-import { type PointEvents, pointEvents } from '@src/lib/markers'
-import type { OverrideProps } from '@src/lib/types'
-import { accessData, axisValues, pointDefined } from '@src/lib/utils'
+} from "@src/lib/animation";
+import type { BarLayout } from "@src/lib/createBands";
+import createClosestTick from "@src/lib/createClosestTick";
+import createPoints from "@src/lib/createPoints";
+import createScale from "@src/lib/createScale";
+import createSeries from "@src/lib/createSeries";
+import { type PointEvents, pointEvents } from "@src/lib/markers";
+import type { OverrideProps } from "@src/lib/types";
+import { accessData, axisValues, pointDefined } from "@src/lib/utils";
 import {
   type ComponentProps,
   For,
@@ -23,44 +23,44 @@ import {
   createUniqueId,
   mergeProps,
   splitProps,
-} from 'solid-js'
+} from "solid-js";
 
 /** A point's pixel position plus the datum it came from. */
 export type PointDatum = {
-  point: [number, number]
-  value: number
-  index: number
-  active: boolean
-}
+  point: [number, number];
+  value: number;
+  index: number;
+  active: boolean;
+};
 
 export type PointProps = OverrideProps<
-  Omit<ComponentProps<'circle'>, 'cx' | 'cy'>,
+  Omit<ComponentProps<"circle">, "cx" | "cy">,
   {
     /** Data key for the y-values. Omit for plain number arrays. */
-    dataKey?: string
+    dataKey?: string;
     /** Per-series data array. Overrides chart-level `data` for this series. */
-    data?: unknown[]
+    data?: unknown[];
     /** Display name for legends/tooltips. @defaultValue `dataKey` */
-    name?: string
+    name?: string;
     /** Bound x-axis id. @defaultValue `'x'` */
-    xAxisId?: string
+    xAxisId?: string;
     /** Bound value-axis id. @defaultValue `'y'` */
-    yAxisId?: string
+    yAxisId?: string;
     /** Stack id — series sharing one stack are stacked. */
-    stackId?: string
+    stackId?: string;
     /** Point orientation. `'horizontal'` swaps axes: categories on Y, values on X. @defaultValue `'vertical'` */
-    layout?: BarLayout
+    layout?: BarLayout;
     /** `<circle>` props applied when the point is the active (hovered) one. */
-    activeProps?: Omit<ComponentProps<'circle'>, 'cx' | 'cy'>
+    activeProps?: Omit<ComponentProps<"circle">, "cx" | "cy">;
     /** Render a custom marker per point (e.g. an image or emoji) instead of a
      * `<circle>`. Receives the point's pixel position, value and active state. */
-    children?: (datum: PointDatum) => JSX.Element
+    children?: (datum: PointDatum) => JSX.Element;
     /** Explicit colour for legend / tooltip swatches. */
-    color?: string
+    color?: string;
     /** Animation configuration. */
-    animation?: AnimationOptions
+    animation?: AnimationOptions;
   } & PointEvents
->
+>;
 
 /** Point (marker) series.
  *
@@ -68,60 +68,56 @@ export type PointProps = OverrideProps<
  * @data `data-pc-point` - Present on every point circle element.
  */
 const Point = (props: PointProps) => {
-  const seriesId = createUniqueId()
+  const seriesId = createUniqueId();
   const defaultedProps = mergeProps(
     {
-      xAxisId: 'x',
-      yAxisId: 'y',
-      layout: 'vertical' as const,
+      xAxisId: "x",
+      yAxisId: "y",
+      layout: "vertical" as const,
       r: 4,
-      fill: 'currentColor',
+      fill: "currentColor",
     },
     props,
-  )
+  );
   const [localProps, eventProps, otherProps] = splitProps(
     defaultedProps,
     [
-      'dataKey',
-      'name',
-      'data',
-      'xAxisId',
-      'yAxisId',
-      'stackId',
-      'layout',
-      'activeProps',
-      'children',
-      'color',
-      'animation',
+      "dataKey",
+      "name",
+      "data",
+      "xAxisId",
+      "yAxisId",
+      "stackId",
+      "layout",
+      "activeProps",
+      "children",
+      "color",
+      "animation",
     ],
-    ['onPointClick', 'onPointEnter', 'onPointLeave'],
-  )
-  const chartContext = useChartContext()
-  const horizontal = () => localProps.layout === 'horizontal'
+    ["onPointClick", "onPointEnter", "onPointLeave"],
+  );
+  const chartContext = useChartContext();
+  const horizontal = () => localProps.layout === "horizontal";
 
-  const seriesRawData = () => localProps.data
+  const seriesRawData = () => localProps.data;
 
   const data = createMemo(() =>
-    accessData<number>(
-      localProps.data ?? chartContext.displayedData(),
-      localProps.dataKey,
-    ),
-  )
+    accessData<number>(localProps.data ?? chartContext.displayedData(), localProps.dataKey),
+  );
 
   createSeries({
     seriesId,
-    name: () => localProps.name ?? localProps.dataKey ?? 'series',
-    type: 'point',
+    name: () => localProps.name ?? localProps.dataKey ?? "series",
+    type: "point",
     xAxisId: () => localProps.xAxisId,
     yAxisId: () => localProps.yAxisId,
-    valueAxisId: () =>
-      horizontal() ? localProps.xAxisId : localProps.yAxisId,
+    valueAxisId: () => (horizontal() ? localProps.xAxisId : localProps.yAxisId),
     dataKey: () => localProps.dataKey,
     stackId: () => localProps.stackId,
     data,
     color: () => localProps.color,
     chartContext,
-  })
+  });
 
   const points = createPoints({
     layout: () => localProps.layout,
@@ -132,36 +128,33 @@ const Point = (props: PointProps) => {
     data,
     seriesData: seriesRawData,
     chartContext,
-  })
+  });
 
-  const categoryAxis = () => (horizontal() ? 'y' : 'x')
-  const categoryAxisId = () =>
-    horizontal() ? localProps.yAxisId : localProps.xAxisId
+  const categoryAxis = () => (horizontal() ? "y" : "x");
+  const categoryAxisId = () => (horizontal() ? localProps.yAxisId : localProps.xAxisId);
 
   const categoryScale = createScale({
     axisId: categoryAxisId,
     orientation: categoryAxis,
     chartContext,
-  })
+  });
 
   const closestTick = createClosestTick({
     axis: categoryAxis,
     scale: categoryScale,
     values: () => axisValues(chartContext, categoryAxisId(), categoryAxis()),
     chartContext,
-  })
+  });
 
   const isActive = (index: number) =>
-    chartContext.pointerInChart() && closestTick()?.index === index
+    chartContext.pointerInChart() && closestTick()?.index === index;
 
   const circleProps = (index: number) =>
-    isActive(index)
-      ? mergeProps(otherProps, localProps.activeProps)
-      : otherProps
+    isActive(index) ? mergeProps(otherProps, localProps.activeProps) : otherProps;
 
   const animOpts = createMemo<ResolvedAnimationOptions>(() =>
     resolveAnimation(localProps.animation),
-  )
+  );
   const circles = createMemo(() =>
     points().map((p, i) => ({
       cx: p[0],
@@ -169,7 +162,7 @@ const Point = (props: PointProps) => {
       r: Number(otherProps.r ?? 4),
       index: i,
     })),
-  )
+  );
   const animatedCircles = createPresence(
     circles,
     animOpts,
@@ -181,26 +174,30 @@ const Point = (props: PointProps) => {
     }),
     (target) => ({ cx: target.cx, cy: target.cy, r: 0, index: target.index }),
     (current) => ({ cx: current.cx, cy: current.cy, r: 0, index: current.index }),
-  )
+  );
 
   return (
     <Show when={chartContext.isSeriesVisible(seriesId)}>
       <g data-pc-point-group="">
         <For each={animatedCircles()}>
           {(item) => {
-            const c = () => item.value
-            const dataIndex = () => animatedCircles().filter((i) => i.mode !== 'exit').indexOf(item)
-            const valid = () => pointDefined([c().cx, c().cy]) && (c().r > 0 || item.mode === 'exit')
+            const c = () => item.value;
+            const dataIndex = () =>
+              animatedCircles()
+                .filter((i) => i.mode !== "exit")
+                .indexOf(item);
+            const valid = () =>
+              pointDefined([c().cx, c().cy]) && (c().r > 0 || item.mode === "exit");
             return (
               <Show when={valid()}>
-                {item.mode === 'exit' || !localProps.children ? (
+                {item.mode === "exit" || !localProps.children ? (
                   <circle
                     cx={c().cx}
                     cy={c().cy}
                     data-active={isActive(dataIndex())}
                     data-pc-point=""
                     {...circleProps(dataIndex())}
-                    {...(item.mode === 'exit'
+                    {...(item.mode === "exit"
                       ? {}
                       : pointEvents(eventProps, () => ({
                           value: data()[dataIndex()] as number,
@@ -218,12 +215,12 @@ const Point = (props: PointProps) => {
                   })
                 )}
               </Show>
-            )
+            );
           }}
         </For>
       </g>
     </Show>
-  )
-}
+  );
+};
 
-export default Point
+export default Point;

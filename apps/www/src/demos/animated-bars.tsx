@@ -1,30 +1,22 @@
-import {
-  Axis,
-  AxisGrid,
-  AxisLabel,
-  AxisLine,
-  Bar,
-  Chart,
-  Legend,
-} from 'peculiar-charts'
-import { createSignal } from 'solid-js'
+import { Axis, AxisGrid, AxisLabel, AxisLine, Bar, Chart, Legend } from "peculiar-charts";
+import { createSignal } from "solid-js";
 
 const dataA = [
-  { month: 'Jan', revenue: 42, costs: 28 },
-  { month: 'Feb', revenue: 55, costs: 32 },
-  { month: 'Mar', revenue: 38, costs: 25 },
-  { month: 'Apr', revenue: 71, costs: 40 },
-  { month: 'May', revenue: 88, costs: 45 },
-]
+  { month: "Jan", revenue: 42, costs: 28 },
+  { month: "Feb", revenue: 55, costs: 32 },
+  { month: "Mar", revenue: 38, costs: 25 },
+  { month: "Apr", revenue: 71, costs: 40 },
+  { month: "May", revenue: 88, costs: 45 },
+];
 
 const dataB = [
-  { month: 'Jan', revenue: 60, costs: 35 },
-  { month: 'Feb', revenue: 45, costs: 42 },
-  { month: 'Mar', revenue: 78, costs: 30 },
-]
+  { month: "Jan", revenue: 60, costs: 35 },
+  { month: "Feb", revenue: 45, costs: 42 },
+  { month: "Mar", revenue: 78, costs: 30 },
+];
 
 export default function AnimatedBars() {
-  const [data, setData] = createSignal(dataA)
+  const [data, setData] = createSignal(dataA);
   return (
     <div class="flex h-full flex-col gap-3">
       <div class="flex gap-2">
@@ -57,5 +49,5 @@ export default function AnimatedBars() {
         <Bar dataKey="costs" name="Costs" class="text-rose-400" color="#fb7185" animation />
       </Chart>
     </div>
-  )
+  );
 }

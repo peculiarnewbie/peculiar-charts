@@ -27,13 +27,13 @@ import {
   PolarRadiusLabel,
   PolarTooltip,
   Radar,
-} from 'peculiar-charts'
+} from "peculiar-charts";
 
 const skills = [
-  { skill: 'Speed', alice: 120, bob: 98 },
-  { skill: 'Strength', alice: 98, bob: 130 },
+  { skill: "Speed", alice: 120, bob: 98 },
+  { skill: "Strength", alice: 98, bob: 130 },
   // …
-]
+];
 
 function SkillsRadar() {
   return (
@@ -53,7 +53,7 @@ function SkillsRadar() {
         <Radar dataKey="bob" name="Bob" class="text-emerald-500" />
       </PolarLayout>
     </Chart>
-  )
+  );
 }
 ```
 
@@ -103,38 +103,38 @@ the angle and radius scales, then render with **`PolarPolygon`** (closed `d3` li
 
 ## Components
 
-| Component | Role |
-|---|---|
-| `PolarLayout` | Provides `usePolarLayout()` — `cx`, `cy`, `innerRadius`, `outerRadius`, `startAngle`, `endAngle` |
-| `PolarAngleAxis` | Registers `orientation: 'angle'`, exposes polar axis context to children |
-| `PolarAngleLabel` | Category labels outside `outerRadius` |
-| `PolarRadiusAxis` | Registers `orientation: 'radius'`; `angle` sets which spoke tick labels use |
-| `PolarRadiusLabel` | Numeric tick labels along the radius axis spoke |
-| `PolarGrid` | Concentric rings (`gridType: 'polygon' \| 'circle'`) and optional `radialLines` spokes |
-| `PolarCrosshair` | Radial guide line at the category spoke nearest the pointer |
-| `PolarTooltip` | HTML tooltip (portaled) — default body or `content` render-prop |
-| `Radar` | Filled/stroked closed polygon; `angleAxisId` / `radiusAxisId` bind axes |
-| `PolarPolygon` | Low-level closed path from `[x, y][]` — for custom polar series |
+| Component          | Role                                                                                             |
+| ------------------ | ------------------------------------------------------------------------------------------------ |
+| `PolarLayout`      | Provides `usePolarLayout()` — `cx`, `cy`, `innerRadius`, `outerRadius`, `startAngle`, `endAngle` |
+| `PolarAngleAxis`   | Registers `orientation: 'angle'`, exposes polar axis context to children                         |
+| `PolarAngleLabel`  | Category labels outside `outerRadius`                                                            |
+| `PolarRadiusAxis`  | Registers `orientation: 'radius'`; `angle` sets which spoke tick labels use                      |
+| `PolarRadiusLabel` | Numeric tick labels along the radius axis spoke                                                  |
+| `PolarGrid`        | Concentric rings (`gridType: 'polygon' \| 'circle'`) and optional `radialLines` spokes           |
+| `PolarCrosshair`   | Radial guide line at the category spoke nearest the pointer                                      |
+| `PolarTooltip`     | HTML tooltip (portaled) — default body or `content` render-prop                                  |
+| `Radar`            | Filled/stroked closed polygon; `angleAxisId` / `radiusAxisId` bind axes                          |
+| `PolarPolygon`     | Low-level closed path from `[x, y][]` — for custom polar series                                  |
 
 ### `PolarLayout` props
 
-| Prop | Default | Description |
-|---|---|---|
-| `cx`, `cy` | plot centre | Centre in SVG coordinates |
-| `innerRadius` | `0` | Inner bound (px or `%`) |
-| `outerRadius` | `'80%'` | Outer bound (px or `%`) |
-| `startAngle` | `-π/2` | First category angle (radians) |
-| `endAngle` | `3π/2` | Last category angle (radians) |
+| Prop          | Default     | Description                    |
+| ------------- | ----------- | ------------------------------ |
+| `cx`, `cy`    | plot centre | Centre in SVG coordinates      |
+| `innerRadius` | `0`         | Inner bound (px or `%`)        |
+| `outerRadius` | `'80%'`     | Outer bound (px or `%`)        |
+| `startAngle`  | `-π/2`      | First category angle (radians) |
+| `endAngle`    | `3π/2`      | Last category angle (radians)  |
 
 ### `Radar` props
 
-| Prop | Default | Description |
-|---|---|---|
-| `dataKey` | — | Key for spoke values (omit for plain number arrays) |
-| `name` | `dataKey` | Legend / tooltip label |
-| `angleAxisId` | `'angle'` | Bound angle axis |
-| `radiusAxisId` | `'radius'` | Bound radius axis |
-| `fillOpacity` | `0.35` | Polygon fill opacity |
+| Prop           | Default    | Description                                         |
+| -------------- | ---------- | --------------------------------------------------- |
+| `dataKey`      | —          | Key for spoke values (omit for plain number arrays) |
+| `name`         | `dataKey`  | Legend / tooltip label                              |
+| `angleAxisId`  | `'angle'`  | Bound angle axis                                    |
+| `radiusAxisId` | `'radius'` | Bound radius axis                                   |
+| `fillOpacity`  | `0.35`     | Polygon fill opacity                                |
 
 `data-pc-radar-group` and `data-pc-radar` attributes are emitted for testing and styling.
 
@@ -152,38 +152,36 @@ import {
   PolarPolygon,
   useChartContext,
   usePolarLayout,
-} from 'peculiar-charts'
-import { createMemo, createUniqueId } from 'solid-js'
+} from "peculiar-charts";
+import { createMemo, createUniqueId } from "solid-js";
 
 function MyPolarSeries(props: { dataKey: string }) {
-  const chartContext = useChartContext()
-  const layout = usePolarLayout()
-  const seriesId = createUniqueId()
-  const data = createMemo(() =>
-    accessData<number>(chartContext.data(), props.dataKey),
-  )
+  const chartContext = useChartContext();
+  const layout = usePolarLayout();
+  const seriesId = createUniqueId();
+  const data = createMemo(() => accessData<number>(chartContext.data(), props.dataKey));
 
   createSeries({
     seriesId,
     name: () => props.dataKey,
-    type: 'custom-polar',
-    yAxisId: () => 'radius',
+    type: "custom-polar",
+    yAxisId: () => "radius",
     dataKey: () => props.dataKey,
     stackId: () => undefined,
     data,
     chartContext,
-  })
+  });
 
   const points = createPolarPoints({
-    angleAxisId: () => 'angle',
-    radiusAxisId: () => 'radius',
+    angleAxisId: () => "angle",
+    radiusAxisId: () => "radius",
     dataKey: () => props.dataKey,
     data,
     layout,
     chartContext,
-  })
+  });
 
-  return <PolarPolygon points={points()} />
+  return <PolarPolygon points={points()} />;
 }
 ```
 

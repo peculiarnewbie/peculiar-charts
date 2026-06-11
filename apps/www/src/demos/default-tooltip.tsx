@@ -7,9 +7,9 @@ import {
   AxisTooltip,
   Chart,
   Line,
-} from 'peculiar-charts'
-import { TOOLTIP_SHELL } from '../demoStyles'
-import { sales } from '../data'
+} from "peculiar-charts";
+import { TOOLTIP_SHELL } from "../demoStyles";
+import { sales } from "../data";
 
 /** Default tooltip — no `children`/`content`; lists registered series automatically. */
 export default function DefaultTooltip() {
@@ -28,5 +28,5 @@ export default function DefaultTooltip() {
       <Line dataKey="coffee" name="Coffee" class="text-blue-500" color="#3b82f6" stroke-width={2} />
       <Line dataKey="tea" name="Tea" class="text-emerald-500" color="#10b981" stroke-width={2} />
     </Chart>
-  )
+  );
 }

@@ -1,12 +1,5 @@
-import {
-  Axis,
-  AxisGrid,
-  AxisLabel,
-  AxisLine,
-  Chart,
-  Line,
-} from 'peculiar-charts'
-import { forecast } from '../data'
+import { Axis, AxisGrid, AxisLabel, AxisLine, Chart, Line } from "peculiar-charts";
+import { forecast } from "../data";
 
 export default function GradientForecast() {
   return (
@@ -35,5 +28,5 @@ export default function GradientForecast() {
         stroke-linecap="round"
       />
     </Chart>
-  )
+  );
 }

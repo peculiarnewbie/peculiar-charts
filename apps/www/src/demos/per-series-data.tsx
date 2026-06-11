@@ -1,24 +1,15 @@
-import {
-  Axis,
-  AxisGrid,
-  AxisLabel,
-  AxisLine,
-  Chart,
-  Legend,
-  Line,
-  Point,
-} from 'peculiar-charts'
-import { sales } from '../data'
+import { Axis, AxisGrid, AxisLabel, AxisLine, Chart, Legend, Line, Point } from "peculiar-charts";
+import { sales } from "../data";
 
 const weatherData = [
-  { day: 'Mon', temp: 18 },
-  { day: 'Tue', temp: 22 },
-  { day: 'Wed', temp: 15 },
-  { day: 'Thu', temp: 25 },
-  { day: 'Fri', temp: 28 },
-  { day: 'Sat', temp: 24 },
-  { day: 'Sun', temp: 20 },
-]
+  { day: "Mon", temp: 18 },
+  { day: "Tue", temp: 22 },
+  { day: "Wed", temp: 15 },
+  { day: "Thu", temp: 25 },
+  { day: "Fri", temp: 28 },
+  { day: "Sat", temp: 24 },
+  { day: "Sun", temp: 20 },
+];
 
 export default function PerSeriesData() {
   return (
@@ -64,5 +55,5 @@ export default function PerSeriesData() {
         <AxisLine class="stroke-black" />
       </Axis>
     </Chart>
-  )
+  );
 }

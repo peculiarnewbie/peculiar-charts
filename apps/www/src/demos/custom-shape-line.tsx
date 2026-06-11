@@ -8,22 +8,22 @@ import {
   Legend,
   Line,
   type LineShapeProps,
-} from 'peculiar-charts'
+} from "peculiar-charts";
 
 const data = [
-  { day: 'Mon', coffee: 4, tea: 3 },
-  { day: 'Tue', coffee: 3, tea: 5 },
-  { day: 'Wed', coffee: 5, tea: 2 },
-  { day: 'Thu', coffee: 2, tea: 4 },
-  { day: 'Fri', coffee: 6, tea: 3 },
-  { day: 'Sat', coffee: 4, tea: 6 },
-  { day: 'Sun', coffee: 3, tea: 4 },
-]
+  { day: "Mon", coffee: 4, tea: 3 },
+  { day: "Tue", coffee: 3, tea: 5 },
+  { day: "Wed", coffee: 5, tea: 2 },
+  { day: "Thu", coffee: 2, tea: 4 },
+  { day: "Fri", coffee: 6, tea: 3 },
+  { day: "Sat", coffee: 4, tea: 6 },
+  { day: "Sun", coffee: 3, tea: 4 },
+];
 
 function OpacityFadeShape(props: LineShapeProps) {
-  const { animationElapsedTime = 1, isEntrance = false, points, ...svgProps } = props
-  const opacity = isEntrance ? animationElapsedTime : 1
-  return <Curve points={points} stroke-opacity={opacity} {...svgProps} />
+  const { animationElapsedTime = 1, isEntrance = false, points, ...svgProps } = props;
+  const opacity = isEntrance ? animationElapsedTime : 1;
+  return <Curve points={points} stroke-opacity={opacity} {...svgProps} />;
 }
 
 export default function CustomShapeLine() {
@@ -59,5 +59,5 @@ export default function CustomShapeLine() {
         <AxisLine class="stroke-black" />
       </Axis>
     </Chart>
-  )
+  );
 }

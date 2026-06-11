@@ -20,15 +20,15 @@
 
 The type system is deliberately weakened in the data pipeline:
 
-| Location | Issue |
-|---|---|
-| `context.ts:62` | `data: Accessor<any[]>` |
-| `hooks.ts:85,94,98` | `useInverseScale` returns `Accessor<(pixel: number) => any>` |
-| `hooks.ts:141` | `useData<T = any>()` — generic defaults to `any` |
-| `hooks.ts:154` | `useAxisValues` returns `Accessor<any[]>` |
+| Location                 | Issue                                                                                     |
+| ------------------------ | ----------------------------------------------------------------------------------------- |
+| `context.ts:62`          | `data: Accessor<any[]>`                                                                   |
+| `hooks.ts:85,94,98`      | `useInverseScale` returns `Accessor<(pixel: number) => any>`                              |
+| `hooks.ts:141`           | `useData<T = any>()` — generic defaults to `any`                                          |
+| `hooks.ts:154`           | `useAxisValues` returns `Accessor<any[]>`                                                 |
 | `scale.ts:44,79,100,129` | `buildScale`, `projectScale`, `invertScale`, `scaleTicks` all use `any` for domain values |
-| `utils.ts:6` | `accessData<T>` casts `unknown` → `T[]` with no runtime check |
-| `Chart.tsx:378` | `axisValues(... as any, ...)` — explicit cast to bypass types |
+| `utils.ts:6`             | `accessData<T>` casts `unknown` → `T[]` with no runtime check                             |
+| `Chart.tsx:378`          | `axisValues(... as any, ...)` — explicit cast to bypass types                             |
 
 This is the single biggest gap against "make impossible states unrepresentable." A `string` passed where a `number` domain is expected will silently produce `NaN` pixel coordinates. Consider:
 
@@ -46,9 +46,11 @@ Vitest and Playwright are installed but zero test files exist. The `test` script
 ### 3. `as any` cast in sync path
 
 `Chart.tsx:378`:
+
 ```ts
-axisValues({ getAxisConfig, displayedData } as any, 'x', 'x')
+axisValues({ getAxisConfig, displayedData } as any, "x", "x");
 ```
+
 This constructs a partial `ChartContextType` and bypasses the type system. `axisValues` expects `ChartContextType` but only uses `getAxisConfig` and `displayedData`. Extract an interface for the subset (`Pick<ChartContextType, 'getAxisConfig' | 'displayedData'>`) and overload `axisValues` to accept it.
 
 ### 4. `SyncBus` is a global singleton with no cleanup
@@ -58,17 +60,21 @@ This constructs a partial `ChartContextType` and bypasses the type system. `axis
 ### 5. `SyncMethod` uses `any[]`
 
 `sync.ts:4`:
+
 ```ts
 | ((ticks: any[], data: SyncHandlerParam) => number)
 ```
+
 The `ticks` array should be typed as the domain value type, not `any[]`.
 
 ### 6. Mutable `seriesOrder` counter breaks on HMR
 
 `Chart.tsx:170`:
+
 ```ts
-let seriesOrder = 0
+let seriesOrder = 0;
 ```
+
 This is a plain `let` inside the component body. On Hot Module Replacement (or re-renders triggered by Solid's reactivity), it resets to 0 but the `series` map still holds old orders, causing color palette mismatches. Use a `createSignal` or derive order from `series().size`.
 
 ### 7. No Standard Schema support
@@ -82,9 +88,11 @@ Axis IDs are plain strings (`xAxisId?: string`). Two series with `xAxisId="x"` a
 ### 9. `MouseEvent` → `PointerEvent` unsafe cast
 
 `Chart.tsx:576-577`:
+
 ```ts
-buildChartEventPayload(event as unknown as PointerEvent)
+buildChartEventPayload(event as unknown as PointerEvent);
 ```
+
 The SVG `onPointerMove` handler receives a `PointerEvent`, but `fireChartPointerMove` is typed `(event: MouseEvent)`. The double-cast masks this. Type the handler param correctly as `PointerEvent` and remove the cast.
 
 ### 10. No observability hooks
@@ -95,14 +103,14 @@ The library has no OpenTelemetry spans or instrumentation points. For a charting
 
 ## Summary
 
-| Principle | Status |
-|---|---|
-| Impossible states unrepresentable | **Good** on scale/domain types; **weak** on data pipeline (`any`) |
-| End-to-end types | **Not applicable** (no DB/server); generic data row type is underspecified |
-| Object args | **Excellent** — consistent across all primitives |
-| Standard Schema | **Not present** |
-| Real tests | **None** — biggest gap |
-| OpenTelemetry | **Not present** |
+| Principle                         | Status                                                                     |
+| --------------------------------- | -------------------------------------------------------------------------- |
+| Impossible states unrepresentable | **Good** on scale/domain types; **weak** on data pipeline (`any`)          |
+| End-to-end types                  | **Not applicable** (no DB/server); generic data row type is underspecified |
+| Object args                       | **Excellent** — consistent across all primitives                           |
+| Standard Schema                   | **Not present**                                                            |
+| Real tests                        | **None** — biggest gap                                                     |
+| OpenTelemetry                     | **Not present**                                                            |
 
 The strongest recommendation: add tests for the pure-function core (`scale.ts`, `utils.ts`, `animation.ts` resolve logic) and tighten the `any` usage in the data pipeline. Those two changes would have the highest impact on maintainability.
 

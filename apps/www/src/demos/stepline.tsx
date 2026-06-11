@@ -1,13 +1,6 @@
-import {
-  Axis,
-  AxisGrid,
-  AxisLabel,
-  AxisLine,
-  Chart,
-  Line,
-} from 'peculiar-charts'
-import { curveStepAfter } from 'peculiar-charts/curves'
-import { sales } from '../data'
+import { Axis, AxisGrid, AxisLabel, AxisLine, Chart, Line } from "peculiar-charts";
+import { curveStepAfter } from "peculiar-charts/curves";
+import { sales } from "../data";
 
 export default function Stepline() {
   return (
@@ -19,18 +12,8 @@ export default function Stepline() {
         <AxisLabel />
         <AxisLine class="stroke-black" />
       </Axis>
-      <Line
-        dataKey="coffee"
-        curve={curveStepAfter}
-        class="text-blue-600"
-        stroke-width={2}
-      />
-      <Line
-        dataKey="tea"
-        class="text-amber-500"
-        stroke-width={2}
-        stroke-dasharray="6,4"
-      />
+      <Line dataKey="coffee" curve={curveStepAfter} class="text-blue-600" stroke-width={2} />
+      <Line dataKey="tea" class="text-amber-500" stroke-width={2} stroke-dasharray="6,4" />
     </Chart>
-  )
+  );
 }

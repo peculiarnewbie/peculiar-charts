@@ -4,22 +4,29 @@
   "private": false,
   "description": "Composable, unstyled, headless charts for SolidJS",
   "keywords": [
+    "charts",
+    "d3",
+    "headless",
     "solid",
     "solidjs",
-    "charts",
-    "svg",
-    "d3",
-    "headless"
+    "svg"
   ],
-  "license": "MIT",
   "homepage": "https://charts.peculiarnewbie.com",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/peculiarnewbie/peculiar-charts.git",
     "directory": "packages/peculiar-charts"
   },
-  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -32,13 +39,6 @@
       "default": "./dist/curves.js"
     }
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
   "scripts": {
     "build": "tsgo --noEmit && tsdown",
     "dev": "tsdown --watch",

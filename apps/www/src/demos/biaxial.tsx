@@ -1,13 +1,5 @@
-import {
-  Axis,
-  AxisGrid,
-  AxisLabel,
-  AxisLine,
-  Chart,
-  Legend,
-  Line,
-} from 'peculiar-charts'
-import { sales } from '../data'
+import { Axis, AxisGrid, AxisLabel, AxisLine, Chart, Legend, Line } from "peculiar-charts";
+import { sales } from "../data";
 
 export default function Biaxial() {
   return (
@@ -25,13 +17,7 @@ export default function Biaxial() {
         <AxisLabel />
         <AxisLine class="stroke-black" />
       </Axis>
-      <Line
-        dataKey="coffee"
-        name="Coffee"
-        class="text-blue-600"
-        color="#2563eb"
-        stroke-width={2}
-      />
+      <Line dataKey="coffee" name="Coffee" class="text-blue-600" color="#2563eb" stroke-width={2} />
       <Line
         dataKey="revenue"
         name="Revenue"
@@ -41,5 +27,5 @@ export default function Biaxial() {
         stroke-width={2}
       />
     </Chart>
-  )
+  );
 }

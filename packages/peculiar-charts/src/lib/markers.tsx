@@ -1,16 +1,16 @@
-import { dataIf } from '@corvu/utils'
-import { type ComponentProps, type JSX, Show, mergeProps } from 'solid-js'
+import { dataIf } from "@corvu/utils";
+import { type ComponentProps, type JSX, Show, mergeProps } from "solid-js";
 
 /** A marker's pixel position plus the datum it represents. */
 export type DotDatum = {
-  point: [number, number]
-  value: number
-  index: number
-  active: boolean
-}
+  point: [number, number];
+  value: number;
+  index: number;
+  active: boolean;
+};
 
 /** Props accepted by the default dot `<circle>`; its position is supplied. */
-export type DotProps = Omit<ComponentProps<'circle'>, 'cx' | 'cy'>
+export type DotProps = Omit<ComponentProps<"circle">, "cx" | "cy">;
 
 /**
  * How to render a marker. Mirrors Recharts' normalised shape prop:
@@ -19,23 +19,17 @@ export type DotProps = Omit<ComponentProps<'circle'>, 'cx' | 'cy'>
  * - a partial-props object — merged onto the default `<circle>`.
  * - a function — full control; receives the {@link DotDatum}.
  */
-export type DotRenderer =
-  | boolean
-  | DotProps
-  | ((datum: DotDatum) => JSX.Element)
+export type DotRenderer = boolean | DotProps | ((datum: DotDatum) => JSX.Element);
 
 /** The datum handed to a per-point event handler. */
 export type PointEventDatum = {
   /** The series value at this index. */
-  value: number
-  index: number
-  point: [number, number]
-}
+  value: number;
+  index: number;
+  point: [number, number];
+};
 
-export type PointEventHandler = (
-  datum: PointEventDatum,
-  event: MouseEvent,
-) => void
+export type PointEventHandler = (datum: PointEventDatum, event: MouseEvent) => void;
 
 /**
  * Per-datum event callbacks a series can accept. Unlike the raw SVG handlers
@@ -44,18 +38,18 @@ export type PointEventHandler = (
  */
 export type PointEvents = {
   /** Fired when a point/marker is clicked. */
-  onPointClick?: PointEventHandler
+  onPointClick?: PointEventHandler;
   /** Fired when the pointer enters a point/marker. */
-  onPointEnter?: PointEventHandler
+  onPointEnter?: PointEventHandler;
   /** Fired when the pointer leaves a point/marker. */
-  onPointLeave?: PointEventHandler
-}
+  onPointLeave?: PointEventHandler;
+};
 
 type PointEventAttrs = {
-  onClick?: JSX.EventHandlerUnion<SVGElement, MouseEvent>
-  onMouseEnter?: JSX.EventHandlerUnion<SVGElement, MouseEvent>
-  onMouseLeave?: JSX.EventHandlerUnion<SVGElement, MouseEvent>
-}
+  onClick?: JSX.EventHandlerUnion<SVGElement, MouseEvent>;
+  onMouseEnter?: JSX.EventHandlerUnion<SVGElement, MouseEvent>;
+  onMouseLeave?: JSX.EventHandlerUnion<SVGElement, MouseEvent>;
+};
 
 /**
  * Builds the DOM event-handler props for a per-datum element from the series'
@@ -64,19 +58,13 @@ type PointEventAttrs = {
  * `{...otherProps}` — an `onPointClick` then takes precedence over a raw
  * `onClick` on the same element.
  */
-export const pointEvents = (
-  events: PointEvents,
-  datum: () => PointEventDatum,
-): PointEventAttrs => {
-  const out: PointEventAttrs = {}
-  if (events.onPointClick)
-    out.onClick = (e: MouseEvent) => events.onPointClick?.(datum(), e)
-  if (events.onPointEnter)
-    out.onMouseEnter = (e: MouseEvent) => events.onPointEnter?.(datum(), e)
-  if (events.onPointLeave)
-    out.onMouseLeave = (e: MouseEvent) => events.onPointLeave?.(datum(), e)
-  return out
-}
+export const pointEvents = (events: PointEvents, datum: () => PointEventDatum): PointEventAttrs => {
+  const out: PointEventAttrs = {};
+  if (events.onPointClick) out.onClick = (e: MouseEvent) => events.onPointClick?.(datum(), e);
+  if (events.onPointEnter) out.onMouseEnter = (e: MouseEvent) => events.onPointEnter?.(datum(), e);
+  if (events.onPointLeave) out.onMouseLeave = (e: MouseEvent) => events.onPointLeave?.(datum(), e);
+  return out;
+};
 
 /**
  * Renders a single marker from a {@link DotRenderer}. The default `<circle>`
@@ -87,26 +75,26 @@ export const pointEvents = (
  * @data `data-pc-dot` - Present on every default dot circle.
  */
 export const Dot = (props: {
-  renderer: DotRenderer | undefined
-  point: [number, number]
-  value: number
-  index: number
-  active: boolean
+  renderer: DotRenderer | undefined;
+  point: [number, number];
+  value: number;
+  index: number;
+  active: boolean;
   /** Defaults merged under a props-object renderer (e.g. series colour). */
-  defaults?: DotProps
-  events?: PointEvents
+  defaults?: DotProps;
+  events?: PointEvents;
 }) => {
   const datum = (): DotDatum => ({
     point: props.point,
     value: props.value,
     index: props.index,
     active: props.active,
-  })
+  });
   return (
     <Show when={props.renderer !== undefined && props.renderer !== false}>
       <Show
         when={
-          typeof props.renderer === 'function'
+          typeof props.renderer === "function"
             ? (props.renderer as (d: DotDatum) => JSX.Element)
             : null
         }
@@ -117,7 +105,7 @@ export const Dot = (props: {
             data-pc-dot=""
             data-active={dataIf(props.active)}
             {...mergeProps(
-              { r: 3, fill: 'currentColor' } as DotProps,
+              { r: 3, fill: "currentColor" } as DotProps,
               props.defaults,
               props.renderer === true ? {} : (props.renderer as DotProps),
             )}
@@ -134,24 +122,21 @@ export const Dot = (props: {
         {(fn) => fn()(datum())}
       </Show>
     </Show>
-  )
-}
+  );
+};
 
 /** Pixel geometry plus datum index for a single bar. */
 export type BarDatum = {
-  x: number
-  y: number
-  width: number
-  height: number
-  value: number
-  index: number
-}
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  value: number;
+  index: number;
+};
 
 /** Props accepted by the default bar `<rect>`; its geometry is supplied. */
-export type BarShapeProps = Omit<
-  ComponentProps<'rect'>,
-  'x' | 'y' | 'width' | 'height'
->
+export type BarShapeProps = Omit<ComponentProps<"rect">, "x" | "y" | "width" | "height">;
 
 /**
  * How to render a bar. Mirrors Recharts' `shape` prop:
@@ -159,10 +144,7 @@ export type BarShapeProps = Omit<
  * - a partial-props object — merged onto the default `<rect>`.
  * - a function — full control; receives the {@link BarDatum}.
  */
-export type BarShapeRenderer =
-  | boolean
-  | BarShapeProps
-  | ((datum: BarDatum) => JSX.Element)
+export type BarShapeRenderer = boolean | BarShapeProps | ((datum: BarDatum) => JSX.Element);
 
 /**
  * Renders a single bar from a {@link BarShapeRenderer}. The default `<rect>`
@@ -172,27 +154,27 @@ export type BarShapeRenderer =
  * @data `data-pc-bar` - Present on every default bar rect.
  */
 export const BarShape = (props: {
-  renderer: BarShapeRenderer
-  bar: Pick<BarDatum, 'x' | 'y' | 'width' | 'height'>
-  value: number
-  index: number
+  renderer: BarShapeRenderer;
+  bar: Pick<BarDatum, "x" | "y" | "width" | "height">;
+  value: number;
+  index: number;
   /** Defaults merged under a props-object renderer (e.g. series colour). */
-  defaults?: BarShapeProps
-  events?: PointEvents
+  defaults?: BarShapeProps;
+  events?: PointEvents;
 }) => {
   const datum = (): BarDatum => ({
     ...props.bar,
     value: props.value,
     index: props.index,
-  })
+  });
   const eventPoint = (): [number, number] => [
     props.bar.x + props.bar.width / 2,
     props.bar.y + props.bar.height / 2,
-  ]
+  ];
   return (
     <Show
       when={
-        typeof props.renderer === 'function'
+        typeof props.renderer === "function"
           ? (props.renderer as (d: BarDatum) => JSX.Element)
           : null
       }
@@ -204,7 +186,7 @@ export const BarShape = (props: {
           height={props.bar.height}
           data-pc-bar=""
           {...mergeProps(
-            { fill: 'currentColor', stroke: 'none' } as BarShapeProps,
+            { fill: "currentColor", stroke: "none" } as BarShapeProps,
             props.defaults,
             props.renderer === true ? {} : (props.renderer as BarShapeProps),
           )}
@@ -220,5 +202,5 @@ export const BarShape = (props: {
     >
       {(fn) => fn()(datum())}
     </Show>
-  )
-}
+  );
+};
