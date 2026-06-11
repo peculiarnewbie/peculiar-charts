@@ -94,8 +94,9 @@ export const getBarPadding = (chartContext: BarPaddingContext) => {
     .domain(Array(dataLength).keys().map(String).toArray())
     .range([left, right])
     .paddingInner(bandGap)
+    .paddingOuter(bandGap / 2)
 
-  return bandScale.bandwidth() / 2
+  return bandScale.step() / 2
 }
 
 export const pointDefined = (point: [number, number]) =>

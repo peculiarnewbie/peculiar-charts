@@ -8,6 +8,7 @@ import Bubble from '@src/series/Bubble'
 import Pie from '@src/series/Pie'
 import Radar from '@src/series/Radar'
 import Axis from '@src/axis/Axis'
+import AxisLabel from '@src/axis/Label'
 import PolarLayout from '@src/axis/polar/PolarLayout'
 import PolarAngleAxis from '@src/axis/polar/PolarAngleAxis'
 import PolarRadiusAxis from '@src/axis/polar/PolarRadiusAxis'
@@ -115,6 +116,42 @@ describe('Bar', () => {
       const h = Number(rect.getAttribute('height'))
       expect(w).toBeGreaterThan(0)
       expect(h).toBeGreaterThan(0)
+    }
+  })
+
+  it('aligns band-axis custom labels with bar centers', () => {
+    const { container } = render(() => (
+      <Chart data={data} width={400} height={300}>
+        <Axis axis="x" position="bottom" dataKey="x" type="band">
+          <AxisLabel interval={0}>
+            {(tick) => (
+              <circle
+                data-test-axis-label=""
+                cx={tick.x}
+                cy={tick.y}
+                r={1}
+              />
+            )}
+          </AxisLabel>
+        </Axis>
+        <Axis axis="y" position="left" />
+        <Bar dataKey="y" />
+      </Chart>
+    ))
+
+    const rects = [...container.querySelectorAll('[data-pc-bar]')]
+    const labels = [...container.querySelectorAll('[data-test-axis-label]')]
+
+    expect(labels.length).toBe(rects.length)
+
+    for (let i = 0; i < rects.length; i++) {
+      const rect = rects[i]!
+      const label = labels[i]!
+      const barCenter =
+        Number(rect.getAttribute('x')) + Number(rect.getAttribute('width')) / 2
+      const labelCenter = Number(label.getAttribute('cx'))
+
+      expect(labelCenter).toBeCloseTo(barCenter, 6)
     }
   })
 })

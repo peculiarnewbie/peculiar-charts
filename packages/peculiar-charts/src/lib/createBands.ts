@@ -41,6 +41,7 @@ const createBands = (props: {
       .domain(Array(data.length).keys().map(String).toArray())
       .range(horizontal ? [top, bottom] : [left, right])
       .paddingInner(bandGap)
+      .paddingOuter(bandGap / 2)
 
     const bars = ctx.bars()
     const barGroupScale = scaleBand()
