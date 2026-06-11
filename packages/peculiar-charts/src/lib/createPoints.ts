@@ -73,8 +73,16 @@ const createPoints = (props: {
             stacked = 0;
           }
         } else if (thisIdx > 0) {
-          for (let s = 0; s < thisIdx; s++) {
-            stacked += stack.get(stackDataKeys[s]!)?.values[i] || 0;
+          if (value >= 0) {
+            for (let s = 0; s < thisIdx; s++) {
+              const v = stack.get(stackDataKeys[s]!)?.values[i] ?? 0;
+              if (v >= 0) stacked += v;
+            }
+          } else {
+            for (let s = 0; s < thisIdx; s++) {
+              const v = stack.get(stackDataKeys[s]!)?.values[i] ?? 0;
+              if (v < 0) stacked += v;
+            }
           }
         }
       }

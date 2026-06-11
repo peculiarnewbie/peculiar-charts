@@ -16,7 +16,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "typecheck": "pnpm --filter peculiar-charts build && pnpm --filter @peculiar-charts/www typecheck",
+    "typecheck": "pnpm --filter peculiar-charts typecheck && pnpm --filter @peculiar-charts/www typecheck",
     "publish:lib": "pnpm --filter peculiar-charts release"
   },
   "devDependencies": {

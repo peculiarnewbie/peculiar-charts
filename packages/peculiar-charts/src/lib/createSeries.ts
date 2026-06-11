@@ -59,15 +59,21 @@ const createSeries = (props: {
     const data = props.data();
 
     const stackValues = stack ? [...stack.values()].flatMap((s) => s.values) : [];
-    const min = Math.min(...data, ...stackValues);
+    let min = Math.min(...data, ...stackValues);
 
     let max: number | null = null;
     if (stack) {
       const stackDataKeys = [...stack.keys()];
       for (let i = 0; i < data.length; i++) {
-        let stacked = 0;
-        for (const key of stackDataKeys) stacked += stack.get(key)?.values[i] ?? 0;
-        max = Math.max(max ?? stacked, stacked);
+        let posSum = 0;
+        let negSum = 0;
+        for (const key of stackDataKeys) {
+          const v = stack.get(key)?.values[i] ?? 0;
+          if (v >= 0) posSum += v;
+          else negSum += v;
+        }
+        min = Math.min(min, negSum);
+        max = Math.max(max ?? posSum, posSum);
       }
     }
     max = max ?? Math.max(...data);

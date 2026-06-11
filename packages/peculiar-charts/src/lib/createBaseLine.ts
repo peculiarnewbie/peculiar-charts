@@ -49,8 +49,17 @@ const createBaseLine = (props: {
       }
 
       let baseLine = 0;
-      for (let s = 0; s < thisIdx; s++) {
-        baseLine += stack.get(stackDataKeys[s]!)?.values[i] ?? 0;
+      const currentValue = props.data()[i] ?? 0;
+      if (currentValue >= 0) {
+        for (let s = 0; s < thisIdx; s++) {
+          const v = stack.get(stackDataKeys[s]!)?.values[i] ?? 0;
+          if (v >= 0) baseLine += v;
+        }
+      } else {
+        for (let s = 0; s < thisIdx; s++) {
+          const v = stack.get(stackDataKeys[s]!)?.values[i] ?? 0;
+          if (v < 0) baseLine += v;
+        }
       }
       return projectScale(_scale, baseLine);
     });

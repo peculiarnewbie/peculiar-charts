@@ -187,13 +187,21 @@ const Brush = (props: BrushProps) => {
 
     const onUp = () => {
       setDragging(null);
+      cleanup();
+      local.onDragEnd?.({ startIndex: clampedStart(), endIndex: clampedEnd() });
+    };
+
+    let cleaned = false;
+    const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
-      local.onDragEnd?.({ startIndex: clampedStart(), endIndex: clampedEnd() });
     };
 
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
+    onCleanup(cleanup);
   };
 
   // --- render --------------------------------------------------------------

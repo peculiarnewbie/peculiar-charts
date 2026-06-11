@@ -529,6 +529,14 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
     const svgX = toSvgPosition(containerX, "width");
     const svgY = toSvgPosition(containerY, "height");
 
+    const left = getInset("left");
+    const right = svgSize()[0] - getInset("right");
+    const top = getInset("top");
+    const bottom = svgSize()[1] - getInset("bottom");
+    if (svgX < left || svgX > right || svgY < top || svgY > bottom) {
+      return { event, x: svgX, y: svgY, index: null, datum: undefined, series: [] };
+    }
+
     const data = displayedData();
     const ticks = xAxisValues();
     const idx = ticks.length ? findClosestTickIndex(xScale(), ticks, svgX) : null;
@@ -563,9 +571,18 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
     });
     if (localProps.syncId != null && !isReceivingSync()) {
       const svgX = toSvgPosition(event.clientX - rect.left, "width");
-      const idx = findClosestTickIndex(xScale(), xAxisValues(), svgX);
-      const label = String(xAxisValues()[idx] ?? "");
-      emitSync(true, idx, label);
+      const svgY = toSvgPosition(event.clientY - rect.top, "height");
+      const left = getInset("left");
+      const right = svgSize()[0] - getInset("right");
+      const top = getInset("top");
+      const bottom = svgSize()[1] - getInset("bottom");
+      if (svgX >= left && svgX <= right && svgY >= top && svgY <= bottom) {
+        const idx = findClosestTickIndex(xScale(), xAxisValues(), svgX);
+        const label = String(xAxisValues()[idx] ?? "");
+        emitSync(true, idx, label);
+      } else {
+        emitSync(false, null, undefined);
+      }
     }
     localProps.onChartPointerMove?.(buildChartEventPayload(event as unknown as PointerEvent));
   };
