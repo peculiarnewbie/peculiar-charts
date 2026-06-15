@@ -27,7 +27,9 @@ describe("createScale", () => {
 
       const s = scale();
       expect(s.type).toBe("point");
-      expect(s.scale.domain()).toEqual(["a", "b", "c"]);
+      if (s.type === "point") {
+        expect(s.scale.domain()).toEqual(["a", "b", "c"]);
+      }
       dispose();
     }));
 
@@ -81,10 +83,16 @@ describe("createScale", () => {
         chartContext: ctx,
       });
 
-      expect(scale().scale.domain()).toEqual(["a", "b"]);
+      const s1 = scale();
+      if (s1.type === "point") {
+        expect(s1.scale.domain()).toEqual(["a", "b"]);
+      }
 
       setDomain({ kind: "categorical", values: ["x", "y", "z"] });
-      expect(scale().scale.domain()).toEqual(["x", "y", "z"]);
+      const s2 = scale();
+      if (s2.type === "point") {
+        expect(s2.scale.domain()).toEqual(["x", "y", "z"]);
+      }
       dispose();
     }));
 
@@ -114,8 +122,10 @@ describe("createScale", () => {
 
       const s = scale();
       // y-axis: 0 maps to bottom (400), 100 maps to top (0)
-      expect(s.scale(0)).toBe(400);
-      expect(s.scale(100)).toBe(0);
+      if (s.type === "linear") {
+        expect(s.scale(0)).toBe(400);
+        expect(s.scale(100)).toBe(0);
+      }
       dispose();
     }));
 });

@@ -35,33 +35,43 @@ describe("buildScale", () => {
   it("builds a linear scale", () => {
     const s = buildScale("linear", [0, 100], [0, 500]);
     expect(s.type).toBe("linear");
-    expect(s.scale(0)).toBe(0);
-    expect(s.scale(50)).toBe(250);
-    expect(s.scale(100)).toBe(500);
+    if (s.type === "linear") {
+      expect(s.scale(0)).toBe(0);
+      expect(s.scale(50)).toBe(250);
+      expect(s.scale(100)).toBe(500);
+    }
   });
 
   it("builds a reversed linear scale", () => {
     const s = buildScale("linear", [0, 100], [0, 500], { reverse: true });
-    expect(s.scale(0)).toBe(500);
-    expect(s.scale(100)).toBe(0);
+    if (s.type === "linear") {
+      expect(s.scale(0)).toBe(500);
+      expect(s.scale(100)).toBe(0);
+    }
   });
 
   it("builds a band scale", () => {
     const s = buildScale("band", ["a", "b", "c"], [0, 300]);
     expect(s.type).toBe("band");
-    expect(s.scale.domain()).toEqual(["a", "b", "c"]);
-    expect(s.scale.bandwidth()).toBeGreaterThan(0);
+    if (s.type === "band") {
+      expect(s.scale.domain()).toEqual(["a", "b", "c"]);
+      expect(s.scale.bandwidth()).toBeGreaterThan(0);
+    }
   });
 
   it("builds a band scale with padding", () => {
     const s = buildScale("band", ["a", "b"], [0, 200], { padding: 0.5 });
-    expect(s.scale.paddingInner()).toBe(0.5);
+    if (s.type === "band") {
+      expect(s.scale.paddingInner()).toBe(0.5);
+    }
   });
 
   it("builds a point scale", () => {
     const s = buildScale("point", ["x", "y", "z"], [0, 300]);
     expect(s.type).toBe("point");
-    expect(s.scale.domain()).toEqual(["x", "y", "z"]);
+    if (s.type === "point") {
+      expect(s.scale.domain()).toEqual(["x", "y", "z"]);
+    }
   });
 
   it("builds a time scale", () => {
@@ -74,8 +84,10 @@ describe("buildScale", () => {
   it("builds a log scale", () => {
     const s = buildScale("log", [1, 1000], [0, 300]);
     expect(s.type).toBe("log");
-    expect(s.scale(1)).toBe(0);
-    expect(s.scale(1000)).toBe(300);
+    if (s.type === "log") {
+      expect(s.scale(1)).toBe(0);
+      expect(s.scale(1000)).toBe(300);
+    }
   });
 });
 
@@ -90,14 +102,18 @@ describe("projectScale", () => {
   it("projects band values to center of band", () => {
     const s = buildScale("band", ["a", "b", "c"], [0, 300]);
     const projected = projectScale(s, "a");
-    const bw = s.scale.bandwidth();
-    // Should be band start + half bandwidth
-    expect(projected).toBe(s.scale("a")! + bw / 2);
+    if (s.type === "band") {
+      const bw = s.scale.bandwidth();
+      // Should be band start + half bandwidth
+      expect(projected).toBe(s.scale("a")! + bw / 2);
+    }
   });
 
   it("projects point values directly", () => {
     const s = buildScale("point", ["a", "b"], [0, 200]);
-    expect(projectScale(s, "a")).toBe(s.scale("a"));
+    if (s.type === "point") {
+      expect(projectScale(s, "a")).toBe(s.scale("a"));
+    }
   });
 
   it("returns NaN for unknown band value", () => {

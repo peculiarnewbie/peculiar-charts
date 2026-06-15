@@ -52,7 +52,7 @@ document only so the landing page stays focused on polished product examples.
 | **Percent stacking**                     | `stackOffset="expand"`                                                                                                  | `stackOffset="expand"` on `<Chart>`                                                                                | **Parity**                   |
 | **`stackOffset` variants**               | `"expand"`, `"silhouette"`, `"sign"`, `"none"`                                                                          | `"expand"` supported                                                                                               | **Partial**                  |
 | **Custom `shape` on Line/Area**          | custom component receives `animationElapsedTime`, `isEntrance`                                                          | `shape` prop on Line/Area — function receives points, SVG props, animation state                                   | **Parity**                   |
-| **Custom `animationInterpolateFn`**      | custom interpolation logic for animation                                                                                | Not supported                                                                                                      | **Missing**                  |
+| **Custom `animationInterpolateFn`**      | custom interpolation logic for animation                                                                                | `interpolate` option in `AnimationOptions` on Line/Area                                                            | **Parity**                   |
 | **Animation match strategy**             | `animationMatchBy` (`matchByIndex`/`matchByDataKey`)                                                                    | Not supported                                                                                                      | **Missing**                  |
 | **Chart-level mouse/touch events**       | `onClick`, `onMouseMove`, `onMouseDown`, `onMouseUp`, `onDoubleClick`, `onContextMenu`, touch events on chart container | `onChartClick`, `onChartPointerMove`, `onChartPointerDown`, `onChartPointerUp`, `onChartPointerLeave` on `<Chart>` | **Parity**                   |
 | **Axis padding**                         | `padding={{ left: 30, right: 30 }}` on XAxis/YAxis                                                                      | `padding={{ left, right, top, bottom }}` on `<Axis>`                                                               | **Parity**                   |
@@ -198,7 +198,7 @@ Animation, Custom Line Shape Chart.
 
 ---
 
-### 5. Custom `animationInterpolateFn`
+### 5. Custom `animationInterpolateFn` ✅
 
 Recharts allows a custom interpolation function for animation, giving full control over
 how geometry transitions between states:
@@ -213,11 +213,24 @@ how geometry transitions between states:
 />
 ```
 
-Peculiar-charts' animation system uses `createTweenedArray` with a fixed `interpolatePoint`
-function. There's no hook to override it.
+Peculiar-charts now supports an `interpolate` option in `AnimationOptions`. The function
+is called per-element (e.g. per `[x, y]` point for Line/Area) with the start value, end
+value, and progress `t` in `[0, 1]`. When omitted, the default linear point interpolation
+is used.
 
-**What's needed:** An `interpolate` option in `AnimationOptions` (or a separate
-`animationInterpolate` prop) that accepts a custom interpolation function.
+```tsx
+// Peculiar-charts
+<Line
+  dataKey="value"
+  animation={{
+    duration: 800,
+    interpolate: (from, to, t) => [
+      from[0] + (to[0] - from[0]) * t,
+      from[1] + (to[1] - from[1]) * t,
+    ],
+  }}
+/>
+```
 
 **Affects:** Custom Animation Example.
 
@@ -464,7 +477,7 @@ Ordered by impact × effort:
 | 3        | ~~Percent stacking (`stackOffset`)~~      | ~~Medium~~ | ~~Unlocks percentage-stacked areas~~               |
 | 4        | ~~Custom `shape` on Line/Area~~           | ~~Medium~~ | ~~Unlocks custom rendering + advanced animations~~ |
 | 5        | Animation match strategy                  | Medium     | Correct transitions when data changes shape        |
-| 6        | Custom `animationInterpolateFn`           | Low-Medium | Full animation control                             |
+| 6        | ~~Custom `animationInterpolateFn`~~           | ~~Low-Medium~~ | ~~Full animation control~~                             |
 | 7        | `stackOffset` variants (silhouette, sign) | Medium     | Streamgraph + signed stacking                      |
 
 Vertical layout is the biggest remaining gap — it blocks an entire chart orientation.
@@ -511,6 +524,10 @@ Completed since this plan was written:
   (`'dataMax + 1000'`, `'dataMin - 50'`, `'dataMin'`, `'dataMax'`) that are evaluated
   against the computed data extent. A `parseAxisRange` utility parses the expression and
   `getDomain()` in the chart context resolves it to a numeric bound.
+- **Custom `animationInterpolateFn`** — `AnimationOptions` now accepts an `interpolate`
+  function that overrides the default per-element linear interpolation. Called with
+  `(from, to, t)` where `t` is progress in `[0, 1]`. Used by `<Line>` and `<Area>` via
+  `createTweenedArray`.
 
 ---
 

@@ -66,7 +66,7 @@ describe("image snapshots: Area", () => {
       <Chart data={cartesianData} width={400} height={300}>
         <Axis axis="x" position="bottom" dataKey="x" />
         <Axis axis="y" position="left" />
-        <Area dataKey="y" fill="#e74c3c" fillOpacity={0.3} stroke="#c0392b" />
+        <Area dataKey="y" fill="#e74c3c" fill-opacity={0.3} stroke="#c0392b" />
       </Chart>
     ));
 
@@ -196,7 +196,7 @@ describe("image snapshots: Multi-series combos", () => {
       <Chart data={cartesianData} width={400} height={300}>
         <Axis axis="x" position="bottom" dataKey="x" />
         <Axis axis="y" position="left" />
-        <Area dataKey="y" fillOpacity={0.2} />
+        <Area dataKey="y" fill-opacity={0.2} />
         <Line dataKey="y" stroke="#e74c3c" />
       </Chart>
     ));

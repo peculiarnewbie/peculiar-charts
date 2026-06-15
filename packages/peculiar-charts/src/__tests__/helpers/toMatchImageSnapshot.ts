@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import type { MatcherState } from "@vitest/expect";
+import type { MatcherState } from "vitest";
 import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
 import { svgToPng } from "./svgToPng";

@@ -1,4 +1,4 @@
-import type { ChartContextType } from "@src/components/context";
+import type { ChartContextType, SyncInteraction } from "@src/components/context";
 import { createSignal } from "solid-js";
 
 export const createMockChartContext = (overrides?: Partial<ChartContextType>): ChartContextType => {
@@ -10,7 +10,7 @@ export const createMockChartContext = (overrides?: Partial<ChartContextType>): C
   const [stacks, setStacks] = createSignal(new Map());
   const [bars, setBars] = createSignal(new Set<string>());
   const [pointerPosition, setPointerPosition] = createSignal(null);
-  const [syncInteraction, setSyncInteraction] = createSignal(null);
+  const [syncInteraction, setSyncInteraction] = createSignal<SyncInteraction | null>(null);
   const [brushRange, setBrushRange] = createSignal(null);
 
   const axisConfigs = new Map<string, any>();
@@ -58,9 +58,9 @@ export const createMockChartContext = (overrides?: Partial<ChartContextType>): C
     registerStack: () => {},
     unregisterStack: () => {},
     bars,
-    registerBar: (key) => bars((prev) => new Set(prev).add(key)),
-    unregisterBar: (key) =>
-      bars((prev) => {
+    registerBar: (key: string) => setBars((prev) => new Set(prev).add(key)),
+    unregisterBar: (key: string) =>
+      setBars((prev) => {
         const next = new Set(prev);
         next.delete(key);
         return next;

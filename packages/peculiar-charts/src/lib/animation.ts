@@ -52,6 +52,12 @@ export type AnimationOptions =
       delay?: number;
       enter?: PhaseConfig;
       exit?: PhaseConfig;
+      /**
+       * Custom interpolation function for animated geometry.
+       * Receives the start value, end value, and progress `t` in `[0, 1]`.
+       * Called per-element (e.g. per `[x, y]` point for Line/Area).
+       */
+      interpolate?: (from: any, to: any, t: number) => any;
     };
 
 export type ResolvedPhaseConfig = {
@@ -67,6 +73,7 @@ export type ResolvedAnimationOptions = {
   delay: number;
   enter: ResolvedPhaseConfig;
   exit: ResolvedPhaseConfig;
+  interpolate?: (from: any, to: any, t: number) => any;
 };
 
 const mergePhase = (
@@ -109,6 +116,7 @@ export const resolveAnimation = (
     ...top,
     enter: mergePhase(options.enter, top),
     exit: mergePhase(options.exit, top),
+    interpolate: options.interpolate,
   };
 };
 

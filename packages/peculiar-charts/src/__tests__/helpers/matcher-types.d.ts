@@ -1,3 +1,5 @@
+/// <reference types="@testing-library/jest-dom" />
+
 import type { MatchImageSnapshotOptions } from "@src/__tests__/helpers/toMatchImageSnapshot";
 
 declare module "vitest" {

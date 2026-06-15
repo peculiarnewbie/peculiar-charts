@@ -157,7 +157,7 @@ const Line = (props: LineProps) => {
   const animatedPoints = createTweenedArray(
     points,
     animOpts,
-    interpolatePoint,
+    (a, b, t) => animOpts().interpolate?.(a, b, t) ?? interpolatePoint(a, b, t),
     (target) => (Number.isNaN(target[0]) ? NaN_POINT : target),
     (elapsed) => {
       setAnimElapsed(elapsed);
