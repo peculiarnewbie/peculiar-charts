@@ -94,6 +94,8 @@ import StackedArea from "./demos/stacked-area";
 import stackedAreaCode from "./demos/stacked-area?raw";
 import StackedBars from "./demos/stacked-bars";
 import stackedBarsCode from "./demos/stacked-bars?raw";
+import StackOffsetVariants from "./demos/stack-offset-variants";
+import stackOffsetVariantsCode from "./demos/stack-offset-variants?raw";
 import Stepline from "./demos/stepline";
 import steplineCode from "./demos/stepline?raw";
 import SyncIdDemo from "./demos/syncId";
@@ -348,7 +350,7 @@ const DEMOS: Demo[] = [
     id: "animated-line",
     group: "Animation",
     title: "Animated line + points",
-    desc: "Line and Point series with `animation` — points tween their coordinates and exiting points shrink to zero radius. The path snaps on remove (no per-point exit for lines).",
+    desc: 'Line and Point series with `animation` — line paths use `matchBy: "day"` so shared dates tween from their previous positions when data changes shape.',
     Comp: AnimatedLine,
     code: animatedLineCode,
   },
@@ -505,12 +507,28 @@ const FEATURE_PARITY_DEMOS: Demo[] = [
     code: percentAreaCode,
   },
   {
+    id: "stack-offset-variants",
+    group: "Stacking",
+    title: "Stack offset variants",
+    desc: 'Covers the remaining Recharts `stackOffset` variants. `<Chart stackOffset>` now accepts `"none"`, `"expand"`, `"silhouette"`, and `"sign"` for cumulative, percent, streamgraph, and signed stacking.',
+    Comp: StackOffsetVariants,
+    code: stackOffsetVariantsCode,
+  },
+  {
     id: "custom-shape-line",
     group: "Shape",
     title: "Custom shape (opacity fade)",
     desc: "Covers the Recharts custom `shape` parity gap on Line. A custom shape function receives the animated points, SVG props, and animation state (`animationElapsedTime`, `isAnimating`, `isEntrance`). This example fades in the line during entrance using `strokeOpacity`.",
     Comp: CustomShapeLine,
     code: customShapeLineCode,
+  },
+  {
+    id: "animated-line",
+    group: "Animation",
+    title: "Animation match strategy",
+    desc: 'Covers the Recharts `animationMatchBy` parity gap. Line paths use `animation={{ matchBy: "day" }}` so points are matched by stable datum key instead of array index during sliding-window updates.',
+    Comp: AnimatedLine,
+    code: animatedLineCode,
   },
 ];
 

@@ -5,6 +5,7 @@ export type AxisContextType = {
   axisId: Accessor<string>;
   axis: Accessor<"x" | "y">;
   position: Accessor<"top" | "right" | "bottom" | "left">;
+  mirror: Accessor<boolean>;
   tickFormatter: Accessor<(value: any) => string>;
   scale: Accessor<Scale>;
   ticks: Accessor<any[]>;

@@ -1,4 +1,5 @@
 import type { ChartContextType } from "@src/components/context";
+import { resolveStackOffset, stackExtent } from "@src/lib/stacking";
 import { type Accessor, createEffect, onCleanup } from "solid-js";
 
 /**
@@ -48,37 +49,24 @@ const createSeries = (props: {
   createEffect(() => {
     if (!ctx.isSeriesVisible(props.seriesId)) return;
 
-    if (ctx.stackOffset?.() === "expand") {
-      ctx.registerExtent(valueAxisId(), props.seriesId, { min: 0, max: 1 });
-      onCleanup(() => ctx.unregisterExtent(valueAxisId(), props.seriesId));
-      return;
-    }
-
     const stackId = props.stackId();
     const stack = stackId !== undefined && ctx.stacks().get(stackId);
     const data = props.data();
 
-    const stackValues = stack ? [...stack.values()].flatMap((s) => s.values) : [];
-    let min = Math.min(...data, ...stackValues);
-
-    let max: number | null = null;
     if (stack) {
-      const stackDataKeys = [...stack.keys()];
-      for (let i = 0; i < data.length; i++) {
-        let posSum = 0;
-        let negSum = 0;
-        for (const key of stackDataKeys) {
-          const v = stack.get(key)?.values[i] ?? 0;
-          if (v >= 0) posSum += v;
-          else negSum += v;
-        }
-        min = Math.min(min, negSum);
-        max = Math.max(max ?? posSum, posSum);
-      }
+      ctx.registerExtent(
+        valueAxisId(),
+        props.seriesId,
+        stackExtent(stack, resolveStackOffset(ctx.stackOffset?.())),
+      );
+      onCleanup(() => ctx.unregisterExtent(valueAxisId(), props.seriesId));
+      return;
     }
-    max = max ?? Math.max(...data);
 
-    ctx.registerExtent(valueAxisId(), props.seriesId, { min, max });
+    ctx.registerExtent(valueAxisId(), props.seriesId, {
+      min: Math.min(...data),
+      max: Math.max(...data),
+    });
     onCleanup(() => ctx.unregisterExtent(valueAxisId(), props.seriesId));
   });
 };

@@ -72,17 +72,31 @@ const Mark = (props: MarkProps) => {
       case "bottom":
         return pos(tick);
       case "left":
-        return chartContext.getInset("left") - localProps.length;
+        return (
+          chartContext.getInset("left") +
+          (axisContext.mirror() ? localProps.length : -localProps.length)
+        );
       case "right":
-        return chartContext.width() - chartContext.getInset("right") + localProps.length;
+        return (
+          chartContext.width() -
+          chartContext.getInset("right") +
+          (axisContext.mirror() ? -localProps.length : localProps.length)
+        );
     }
   };
   const y2 = (tick: any) => {
     switch (axisContext.position()) {
       case "top":
-        return chartContext.getInset("top") - localProps.length;
+        return (
+          chartContext.getInset("top") +
+          (axisContext.mirror() ? localProps.length : -localProps.length)
+        );
       case "bottom":
-        return chartContext.height() - chartContext.getInset("bottom") + localProps.length;
+        return (
+          chartContext.height() -
+          chartContext.getInset("bottom") +
+          (axisContext.mirror() ? -localProps.length : localProps.length)
+        );
       case "left":
       case "right":
         return pos(tick);

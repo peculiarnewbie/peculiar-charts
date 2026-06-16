@@ -20,6 +20,8 @@ const createClosestTick = (props: {
   scale: Accessor<Scale>;
   /** Per-datum domain values for this axis (categories, numbers or dates). */
   values: Accessor<any[]>;
+  /** Index to use before the pointer enters the chart. */
+  defaultIndex?: Accessor<number | undefined>;
   chartContext: ChartContextType;
 }) => {
   const ctx = props.chartContext;
@@ -38,11 +40,18 @@ const createClosestTick = (props: {
     }
 
     const pointerPosition = ctx.pointerPosition();
-    if (!pointerPosition) return prev;
 
     const scale = props.scale();
     const values = props.values();
     if (values.length === 0) return prev;
+
+    if (!pointerPosition) {
+      const defaultIndex = props.defaultIndex?.();
+      if (defaultIndex === undefined || defaultIndex < 0 || defaultIndex >= values.length)
+        return prev;
+      const position = projectScale(scale, values[defaultIndex]);
+      return Number.isFinite(position) ? { index: defaultIndex, position } : prev;
+    }
 
     const position =
       props.axis() === "x"

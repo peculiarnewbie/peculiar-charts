@@ -23,6 +23,8 @@ export type TooltipProps = OverrideProps<
     tickGap?: number;
     /** Gap between the pointer and the tooltip. @defaultValue `16` */
     pointerGap?: number;
+    /** Show the tooltip at this datum index before the pointer enters the chart. */
+    defaultIndex?: number;
     /**
      * Tooltip body renderer — Recharts-style alias for `children`.
      * `true` (or omit both) renders the default {@link TooltipContent}.
@@ -44,6 +46,7 @@ const Tooltip = (props: TooltipProps) => {
   const [localProps, otherProps] = splitProps(defaultedProps, [
     "tickGap",
     "pointerGap",
+    "defaultIndex",
     "content",
     "children",
     "style",
@@ -67,6 +70,7 @@ const Tooltip = (props: TooltipProps) => {
     axis: axisContext.axis,
     scale: axisContext.scale,
     values: () => axisValues(chartContext, axisContext.axisId(), axisContext.axis()),
+    defaultIndex: () => localProps.defaultIndex,
     chartContext,
   });
 
@@ -89,7 +93,8 @@ const Tooltip = (props: TooltipProps) => {
         return tickPosition - localProps.tickGap - _tooltipSize[0];
       return preferred;
     }
-    if (!_pointerPosition) return 0;
+    if (!_pointerPosition)
+      return chartContext.toContainerPosition(chartContext.getInset("left"), "width");
     const preferred = _pointerPosition.x + localProps.pointerGap;
     if (_tooltipSize && preferred + _tooltipSize[0] > containerWidth)
       return _pointerPosition.x - localProps.pointerGap - _tooltipSize[0];
@@ -109,7 +114,8 @@ const Tooltip = (props: TooltipProps) => {
         return tickPosition - localProps.tickGap - _tooltipSize[1];
       return preferred;
     }
-    if (!_pointerPosition) return 0;
+    if (!_pointerPosition)
+      return chartContext.toContainerPosition(chartContext.getInset("top"), "height");
     const preferred = _pointerPosition.y + localProps.pointerGap;
     if (_tooltipSize && preferred + _tooltipSize[1] > containerHeight)
       return _pointerPosition.y - localProps.pointerGap - _tooltipSize[1];
@@ -127,7 +133,11 @@ const Tooltip = (props: TooltipProps) => {
             top: 0,
             left: 0,
             opacity:
-              chartContext.pointerInChart() || chartContext.syncInteraction()?.active ? 1 : 0,
+              chartContext.pointerInChart() ||
+              chartContext.syncInteraction()?.active ||
+              localProps.defaultIndex !== undefined
+                ? 1
+                : 0,
             transform: `translate3d(${x()}px, ${y()}px, 0px)`,
           },
           localProps.style,

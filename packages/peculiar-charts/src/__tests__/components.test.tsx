@@ -9,11 +9,15 @@ import Pie from "@src/series/Pie";
 import Radar from "@src/series/Radar";
 import Axis from "@src/axis/Axis";
 import AxisLabel from "@src/axis/Label";
+import AxisMark from "@src/axis/Mark";
+import AxisTooltip from "@src/axis/Tooltip";
 import PolarLayout from "@src/axis/polar/PolarLayout";
 import PolarAngleAxis from "@src/axis/polar/PolarAngleAxis";
 import PolarRadiusAxis from "@src/axis/polar/PolarRadiusAxis";
+import { useChartContext } from "@src/components/context";
 import { expectLines, expectBars, expectPieSectors } from "./helpers";
 import { cartesianData as data, bubbleData, pieData, radarData } from "./helpers/_data";
+import { createEffect } from "solid-js";
 
 describe("Chart", () => {
   it("renders an SVG with data-pc-chart attribute", () => {
@@ -44,6 +48,75 @@ describe("Chart", () => {
     const svg = container.querySelector("svg");
     expect(svg?.getAttribute("viewBox")).toBe("0 0 500 250");
   });
+
+  it("deduplicates categorical domains by default and when explicitly disabled", () => {
+    const duplicateData = [
+      { x: "A", y: 1 },
+      { x: "A", y: 2 },
+      { x: "B", y: 3 },
+    ];
+    const domains: any[][] = [];
+
+    const Probe = () => {
+      const ctx = useChartContext<typeof duplicateData>();
+      createEffect(() => {
+        const domain = ctx.getDomain("x", "x");
+        if (domain.kind === "categorical") domains.push(domain.values);
+      });
+      return null;
+    };
+
+    render(() => (
+      <Chart data={duplicateData} width={400} height={300}>
+        <Axis axis="x" position="bottom" dataKey="x" />
+        <Probe />
+      </Chart>
+    ));
+
+    render(() => (
+      <Chart data={duplicateData} width={400} height={300}>
+        <Axis axis="x" position="bottom" dataKey="x" allowDuplicatedCategory={false} />
+        <Probe />
+      </Chart>
+    ));
+
+    expect(domains).toContainEqual(["A", "B"]);
+    expect(domains.every((values) => values.length === 2)).toBe(true);
+  });
+});
+
+describe("Axis", () => {
+  it("mirrors tick marks inside the plot area", () => {
+    const { container } = render(() => (
+      <Chart data={data} width={400} height={300}>
+        <Axis axis="x" position="bottom" dataKey="x" mirror>
+          <AxisMark length={6} />
+        </Axis>
+      </Chart>
+    ));
+
+    const mark = container.querySelector("[data-pc-axis-mark]");
+    expect(Number(mark?.getAttribute("y2"))).toBeLessThan(Number(mark?.getAttribute("y1")));
+  });
+});
+
+describe("Tooltip", () => {
+  it("renders a default index before pointer interaction", () => {
+    const { container } = render(() => (
+      <Chart data={data} width={400} height={300}>
+        <Axis axis="x" position="bottom" dataKey="x">
+          <AxisTooltip defaultIndex={1} />
+        </Axis>
+        <Axis axis="y" position="left" />
+        <Line dataKey="y" name="Value" />
+      </Chart>
+    ));
+
+    const tooltip = container.querySelector("[data-pc-axis-tooltip]");
+    expect(tooltip).not.toBeNull();
+    expect(tooltip?.textContent).toContain(String(data[1]!.x));
+    expect(tooltip?.getAttribute("style")).toContain("opacity: 1");
+  });
 });
 
 describe("Line", () => {
@@ -69,6 +142,26 @@ describe("Line", () => {
     ));
 
     expectLines(container, [{ stroke: "red" }]);
+  });
+
+  it("clips to the plot area when a bound axis allows data overflow", () => {
+    const { container } = render(() => (
+      <Chart data={data} width={400} height={300}>
+        <Axis
+          axis="x"
+          position="bottom"
+          dataKey="x"
+          type="linear"
+          axisRange={[1, 2]}
+          allowDataOverflow
+        />
+        <Axis axis="y" position="left" />
+        <Line dataKey="y" />
+      </Chart>
+    ));
+
+    const lineGroup = container.querySelector("[clip-path^='url(#']");
+    expect(lineGroup).not.toBeNull();
   });
 });
 

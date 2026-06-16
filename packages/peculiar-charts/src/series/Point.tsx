@@ -1,4 +1,3 @@
-import { dataIf } from "@corvu/utils";
 import { useChartContext } from "@src/components/context";
 import {
   type AnimationOptions,
@@ -12,6 +11,7 @@ import createPoints from "@src/lib/createPoints";
 import createScale from "@src/lib/createScale";
 import createSeries from "@src/lib/createSeries";
 import { type PointEvents, pointEvents } from "@src/lib/markers";
+import { clipPathForAxes } from "@src/lib/overflow";
 import type { OverrideProps } from "@src/lib/types";
 import { accessData, axisValues, pointDefined } from "@src/lib/utils";
 import {
@@ -148,6 +148,11 @@ const Point = (props: PointProps) => {
 
   const isActive = (index: number) =>
     chartContext.pointerInChart() && closestTick()?.index === index;
+  const clipPath = () =>
+    clipPathForAxes(chartContext, [
+      { axisId: localProps.xAxisId, orientation: "x" },
+      { axisId: localProps.yAxisId, orientation: "y" },
+    ]);
 
   const circleProps = (index: number) =>
     isActive(index) ? mergeProps(otherProps, localProps.activeProps) : otherProps;
@@ -178,7 +183,7 @@ const Point = (props: PointProps) => {
 
   return (
     <Show when={chartContext.isSeriesVisible(seriesId)}>
-      <g data-pc-point-group="">
+      <g data-pc-point-group="" clip-path={clipPath()}>
         <For each={animatedCircles()}>
           {(item) => {
             const c = () => item.value;

@@ -24,6 +24,10 @@ export type AxisConfig = {
   reverse: boolean;
   /** Pixel padding applied to the axis range edges. */
   padding?: { left?: number; right?: number; top?: number; bottom?: number };
+  /** Keep duplicate category values in the categorical domain. */
+  allowDuplicatedCategory?: boolean;
+  /** Clip bound series to the plot area when user-defined domains overflow data. */
+  allowDataOverflow?: boolean;
 };
 
 export type BarConfig = {
@@ -51,6 +55,7 @@ export type SeriesMeta = {
 };
 
 export type StackEntry = { seriesIds: Set<string>; values: number[] };
+export type StackOffset = "none" | "expand" | "silhouette" | "sign";
 
 export type BrushRange = { startIndex: number; endIndex: number };
 
@@ -74,6 +79,7 @@ export type ChartContextType<TData extends unknown[] = unknown[]> = {
   setBrushRange: (range: BrushRange | null) => void;
   width: Accessor<number>;
   height: Accessor<number>;
+  plotClipPath: Accessor<string>;
 
   // --- plot rect / insets -------------------------------------------------
   getInset: (edge: Edge, exclude?: string) => number;
@@ -95,7 +101,7 @@ export type ChartContextType<TData extends unknown[] = unknown[]> = {
   getDomain: (axisId: string, orientation: AxisOrientation) => Domain;
 
   // --- stacks -------------------------------------------------------------
-  stackOffset: Accessor<"none" | "expand" | undefined>;
+  stackOffset: Accessor<StackOffset | undefined>;
   stacks: Accessor<Map<string, Map<string, StackEntry>>>;
   registerStack: (stackId: string, dataKey: string, seriesId: string, values: number[]) => void;
   unregisterStack: (stackId: string, dataKey: string, seriesId: string) => void;

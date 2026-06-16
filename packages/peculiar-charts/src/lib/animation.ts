@@ -1,12 +1,4 @@
-import {
-  type Accessor,
-  batch,
-  createEffect,
-  createMemo,
-  createSignal,
-  onCleanup,
-  untrack,
-} from "solid-js";
+import { type Accessor, createEffect, createSignal, onCleanup, untrack } from "solid-js";
 
 /**
  * Animation metadata forwarded to custom chart shapes.
@@ -43,6 +35,11 @@ export type PhaseConfig = {
   delay?: number;
 };
 
+export type AnimationMatchBy<TDatum = unknown> =
+  | "index"
+  | string
+  | ((datum: TDatum, index: number, data: TDatum[]) => unknown);
+
 export type AnimationOptions =
   | boolean
   | {
@@ -58,6 +55,12 @@ export type AnimationOptions =
        * Called per-element (e.g. per `[x, y]` point for Line/Area).
        */
       interpolate?: (from: any, to: any, t: number) => any;
+      /**
+       * Match old and new animated geometry by a stable datum key when data is
+       * inserted, removed, or reordered. A string reads that key from each
+       * datum; a function receives `(datum, index, data)`.
+       */
+      matchBy?: AnimationMatchBy<any>;
     };
 
 export type ResolvedPhaseConfig = {
@@ -74,6 +77,7 @@ export type ResolvedAnimationOptions = {
   enter: ResolvedPhaseConfig;
   exit: ResolvedPhaseConfig;
   interpolate?: (from: any, to: any, t: number) => any;
+  matchBy?: AnimationMatchBy<any>;
 };
 
 const mergePhase = (
@@ -117,6 +121,7 @@ export const resolveAnimation = (
     enter: mergePhase(options.enter, top),
     exit: mergePhase(options.exit, top),
     interpolate: options.interpolate,
+    matchBy: options.matchBy,
   };
 };
 
@@ -273,11 +278,14 @@ export const createTweenedArray = <T>(
   interpolate: (a: T, b: T, t: number) => T,
   enterValue: (target: T, index: number, prev: T[]) => T,
   onProgress?: (elapsed: number) => void,
+  matchKeys?: Accessor<unknown[] | undefined>,
 ): Accessor<T[]> => {
   const initial = source();
+  const initialKeys = matchKeys?.();
   const [animated, setAnimated] = createSignal<T[]>(initial);
   const [target, setTarget] = createSignal<T[]>(initial);
   const [startValue, setStartValue] = createSignal<T[]>(initial);
+  let targetKeys = initialKeys;
 
   let raf: number | undefined;
   let startTime: number | undefined;
@@ -322,21 +330,15 @@ export const createTweenedArray = <T>(
     run();
   };
 
-  const enterFor = (targetArr: T[]): T[] => {
-    const prev = untrack(animated);
-    if (targetArr.length <= prev.length) return targetArr;
-    const result = prev.slice(0, targetArr.length);
-    for (let i = prev.length; i < targetArr.length; i++)
-      result.push(enterValue(targetArr[i]!, i, prev));
-    return result;
-  };
-
   createEffect(() => {
     const src = source();
+    const nextKeys = matchKeys?.();
     const opts = options();
+    const prev = untrack(animated);
 
-    setStartValue(() => untrack(animated));
-    setTarget(() => enterFor(src));
+    setStartValue(() => createTweenedArrayStart(prev, src, enterValue, targetKeys, nextKeys));
+    setTarget(() => src);
+    targetKeys = nextKeys;
 
     const disabled =
       opts.enabled === false ||
@@ -356,6 +358,33 @@ export const createTweenedArray = <T>(
   onCleanup(cancelAnim);
 
   return animated;
+};
+
+export const createTweenedArrayStart = <T>(
+  previous: T[],
+  target: T[],
+  enterValue: (target: T, index: number, prev: T[]) => T,
+  previousKeys?: unknown[],
+  targetKeys?: unknown[],
+): T[] => {
+  if (!previousKeys || !targetKeys) {
+    return target.map((item, index) =>
+      index < previous.length ? previous[index]! : enterValue(item, index, previous),
+    );
+  }
+
+  const used = new Set<number>();
+  return target.map((item, index) => {
+    const key = targetKeys[index];
+    const previousIndex = previousKeys.findIndex(
+      (previousKey, candidateIndex) => !used.has(candidateIndex) && Object.is(previousKey, key),
+    );
+    if (previousIndex >= 0) {
+      used.add(previousIndex);
+      return previous[previousIndex]!;
+    }
+    return enterValue(item, index, previous);
+  });
 };
 
 export type PresenceMode = "enter" | "update" | "exit";

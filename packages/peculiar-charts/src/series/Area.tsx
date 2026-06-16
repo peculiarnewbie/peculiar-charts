@@ -13,6 +13,7 @@ import createPoints from "@src/lib/createPoints";
 import createScale from "@src/lib/createScale";
 import createSeries from "@src/lib/createSeries";
 import type { DotRenderer, PointEvents } from "@src/lib/markers";
+import { clipPathForAxes } from "@src/lib/overflow";
 import { projectScale } from "@src/lib/scale";
 import type { OverrideProps } from "@src/lib/types";
 import { accessData } from "@src/lib/utils";
@@ -215,6 +216,13 @@ const Area = (props: AreaProps) => {
   const animOpts = createMemo<ResolvedAnimationOptions>(() =>
     resolveAnimation(localProps.animation),
   );
+  const animationKeys = createMemo<unknown[] | undefined>(() => {
+    const matchBy = animOpts().matchBy;
+    if (!matchBy || matchBy === "index") return undefined;
+    const raw = (localProps.data ?? chartContext.displayedData()) as unknown[];
+    if (typeof matchBy === "string") return accessData<unknown>(raw, matchBy);
+    return raw.map((datum, index) => matchBy(datum, index, raw));
+  });
   const NaN_POINT: [number, number] = [Number.NaN, Number.NaN];
 
   const [animElapsed, setAnimElapsed] = createSignal(1);
@@ -236,6 +244,7 @@ const Area = (props: AreaProps) => {
         firstAnimation = false;
       }
     },
+    animationKeys,
   );
   const animatedBaseLine = createTweenedArray(
     () => {
@@ -245,6 +254,11 @@ const Area = (props: AreaProps) => {
     animOpts,
     (a, b, t) => a + (b - a) * t,
     (target) => target,
+    undefined,
+    () => {
+      const bl = baseLine();
+      return Array.isArray(bl) ? animationKeys() : undefined;
+    },
   );
   const resolvedAnimatedBaseLine = () => {
     const bl = baseLine();
@@ -258,92 +272,99 @@ const Area = (props: AreaProps) => {
   const zeroPos = () => projectScale(valueScale(), 0);
 
   const hasShape = () => localProps.shape !== undefined;
+  const clipPath = () =>
+    clipPathForAxes(chartContext, [
+      { axisId: localProps.xAxisId, orientation: "x" },
+      { axisId: localProps.yAxisId, orientation: "y" },
+    ]);
 
   return (
     <Show when={chartContext.isSeriesVisible(seriesId)}>
-      {hasShape() ? (
-        (() => {
-          if (firstAnimation && animOpts().enabled !== false) setIsEntrance(true);
-          return localProps.shape!({
-            points: animatedPoints(),
-            baseLine: resolvedAnimatedBaseLine(),
-            animationElapsedTime: animElapsed(),
-            isAnimating: isAnimating(),
-            isEntrance: isEntrance(),
-            ...otherProps,
-          });
-        })()
-      ) : (
-        <Show
-          when={fillByValue()}
-          fallback={
+      <g clip-path={clipPath()}>
+        {hasShape() ? (
+          (() => {
+            if (firstAnimation && animOpts().enabled !== false) setIsEntrance(true);
+            return localProps.shape!({
+              points: animatedPoints(),
+              baseLine: resolvedAnimatedBaseLine(),
+              animationElapsedTime: animElapsed(),
+              isAnimating: isAnimating(),
+              isEntrance: isEntrance(),
+              ...otherProps,
+            });
+          })()
+        ) : (
+          <Show
+            when={fillByValue()}
+            fallback={
+              <Curve
+                points={animatedPoints()}
+                baseLine={resolvedAnimatedBaseLine()}
+                layout={localProps.layout}
+                data-pc-area=""
+                {...otherProps}
+              />
+            }
+          >
+            <defs>
+              <clipPath id={`${clipId}-pos`}>
+                {horizontal() ? (
+                  <rect
+                    x={zeroPos()}
+                    y={0}
+                    width={Math.max(0, chartContext.width() - zeroPos())}
+                    height={chartContext.height()}
+                  />
+                ) : (
+                  <rect x={0} y={0} width={chartContext.width()} height={zeroPos()} />
+                )}
+              </clipPath>
+              <clipPath id={`${clipId}-neg`}>
+                {horizontal() ? (
+                  <rect x={0} y={0} width={zeroPos()} height={chartContext.height()} />
+                ) : (
+                  <rect
+                    x={0}
+                    y={zeroPos()}
+                    width={chartContext.width()}
+                    height={Math.max(0, chartContext.height() - zeroPos())}
+                  />
+                )}
+              </clipPath>
+            </defs>
             <Curve
               points={animatedPoints()}
-              baseLine={resolvedAnimatedBaseLine()}
+              baseLine={zeroPos()}
               layout={localProps.layout}
               data-pc-area=""
               {...otherProps}
+              fill={localProps.positiveFill ?? "none"}
+              clip-path={`url(#${clipId}-pos)`}
             />
-          }
-        >
-          <defs>
-            <clipPath id={`${clipId}-pos`}>
-              {horizontal() ? (
-                <rect
-                  x={zeroPos()}
-                  y={0}
-                  width={Math.max(0, chartContext.width() - zeroPos())}
-                  height={chartContext.height()}
-                />
-              ) : (
-                <rect x={0} y={0} width={chartContext.width()} height={zeroPos()} />
-              )}
-            </clipPath>
-            <clipPath id={`${clipId}-neg`}>
-              {horizontal() ? (
-                <rect x={0} y={0} width={zeroPos()} height={chartContext.height()} />
-              ) : (
-                <rect
-                  x={0}
-                  y={zeroPos()}
-                  width={chartContext.width()}
-                  height={Math.max(0, chartContext.height() - zeroPos())}
-                />
-              )}
-            </clipPath>
-          </defs>
-          <Curve
-            points={animatedPoints()}
-            baseLine={zeroPos()}
-            layout={localProps.layout}
-            data-pc-area=""
-            {...otherProps}
-            fill={localProps.positiveFill ?? "none"}
-            clip-path={`url(#${clipId}-pos)`}
-          />
-          <Curve
-            points={animatedPoints()}
-            baseLine={zeroPos()}
-            layout={localProps.layout}
-            data-pc-area=""
-            {...otherProps}
-            fill={localProps.negativeFill ?? "none"}
-            clip-path={`url(#${clipId}-neg)`}
+            <Curve
+              points={animatedPoints()}
+              baseLine={zeroPos()}
+              layout={localProps.layout}
+              data-pc-area=""
+              {...otherProps}
+              fill={localProps.negativeFill ?? "none"}
+              clip-path={`url(#${clipId}-neg)`}
+            />
+          </Show>
+        )}
+        <Show when={localProps.dot || localProps.activeDot}>
+          <DotsLayer
+            points={animatedPoints}
+            data={data}
+            xAxisId={() => localProps.xAxisId}
+            yAxisId={() => localProps.yAxisId}
+            layout={() => localProps.layout}
+            dot={localProps.dot}
+            activeDot={localProps.activeDot}
+            events={eventProps}
           />
         </Show>
-      )}
-      <Show when={localProps.dot || localProps.activeDot}>
-        <DotsLayer
-          points={animatedPoints}
-          data={data}
-          xAxisId={() => localProps.xAxisId}
-          yAxisId={() => localProps.yAxisId}
-          layout={() => localProps.layout}
-          dot={localProps.dot}
-          activeDot={localProps.activeDot}
-          events={eventProps}
-        />
-      </Show>
+      </g>
     </Show>
   );
 };

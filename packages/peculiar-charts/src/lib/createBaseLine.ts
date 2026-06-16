@@ -2,6 +2,7 @@ import type { ChartContextType } from "@src/components/context";
 import type { BarLayout } from "@src/lib/createBands";
 import createScale from "@src/lib/createScale";
 import { projectScale } from "@src/lib/scale";
+import { stackBaseValue, stackKeys } from "@src/lib/stacking";
 import { type Accessor, createMemo } from "solid-js";
 
 /**
@@ -32,35 +33,17 @@ const createBaseLine = (props: {
     const stack = stackId !== undefined && ctx.stacks().get(stackId);
     if (!stack) return zero;
 
-    const stackDataKeys = [...stack.keys()];
-    const thisIdx = stackDataKeys.indexOf(props.dataKey() ?? "");
-    if (thisIdx <= 0) return zero;
-
-    const expand = ctx.stackOffset?.() === "expand";
+    const keys = stackKeys(stack);
 
     return props.data().map((_, i) => {
-      if (expand) {
-        let total = 0;
-        for (const key of stackDataKeys) total += stack.get(key)?.values[i] ?? 0;
-        if (total === 0) return projectScale(_scale, 0);
-        let baseLine = 0;
-        for (let s = 0; s < thisIdx; s++) baseLine += stack.get(stackDataKeys[s]!)?.values[i] ?? 0;
-        return projectScale(_scale, baseLine / total);
-      }
-
-      let baseLine = 0;
-      const currentValue = props.data()[i] ?? 0;
-      if (currentValue >= 0) {
-        for (let s = 0; s < thisIdx; s++) {
-          const v = stack.get(stackDataKeys[s]!)?.values[i] ?? 0;
-          if (v >= 0) baseLine += v;
-        }
-      } else {
-        for (let s = 0; s < thisIdx; s++) {
-          const v = stack.get(stackDataKeys[s]!)?.values[i] ?? 0;
-          if (v < 0) baseLine += v;
-        }
-      }
+      const baseLine = stackBaseValue({
+        stack,
+        keys,
+        dataKey: props.dataKey(),
+        index: i,
+        value: props.data()[i] ?? 0,
+        offset: ctx.stackOffset?.(),
+      });
       return projectScale(_scale, baseLine);
     });
   });

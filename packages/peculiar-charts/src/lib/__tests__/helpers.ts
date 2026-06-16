@@ -23,6 +23,7 @@ export const createMockChartContext = (overrides?: Partial<ChartContextType>): C
     setBrushRange,
     width,
     height,
+    plotClipPath: () => "url(#test-plot)",
     getInset: () => 0,
     registerInset: () => {},
     unregisterInset: () => {},

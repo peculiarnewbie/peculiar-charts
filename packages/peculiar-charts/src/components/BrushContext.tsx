@@ -83,6 +83,7 @@ export const BrushContextProvider = (props: {
     setBrushRange: noop,
     width: () => props.width(),
     height: () => props.height(),
+    plotClipPath: () => "",
 
     getInset: noopInset,
     registerInset: noop,

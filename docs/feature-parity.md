@@ -5,10 +5,9 @@ what peculiar-charts currently supports. Based on the 20 LineChart and 13 AreaCh
 in Recharts' docs and storybook.
 
 > **TL;DR** — Core rendering (curves, dots, labels, stacking, null handling, axes, vertical
-> layout, per-series data, percent stacking) is at parity. The gaps are in **ranged areas**,
-> **custom shape rendering**, **advanced animation controls**, and
-> a handful of tooltip configuration options. None require architectural changes —
-> they're all additions to the existing prop surface.
+> layout, per-series data, percent stacking, keyed animation matching) is at parity. The
+> remaining gaps are a handful of tooltip / axis configuration options. None require
+> architectural changes — they're additions to the existing prop surface.
 
 ---
 
@@ -50,21 +49,21 @@ document only so the landing page stays focused on polished product examples.
 | **Vertical layout**                      | `layout="vertical"` on chart                                                                                            | `layout="horizontal"` on Line/Area/Point                                                                           | **Parity**                   |
 | **Ranged area** (`[min, max]` tuples)    | data values as `[low, high]` arrays                                                                                     | `<Area dataKey="temp" />` with `[low, high]` tuple data                                                            | **Parity**                   |
 | **Percent stacking**                     | `stackOffset="expand"`                                                                                                  | `stackOffset="expand"` on `<Chart>`                                                                                | **Parity**                   |
-| **`stackOffset` variants**               | `"expand"`, `"silhouette"`, `"sign"`, `"none"`                                                                          | `"expand"` supported                                                                                               | **Partial**                  |
+| **`stackOffset` variants**               | `"expand"`, `"silhouette"`, `"sign"`, `"none"`                                                                          | `"none"`, `"expand"`, `"silhouette"`, `"sign"` on `<Chart>`                                                        | **Parity**                   |
 | **Custom `shape` on Line/Area**          | custom component receives `animationElapsedTime`, `isEntrance`                                                          | `shape` prop on Line/Area — function receives points, SVG props, animation state                                   | **Parity**                   |
 | **Custom `animationInterpolateFn`**      | custom interpolation logic for animation                                                                                | `interpolate` option in `AnimationOptions` on Line/Area                                                            | **Parity**                   |
-| **Animation match strategy**             | `animationMatchBy` (`matchByIndex`/`matchByDataKey`)                                                                    | Not supported                                                                                                      | **Missing**                  |
+| **Animation match strategy**             | `animationMatchBy` (`matchByIndex`/`matchByDataKey`)                                                                    | `animation={{ matchBy: "key" }}` or callback on Line/Area                                                          | **Parity**                   |
 | **Chart-level mouse/touch events**       | `onClick`, `onMouseMove`, `onMouseDown`, `onMouseUp`, `onDoubleClick`, `onContextMenu`, touch events on chart container | `onChartClick`, `onChartPointerMove`, `onChartPointerDown`, `onChartPointerUp`, `onChartPointerLeave` on `<Chart>` | **Parity**                   |
 | **Axis padding**                         | `padding={{ left: 30, right: 30 }}` on XAxis/YAxis                                                                      | `padding={{ left, right, top, bottom }}` on `<Axis>`                                                               | **Parity**                   |
 | **ReferenceLine `segment`**              | line between two arbitrary `{x, y}` points                                                                              | `segment` prop with two data-space endpoints                                                                       | **Parity**                   |
 | **Per-series data**                      | `<Line data={seriesData}>` — each series carries own data                                                               | `data` prop on Line/Area/Point/Bar                                                                                 | **Parity**                   |
 | **Axis domain expressions**              | `domain={[0, 'dataMax + 1000']}` with string expressions                                                                | `axisRange` accepts string expressions (`'dataMax + 1000'`, `'dataMin - 50'`) evaluated against the data extent    | **Parity**                   |
-| **`allowDataOverflow`**                  | clips rendered geometry to axis domain                                                                                  | Not verified                                                                                                       | **Unknown**                  |
+| **`allowDataOverflow`**                  | clips rendered geometry to axis domain                                                                                  | `allowDataOverflow` on `<Axis>` clips bound Line/Area/Point geometry to the plot area                              | **Parity**                   |
 | **`tickFormatter` on axis**              | custom tick label formatting function                                                                                   | `tickFormatter` on `<Axis>` + local `<AxisLabel format>` override                                                  | **Parity**                   |
-| **Tooltip `defaultIndex`**               | show tooltip at a position on load                                                                                      | Not verified                                                                                                       | **Unknown**                  |
+| **Tooltip `defaultIndex`**               | show tooltip at a position on load                                                                                      | `defaultIndex` on `<AxisTooltip>`                                                                                  | **Parity**                   |
 | **Legend `onMouseEnter`/`onMouseLeave`** | hover events on legend items                                                                                            | `onMouseEnter`/`onMouseLeave` on `<Legend>`                                                                        | **Parity**                   |
-| **`allowDuplicatedCategory`**            | deduplicate category axis labels                                                                                        | Not verified                                                                                                       | **Unknown**                  |
-| **Axis `mirror`**                        | render ticks on opposite side                                                                                           | Not verified                                                                                                       | **Unknown**                  |
+| **`allowDuplicatedCategory`**            | deduplicate category axis labels                                                                                        | categorical domains deduplicate by default; `allowDuplicatedCategory` is accepted on `<Axis>`                      | **Parity**                   |
+| **Axis `mirror`**                        | render ticks on opposite side                                                                                           | `mirror` on `<Axis>` renders marks/labels inside the plot area                                                     | **Parity**                   |
 
 ---
 
@@ -159,6 +158,38 @@ formatting for percentages uses `tickFormatter` on `<Axis>`.
 
 ---
 
+### 3a. Stack offset variants ✅
+
+Recharts delegates stacked area offset modes to d3 stack offsets:
+
+```tsx
+<AreaChart stackOffset="silhouette" data={data}>
+  <Area stackId="1" dataKey="uv" />
+  <Area stackId="1" dataKey="pv" />
+</AreaChart>
+```
+
+Peculiar-charts now supports all four Recharts modes on `<Chart stackOffset>`:
+
+- `"none"` — raw cumulative stacking, the default.
+- `"expand"` — normalize each column to 0–1 for percent-stacked charts.
+- `"silhouette"` — center each stack around zero for streamgraph-style areas.
+- `"sign"` — stack positive and negative values separately.
+
+The same stack calculation drives point projection, area baselines, and registered axis
+extents, so rendered geometry and domains stay aligned.
+
+```tsx
+<Chart data={data} stackOffset="silhouette">
+  <Area dataKey="desktop" stackId="traffic" />
+  <Area dataKey="mobile" stackId="traffic" />
+</Chart>
+```
+
+**Affects:** Streamgraph-style stacked area charts, signed stacked area charts.
+
+---
+
 ### 4. Custom `shape` on Line/Area ✅
 
 Recharts lets you replace the default path rendering with a custom component. The custom
@@ -236,7 +267,7 @@ is used.
 
 ---
 
-### 6. Animation match strategy (`animationMatchBy`)
+### 6. Animation match strategy (`animationMatchBy`) ✅
 
 When data changes (new points added, removed, or reordered), Recharts controls how old
 data maps to new data for the transition:
@@ -250,8 +281,23 @@ data maps to new data for the transition:
 
 Without this, transitions when data length changes may produce incorrect intermediate states.
 
-**What's needed:** An `animationMatchBy` option in `AnimationOptions` that controls the
-keying strategy for `createTweenedArray` / `createPresence`.
+Peculiar-charts now supports stable matching through the existing `animation` object:
+
+```tsx
+<Line dataKey="value" animation={{ duration: 600, matchBy: "label" }} />
+<Area
+  dataKey="value"
+  animation={{
+    duration: 600,
+    matchBy: (datum) => datum.label,
+  }}
+/>
+```
+
+`matchBy: "index"` or omitting `matchBy` keeps the original index-based behavior. A string
+reads that data key from each datum; a function receives `(datum, index, data)`. Line and
+Area pass stable key arrays into `createTweenedArray`, so inserted, removed, or reordered
+points animate from their matched previous geometry instead of the same array index.
 
 **Affects:** Animated Time Series (sliding window data).
 
@@ -403,6 +449,41 @@ against the data-derived min/max in `getDomain()`.
 
 ---
 
+### 12. Verified API follow-ups ✅
+
+The remaining previously-unverified Recharts examples map to small Peculiar APIs:
+
+```tsx
+<Chart data={data}>
+  <Axis
+    axis="x"
+    position="bottom"
+    dataKey="name"
+    type="point"
+    allowDuplicatedCategory={false}
+    mirror
+  >
+    <AxisLabel />
+    <AxisMark />
+    <AxisTooltip defaultIndex={2} />
+  </Axis>
+  <Axis axis="y" position="left" axisRange={[10, 20]} allowDataOverflow />
+  <Line dataKey="value" />
+</Chart>
+```
+
+- `allowDataOverflow` on an axis clips bound `<Line>`, `<Area>`, and `<Point>` geometry to
+  the plot area when a user-defined domain hides data outside the visible range.
+- `defaultIndex` on `<AxisTooltip>` renders the tooltip before pointer interaction.
+- Categorical axes deduplicate labels by default, matching the Recharts
+  `allowDuplicatedCategory={false}` examples. The prop is accepted for explicitness.
+- `mirror` on `<Axis>` moves `<AxisLabel>` and `<AxisMark>` inside the plot area.
+
+**Affects:** Highlight And Zoom, Negative + Reference, Multi Series, mirrored axes,
+tooltips with an initial active datum.
+
+---
+
 ## Recharts examples → features mapping
 
 Each Recharts example and which features it exercises:
@@ -470,18 +551,17 @@ Peculiar-charts equivalents: `useYScale()`, `useChartSize()`, `usePlotArea()`,
 
 Ordered by impact × effort:
 
-| Priority | Feature                                   | Effort     | Impact                                             |
-| -------- | ----------------------------------------- | ---------- | -------------------------------------------------- |
-| 1        | ~~Vertical layout~~                       | ~~Medium~~ | ~~Unlocks a whole chart orientation~~              |
-| 2        | ~~Per-series `data` prop~~                | ~~Low~~    | ~~Multi-series with independent data sources~~     |
-| 3        | ~~Percent stacking (`stackOffset`)~~      | ~~Medium~~ | ~~Unlocks percentage-stacked areas~~               |
-| 4        | ~~Custom `shape` on Line/Area~~           | ~~Medium~~ | ~~Unlocks custom rendering + advanced animations~~ |
-| 5        | Animation match strategy                  | Medium     | Correct transitions when data changes shape        |
-| 6        | ~~Custom `animationInterpolateFn`~~           | ~~Low-Medium~~ | ~~Full animation control~~                             |
-| 7        | `stackOffset` variants (silhouette, sign) | Medium     | Streamgraph + signed stacking                      |
+| Priority | Feature                              | Effort         | Impact                                             |
+| -------- | ------------------------------------ | -------------- | -------------------------------------------------- |
+| 1        | ~~Vertical layout~~                  | ~~Medium~~     | ~~Unlocks a whole chart orientation~~              |
+| 2        | ~~Per-series `data` prop~~           | ~~Low~~        | ~~Multi-series with independent data sources~~     |
+| 3        | ~~Percent stacking (`stackOffset`)~~ | ~~Medium~~     | ~~Unlocks percentage-stacked areas~~               |
+| 4        | ~~Custom `shape` on Line/Area~~      | ~~Medium~~     | ~~Unlocks custom rendering + advanced animations~~ |
+| 5        | ~~Animation match strategy~~         | ~~Medium~~     | ~~Correct transitions when data changes shape~~    |
+| 6        | ~~Custom `animationInterpolateFn`~~  | ~~Low-Medium~~ | ~~Full animation control~~                         |
+| 7        | ~~`stackOffset` variants~~           | ~~Medium~~     | ~~Streamgraph + signed stacking~~                  |
 
-Vertical layout is the biggest remaining gap — it blocks an entire chart orientation.
-Items 2–3 are low-hanging fruit. Items 4–7 round out the surface for full parity.
+The listed Line/Area parity roadmap items have been closed.
 
 Completed since this plan was written:
 
@@ -495,6 +575,10 @@ Completed since this plan was written:
   stacked values to 0–1. `createPoints` divides cumulative stacked values by the per-category
   total; `createSeries` registers a fixed `[0, 1]` domain; `createBaseLine` normalizes
   baselines the same way. Combine with `tickFormatter` on `<Axis>` for percentage labels.
+- **`stackOffset` variants** — `<Chart stackOffset>` now accepts `"none"`, `"expand"`,
+  `"silhouette"`, and `"sign"`. The shared stack utility computes data-space baselines,
+  tops, and extents for all modes, so `<Line>`/`<Area>` point projection and area baselines
+  use the same semantics as the value-axis domain.
 - **Per-series `data` prop** — `<Line>`, `<Area>`, `<Point>`, and `<Bar>` now accept a `data`
   prop that overrides chart-level `data` for that series only. Both category and value
   extraction use the per-series data; `createPoints` passes the series data to `axisValues`
@@ -528,6 +612,10 @@ Completed since this plan was written:
   function that overrides the default per-element linear interpolation. Called with
   `(from, to, t)` where `t` is progress in `[0, 1]`. Used by `<Line>` and `<Area>` via
   `createTweenedArray`.
+- **Animation match strategy** — `AnimationOptions` now accepts `matchBy`. Use
+  `matchBy: "index"` for the original behavior, `matchBy: "label"` to read a stable key
+  from each datum, or a callback `(datum, index, data) => key`. `<Line>` and `<Area>`
+  use those keys to align old and new path points during sliding-window updates.
 
 ---
 

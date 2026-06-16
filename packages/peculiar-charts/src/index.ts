@@ -37,6 +37,7 @@ import {
   type BrushRange,
   type Domain,
   type SeriesMeta,
+  type StackOffset,
   type SyncInteraction,
   useChartContext,
 } from "@src/components/context";
@@ -63,6 +64,7 @@ import {
 } from "@src/hooks";
 import {
   type AnimationEasing,
+  type AnimationMatchBy,
   type AnimationOptions,
   type PhaseConfig,
   type PresenceItem,
@@ -153,6 +155,7 @@ export type {
   AxisOrientation,
   Domain,
   SeriesMeta,
+  StackOffset,
   SyncMethod,
   SyncHandlerParam,
   SyncPayload,
@@ -161,6 +164,7 @@ export type {
   StandardSchemaV1,
   // Animation
   AnimationEasing,
+  AnimationMatchBy,
   AnimationOptions,
   PhaseConfig,
   PresenceItem,

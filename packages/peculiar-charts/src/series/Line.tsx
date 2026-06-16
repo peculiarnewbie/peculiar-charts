@@ -11,6 +11,7 @@ import type { BarLayout } from "@src/lib/createBands";
 import createPoints from "@src/lib/createPoints";
 import createSeries from "@src/lib/createSeries";
 import type { DotRenderer, PointEvents } from "@src/lib/markers";
+import { clipPathForAxes } from "@src/lib/overflow";
 import type { OverrideProps } from "@src/lib/types";
 import { accessData } from "@src/lib/utils";
 import DotsLayer from "@src/series/Dots";
@@ -147,6 +148,13 @@ const Line = (props: LineProps) => {
   const animOpts = createMemo<ResolvedAnimationOptions>(() =>
     resolveAnimation(localProps.animation),
   );
+  const animationKeys = createMemo<unknown[] | undefined>(() => {
+    const matchBy = animOpts().matchBy;
+    if (!matchBy || matchBy === "index") return undefined;
+    const raw = (localProps.data ?? chartContext.displayedData()) as unknown[];
+    if (typeof matchBy === "string") return accessData<unknown>(raw, matchBy);
+    return raw.map((datum, index) => matchBy(datum, index, raw));
+  });
   const NaN_POINT: [number, number] = [Number.NaN, Number.NaN];
 
   const [animElapsed, setAnimElapsed] = createSignal(1);
@@ -168,43 +176,51 @@ const Line = (props: LineProps) => {
         firstAnimation = false;
       }
     },
+    animationKeys,
   );
 
   const hasShape = () => localProps.shape !== undefined;
+  const clipPath = () =>
+    clipPathForAxes(chartContext, [
+      { axisId: localProps.xAxisId, orientation: "x" },
+      { axisId: localProps.yAxisId, orientation: "y" },
+    ]);
 
   return (
     <Show when={chartContext.isSeriesVisible(seriesId)}>
-      {hasShape() ? (
-        (() => {
-          if (firstAnimation && animOpts().enabled !== false) setIsEntrance(true);
-          return localProps.shape!({
-            points: animatedPoints(),
-            animationElapsedTime: animElapsed(),
-            isAnimating: isAnimating(),
-            isEntrance: isEntrance(),
-            ...otherProps,
-          });
-        })()
-      ) : (
-        <Curve
-          points={animatedPoints()}
-          layout={localProps.layout}
-          data-pc-line=""
-          {...otherProps}
-        />
-      )}
-      <Show when={localProps.dot || localProps.activeDot}>
-        <DotsLayer
-          points={animatedPoints}
-          data={data}
-          xAxisId={() => localProps.xAxisId}
-          yAxisId={() => localProps.yAxisId}
-          layout={() => localProps.layout}
-          dot={localProps.dot}
-          activeDot={localProps.activeDot}
-          events={eventProps}
-        />
-      </Show>
+      <g clip-path={clipPath()}>
+        {hasShape() ? (
+          (() => {
+            if (firstAnimation && animOpts().enabled !== false) setIsEntrance(true);
+            return localProps.shape!({
+              points: animatedPoints(),
+              animationElapsedTime: animElapsed(),
+              isAnimating: isAnimating(),
+              isEntrance: isEntrance(),
+              ...otherProps,
+            });
+          })()
+        ) : (
+          <Curve
+            points={animatedPoints()}
+            layout={localProps.layout}
+            data-pc-line=""
+            {...otherProps}
+          />
+        )}
+        <Show when={localProps.dot || localProps.activeDot}>
+          <DotsLayer
+            points={animatedPoints}
+            data={data}
+            xAxisId={() => localProps.xAxisId}
+            yAxisId={() => localProps.yAxisId}
+            layout={() => localProps.layout}
+            dot={localProps.dot}
+            activeDot={localProps.activeDot}
+            events={eventProps}
+          />
+        </Show>
+      </g>
     </Show>
   );
 };

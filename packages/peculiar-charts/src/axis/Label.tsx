@@ -71,18 +71,33 @@ const Label = (props: LabelProps) => {
       fill: "currentColor",
       "text-anchor":
         axisContext.position() === "left"
-          ? ("end" as const)
-          : axisContext.position() === "right"
+          ? axisContext.mirror()
             ? ("start" as const)
+            : ("end" as const)
+          : axisContext.position() === "right"
+            ? axisContext.mirror()
+              ? ("end" as const)
+              : ("start" as const)
             : ("middle" as const),
       "dominant-baseline": axisContext.axis() === "y" ? ("central" as const) : undefined,
       dx:
         axisContext.position() === "left"
-          ? "-0.5em"
-          : axisContext.position() === "right"
+          ? axisContext.mirror()
             ? "0.5em"
+            : "-0.5em"
+          : axisContext.position() === "right"
+            ? axisContext.mirror()
+              ? "-0.5em"
+              : "0.5em"
             : undefined,
-      dy: axisContext.position() === "bottom" ? "0.3em" : undefined,
+      dy:
+        axisContext.position() === "bottom"
+          ? axisContext.mirror()
+            ? "-0.3em"
+            : "0.3em"
+          : axisContext.position() === "top" && axisContext.mirror()
+            ? "0.8em"
+            : undefined,
     },
     props,
   );
@@ -141,6 +156,7 @@ const Label = (props: LabelProps) => {
   };
 
   const x = (tick: any, visibleIndex: number) => {
+    const offset = localProps.tickMargin + staggerOffset(visibleIndex);
     switch (axisContext.position()) {
       case "top":
       case "bottom": {
@@ -153,31 +169,28 @@ const Label = (props: LabelProps) => {
         return tickPosition;
       }
       case "left":
-        return chartContext.getInset("left") - localProps.tickMargin - staggerOffset(visibleIndex);
+        return chartContext.getInset("left") + (axisContext.mirror() ? offset : -offset);
       case "right":
         return (
           chartContext.width() -
           chartContext.getInset("right") +
-          localProps.tickMargin +
-          staggerOffset(visibleIndex)
+          (axisContext.mirror() ? -offset : offset)
         );
     }
   };
 
   const y = (tick: any, visibleIndex: number) => {
+    const offset = localProps.tickMargin + staggerOffset(visibleIndex);
     switch (axisContext.position()) {
       case "top":
         return (
-          chartContext.getInset("top", "axis.label") -
-          localProps.tickMargin -
-          staggerOffset(visibleIndex)
+          chartContext.getInset("top", "axis.label") + (axisContext.mirror() ? offset : -offset)
         );
       case "bottom":
         return (
           chartContext.height() -
           chartContext.getInset("bottom", "axis.label") +
-          localProps.tickMargin +
-          staggerOffset(visibleIndex)
+          (axisContext.mirror() ? -offset : offset)
         );
       case "left":
       case "right":

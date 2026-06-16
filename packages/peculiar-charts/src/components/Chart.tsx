@@ -9,6 +9,7 @@ import {
   type Edge,
   type SeriesMeta,
   type StackEntry,
+  type StackOffset,
   type SyncInteraction,
 } from "@src/components/context";
 import createSize from "@src/lib/dom/createSize";
@@ -24,6 +25,7 @@ import {
   createEffect,
   createMemo,
   createSignal,
+  createUniqueId,
   mergeProps,
   onCleanup,
   splitProps,
@@ -71,8 +73,10 @@ export type ChartProps<TData extends unknown[] = unknown[]> = OverrideProps<
      * Stack offset mode.
      * - `'none'` (default): raw cumulative stacking.
      * - `'expand'`: normalize stacked values to 0–1 (percentage stacking).
+     * - `'silhouette'`: center each stack around zero (streamgraph).
+     * - `'sign'`: stack positive and negative values separately.
      */
-    stackOffset?: "none" | "expand";
+    stackOffset?: StackOffset;
     /**
      * Sync identifier. Charts sharing the same `syncId` synchronise their
      * tooltips and crosshairs — hovering one chart shows the tooltip on all.
@@ -153,6 +157,7 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
 
   // Keep a typed reference to the data — mergeProps/splitProps widen generics.
   const data = () => props.data;
+  const clipId = createUniqueId();
 
   // --- emitter symbol (self-guard for sync; one per chart instance) --------
   const emitterSymbol = Symbol("peculiar-chart-emitter");
@@ -305,10 +310,13 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
 
     if (config.type === "band" || config.type === "point") {
       const data = displayedData();
-      const values = config.dataKey
-        ? uniqueInOrder(accessData(data, config.dataKey))
+      const rawValues = config.dataKey
+        ? accessData(data, config.dataKey)
         : Array.from({ length: data.length }, (_, i) => i);
-      return { kind: "categorical" as const, values };
+      return {
+        kind: "categorical" as const,
+        values: config.allowDuplicatedCategory ? rawValues : uniqueInOrder(rawValues),
+      };
     }
 
     let agg: { min: number; max: number };
@@ -614,6 +622,7 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
         setBrushRange,
         width: () => svgSize()[0],
         height: () => svgSize()[1],
+        plotClipPath: () => `url(#${clipId})`,
         getInset,
         registerInset: (edge, key, value) =>
           setInset((prev) => {
@@ -738,6 +747,16 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
           data-pc-chart=""
           {...otherProps}
         >
+          <defs>
+            <clipPath id={clipId}>
+              <rect
+                x={viewBox().x}
+                y={viewBox().y}
+                width={viewBox().width}
+                height={viewBox().height}
+              />
+            </clipPath>
+          </defs>
           {props.children}
         </svg>
       </div>

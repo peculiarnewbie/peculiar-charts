@@ -54,7 +54,7 @@ export default function AnimatedLine() {
           class="text-blue-500"
           color="#3b82f6"
           stroke-width={2.5}
-          animation
+          animation={{ matchBy: "day" }}
         />
         <Point
           dataKey="coffee"
@@ -70,7 +70,7 @@ export default function AnimatedLine() {
           class="text-emerald-500"
           color="#10b981"
           stroke-width={2.5}
-          animation
+          animation={{ matchBy: "day" }}
         />
         <Point
           dataKey="tea"

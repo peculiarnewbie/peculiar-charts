@@ -31,6 +31,12 @@ export type AxisProps = {
   /** Pixel padding at axis edges. Prevents data points from sitting flush
    *  against the chart boundary. */
   padding?: { left?: number; right?: number; top?: number; bottom?: number };
+  /** Recharts-style flag; `false` deduplicates category values. @defaultValue `false` */
+  allowDuplicatedCategory?: boolean;
+  /** Clip bound series to the plot area when the axis domain hides data. @defaultValue `false` */
+  allowDataOverflow?: boolean;
+  /** Render ticks and labels inside the plot area. @defaultValue `false` */
+  mirror?: boolean;
   /** @hidden */
   children?: JSX.Element;
 } & (XAxisProps | YAxisProps);
@@ -50,6 +56,9 @@ const Axis = (props: AxisProps) => {
       tickFormatter: (value: any) => String(value),
       axisRange: "auto" as const,
       reverse: false,
+      allowDuplicatedCategory: false,
+      allowDataOverflow: false,
+      mirror: false,
     },
     props,
   );
@@ -63,6 +72,8 @@ const Axis = (props: AxisProps) => {
       range: defaultedProps.axisRange === "auto" ? null : defaultedProps.axisRange,
       reverse: defaultedProps.reverse,
       padding: defaultedProps.padding,
+      allowDuplicatedCategory: defaultedProps.allowDuplicatedCategory,
+      allowDataOverflow: defaultedProps.allowDataOverflow,
     });
     onCleanup(() => chartContext.unregisterAxisConfig(defaultedProps.axisId));
   });
@@ -87,6 +98,7 @@ const Axis = (props: AxisProps) => {
         axisId: () => defaultedProps.axisId,
         axis: () => defaultedProps.axis,
         position: () => defaultedProps.position,
+        mirror: () => defaultedProps.mirror,
         tickFormatter: () => defaultedProps.tickFormatter,
         scale,
         ticks,

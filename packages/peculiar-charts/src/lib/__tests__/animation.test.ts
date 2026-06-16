@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { interpolateNumber, interpolatePoint, resolveAnimation } from "../animation";
+import {
+  createTweenedArrayStart,
+  interpolateNumber,
+  interpolatePoint,
+  resolveAnimation,
+} from "../animation";
 
 describe("resolveAnimation", () => {
   it("returns enabled defaults for true", () => {
@@ -59,6 +64,11 @@ describe("resolveAnimation", () => {
     const r = resolveAnimation({ enabled: false, duration: 100 });
     expect(r.enabled).toBe(false);
   });
+
+  it("preserves matchBy", () => {
+    const r = resolveAnimation({ matchBy: "label" });
+    expect(r.matchBy).toBe("label");
+  });
 });
 
 describe("interpolateNumber", () => {
@@ -93,5 +103,31 @@ describe("interpolatePoint", () => {
 
   it("handles negative coordinates", () => {
     expect(interpolatePoint([-10, -20], [10, 20], 0.5)).toEqual([0, 0]);
+  });
+});
+
+describe("createTweenedArrayStart", () => {
+  const enter = (target: number) => -target;
+
+  it("matches by index when no keys are provided", () => {
+    expect(createTweenedArrayStart([10, 20], [1, 2, 3], enter)).toEqual([10, 20, -3]);
+  });
+
+  it("matches reordered values by key", () => {
+    expect(
+      createTweenedArrayStart([10, 20, 30], [1, 2, 3], enter, ["a", "b", "c"], ["c", "a", "b"]),
+    ).toEqual([30, 10, 20]);
+  });
+
+  it("uses enter values for new keys", () => {
+    expect(
+      createTweenedArrayStart([10, 20], [1, 2, 3], enter, ["a", "b"], ["b", "c", "a"]),
+    ).toEqual([20, -2, 10]);
+  });
+
+  it("matches duplicate keys only once", () => {
+    expect(
+      createTweenedArrayStart([10, 20], [1, 2, 3], enter, ["a", "a"], ["a", "a", "a"]),
+    ).toEqual([10, 20, -3]);
   });
 });

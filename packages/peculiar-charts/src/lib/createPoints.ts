@@ -2,6 +2,7 @@ import type { ChartContextType } from "@src/components/context";
 import type { BarLayout } from "@src/lib/createBands";
 import createScale from "@src/lib/createScale";
 import { projectScale } from "@src/lib/scale";
+import { stackKeys, stackTopValue } from "@src/lib/stacking";
 import { axisValues } from "@src/lib/utils";
 import { type Accessor, createMemo } from "solid-js";
 
@@ -55,36 +56,19 @@ const createPoints = (props: {
 
     const stackId = props.stackId();
     const stack = stackId !== undefined && ctx.stacks().get(stackId);
-    const expand = ctx.stackOffset?.() === "expand";
+    const keys = stack ? stackKeys(stack) : [];
 
     return data.map((value, i) => {
       let stacked = value;
       if (stack) {
-        const stackDataKeys = [...stack.keys()];
-        const thisIdx = stackDataKeys.indexOf(props.dataKey() ?? "");
-        if (expand) {
-          let total = 0;
-          for (const key of stackDataKeys) total += stack.get(key)?.values[i] ?? 0;
-          if (total !== 0) {
-            for (let s = 0; s < thisIdx; s++)
-              stacked += stack.get(stackDataKeys[s]!)?.values[i] || 0;
-            stacked = stacked / total;
-          } else {
-            stacked = 0;
-          }
-        } else if (thisIdx > 0) {
-          if (value >= 0) {
-            for (let s = 0; s < thisIdx; s++) {
-              const v = stack.get(stackDataKeys[s]!)?.values[i] ?? 0;
-              if (v >= 0) stacked += v;
-            }
-          } else {
-            for (let s = 0; s < thisIdx; s++) {
-              const v = stack.get(stackDataKeys[s]!)?.values[i] ?? 0;
-              if (v < 0) stacked += v;
-            }
-          }
-        }
+        stacked = stackTopValue({
+          stack,
+          keys,
+          dataKey: props.dataKey(),
+          index: i,
+          value,
+          offset: ctx.stackOffset?.(),
+        });
       }
 
       const category = projectScale(categoryScale, categoryValues[i]);
