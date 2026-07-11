@@ -1,7 +1,7 @@
 import type { AxisContextType } from "@src/axis/context";
 import type { ChartContextType } from "@src/components/context";
 import { type Scale, projectScale } from "@src/lib/scale";
-import { type Accessor, createEffect } from "solid-js";
+import { type Accessor, createMemo } from "solid-js";
 
 export type LabelInterval = "all" | "preserveStart" | "preserveEnd" | "preserveStartEnd" | number;
 
@@ -18,19 +18,17 @@ const createLabelTicks = (props: {
   averageCharSize: Accessor<{ x: number; y: number }>;
   chartContext: ChartContextType;
   axisContext: AxisContextType;
-}) => {
-  createEffect(() => {
+}): Accessor<any[]> =>
+  createMemo(() => {
     const scale = props.axisContext.scale();
     const interval = props.interval();
 
     if (interval === "all" || interval === 0) {
-      props.axisContext.setLabelTicks(props.ticks());
-      return;
+      return props.ticks();
     }
 
     if (typeof interval === "number") {
-      props.axisContext.setLabelTicks(props.ticks().filter((_, i) => i % interval === 0));
-      return;
+      return props.ticks().filter((_, i) => i % interval === 0);
     }
 
     const axis = props.axisContext.axis();
@@ -39,35 +37,29 @@ const createLabelTicks = (props: {
     switch (interval) {
       case "preserveStart": {
         const sign = axis === "x" ? 1 : -1;
-        props.axisContext.setLabelTicks(
-          calculateLabelTicks(
-            props.ticks(),
-            sign,
-            chartSize,
-            props.averageCharSize(),
-            axis,
-            props.labelGap(),
-            props.format(),
-            scale,
-          ),
+        return calculateLabelTicks(
+          props.ticks(),
+          sign,
+          chartSize,
+          props.averageCharSize(),
+          axis,
+          props.labelGap(),
+          props.format(),
+          scale,
         );
-        break;
       }
       case "preserveEnd": {
         const sign = axis === "x" ? -1 : 1;
-        props.axisContext.setLabelTicks(
-          calculateLabelTicks(
-            [...props.ticks()].reverse(),
-            sign,
-            chartSize,
-            props.averageCharSize(),
-            axis,
-            props.labelGap(),
-            props.format(),
-            scale,
-          ).reverse(),
-        );
-        break;
+        return calculateLabelTicks(
+          [...props.ticks()].reverse(),
+          sign,
+          chartSize,
+          props.averageCharSize(),
+          axis,
+          props.labelGap(),
+          props.format(),
+          scale,
+        ).reverse();
       }
       case "preserveStartEnd": {
         const sign = axis === "x" ? -1 : 1;
@@ -91,12 +83,10 @@ const createLabelTicks = (props: {
           scale,
           end + props.labelGap(),
         );
-        props.axisContext.setLabelTicks([...visible, firstTick].reverse());
-        break;
+        return [...visible, firstTick].reverse();
       }
     }
   });
-};
 
 const calculateLabelTicks = (
   ticks: any[],

@@ -116,7 +116,12 @@ import {
   scaleTicks,
 } from "@src/lib/scale";
 import type { SyncHandlerParam, SyncMethod, SyncPayload } from "@src/lib/sync";
-import { TooltipContent, type TooltipSeriesItem, buildTooltipPayload } from "@src/lib/tooltip";
+import {
+  TooltipContent,
+  type TooltipContentProps,
+  type TooltipSeriesItem,
+  buildTooltipPayload,
+} from "@src/lib/tooltip";
 import type { OverrideProps } from "@src/lib/types";
 import { accessData, axisValues, toNumeric } from "@src/lib/utils";
 import ReferenceArea, { type ReferenceAreaProps } from "@src/reference/ReferenceArea";
@@ -204,6 +209,7 @@ export type {
   AxisMarkProps,
   MarkTick,
   AxisTooltipProps,
+  TooltipContentProps,
   TooltipPayload,
   TooltipRenderer,
   TooltipSeriesItem,

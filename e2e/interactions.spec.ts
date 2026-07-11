@@ -1,5 +1,18 @@
 import { expect, test } from "@playwright/test";
 
+test.describe("Documentation routes", () => {
+  for (const [path, heading] of [
+    ["/docs", "Compose the chart you need."],
+    ["/docs/getting-started", "A chart is a scale-aware SVG surface."],
+    ["/docs/recipes/timeline", "Interval timelines"],
+  ]) {
+    test("renders " + path + " directly", async ({ page }) => {
+      await page.goto(path);
+      await expect(page.getByRole("heading", { name: heading })).toBeVisible();
+    });
+  }
+});
+
 test.describe("Chart interactions", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/?all");

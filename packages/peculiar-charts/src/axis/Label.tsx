@@ -14,6 +14,7 @@ import {
   createSignal,
   createUniqueId,
   mergeProps,
+  onCleanup,
   splitProps,
 } from "solid-js";
 
@@ -138,7 +139,7 @@ const Label = (props: LabelProps) => {
   const format = (value: any) =>
     localProps.format ? localProps.format(value) : axisContext.tickFormatter()(value);
 
-  createLabelTicks({
+  const labelTicks = createLabelTicks({
     ticks: axisContext.ticks,
     interval: () => localProps.interval,
     labelGap: () => localProps.labelGap,
@@ -147,6 +148,8 @@ const Label = (props: LabelProps) => {
     chartContext,
     axisContext,
   });
+  axisContext.setLabelTicks(labelTicks);
+  onCleanup(() => axisContext.setLabelTicks(axisContext.ticks));
 
   const staggerOffset = (visibleIndex: number) => {
     const stagger = localProps.stagger;

@@ -11,7 +11,8 @@ export type AxisContextType = {
   ticks: Accessor<any[]>;
   /** Ticks that survived label-collision filtering (shared by Label/Grid/Mark). */
   labelTicks: Accessor<any[]>;
-  setLabelTicks: (ticks: any[]) => void;
+  /** @internal Registers the derived label-tick accessor owned by `<Label>`. */
+  setLabelTicks: (ticks: Accessor<any[]>) => void;
 };
 
 export const AxisContext = createContext<AxisContextType>();

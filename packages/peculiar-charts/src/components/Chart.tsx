@@ -420,10 +420,17 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
     height: Math.max(0, svgSize()[1] - getInset("top") - getInset("bottom")),
   }));
 
+  // Sync consumers resolve by datum index, so rebroadcasting movements within
+  // the same tick only creates needless work in every linked chart.
+  let lastEmittedSyncState: string | undefined;
+
   const emitSync = (active: boolean, index: number | null, label: string | undefined) => {
     if (isReceivingSync()) return;
     const syncId = localProps.syncId;
     if (syncId == null) return;
+    const state = `${String(syncId)}:${active}:${index ?? ""}:${label ?? ""}`;
+    if (state === lastEmittedSyncState) return;
+    lastEmittedSyncState = state;
     const coord: SyncPayload["coordinate"] = active
       ? {
           x: toSvgPosition(pointerPosition()?.x ?? 0, "width"),
@@ -457,6 +464,9 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
     ) => {
       if (emittingSymbol === emitterSymbol) return;
       if (incomingSyncId !== currentSyncId) return;
+      // A remote interaction supersedes the local emission state. If this
+      // chart becomes the source again, it must be able to announce its state.
+      lastEmittedSyncState = undefined;
 
       if (!payload.active) {
         setSyncInteraction({

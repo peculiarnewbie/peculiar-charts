@@ -1,10 +1,40 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { createRoot, createSignal } from "solid-js";
 import {
+  createTweened,
   createTweenedArrayStart,
   interpolateNumber,
   interpolatePoint,
   resolveAnimation,
 } from "../animation";
+
+afterEach(() => vi.unstubAllGlobals());
+
+describe("animation lifecycle", () => {
+  it("removes its reduced-motion listener when its reactive owner is disposed", () => {
+    const addEventListener = vi.fn();
+    const removeEventListener = vi.fn();
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => ({ matches: false, addEventListener, removeEventListener })),
+    );
+
+    let dispose!: () => void;
+    createRoot((cleanup) => {
+      dispose = cleanup;
+      const [source] = createSignal(0);
+      createTweened(
+        source,
+        () => resolveAnimation(false),
+        (a, b, t) => a + (b - a) * t,
+      );
+    });
+
+    expect(addEventListener).toHaveBeenCalledWith("change", expect.any(Function));
+    dispose();
+    expect(removeEventListener).toHaveBeenCalledWith("change", expect.any(Function));
+  });
+});
 
 describe("resolveAnimation", () => {
   it("returns enabled defaults for true", () => {

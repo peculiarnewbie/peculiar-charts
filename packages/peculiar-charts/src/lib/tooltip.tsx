@@ -2,7 +2,7 @@ import type { AxisOrientation, ChartContextType, SeriesMeta } from "@src/compone
 import { type ContentRenderer, renderContent, resolveContentRenderer } from "@src/lib/content";
 import { SeriesSwatch } from "@src/lib/seriesChrome";
 import { accessData, axisValues } from "@src/lib/utils";
-import { For } from "solid-js";
+import { For, type JSX } from "solid-js";
 
 /** A visible series row in a tooltip payload. */
 export type TooltipSeriesItem = SeriesMeta & {
@@ -25,6 +25,15 @@ export type TooltipPayload<TData extends unknown[] = unknown[]> = {
 export type TooltipRenderer<TData extends unknown[] = unknown[]> = ContentRenderer<
   TooltipPayload<TData>
 >;
+
+/**
+ * Props for the default tooltip body. Children are rendered after the default
+ * header and series rows; use a function child to read the active payload.
+ */
+export type TooltipContentProps<TData extends unknown[] = unknown[]> = {
+  payload: TooltipPayload<TData>;
+  children?: JSX.Element | ((payload: TooltipPayload<TData>) => JSX.Element);
+};
 
 /** Builds the tooltip payload for the datum nearest the pointer on an axis. */
 export const buildTooltipPayload = <TData extends unknown[] = unknown[]>(
@@ -61,26 +70,34 @@ export const buildTooltipPayload = <TData extends unknown[] = unknown[]>(
  * @data `data-pc-tooltip-row` - Series value row.
  * @data `data-pc-tooltip-swatch` - Colour swatch.
  */
-export const TooltipContent = (props: { payload: TooltipPayload<any> }) => (
-  <>
-    <div data-pc-tooltip-header="">{String(props.payload.label ?? "")}</div>
-    <For each={props.payload.series}>
-      {(s) => (
-        <div data-pc-tooltip-row="">
-          <SeriesSwatch
-            color={s.color}
-            data-pc-tooltip-swatch=""
-            style={{ width: "8px", height: "8px", "border-radius": "9999px" }}
-          />
-          <span data-pc-tooltip-name="">{s.name}</span>
-          <span data-pc-tooltip-value="">
-            {s.value === undefined || s.value === null ? "—" : String(s.value)}
-          </span>
-        </div>
-      )}
-    </For>
-  </>
-);
+export const TooltipContent = <TData extends unknown[] = unknown[]>(
+  props: TooltipContentProps<TData>,
+) => {
+  const children = () =>
+    typeof props.children === "function" ? props.children(props.payload) : props.children;
+
+  return (
+    <>
+      <div data-pc-tooltip-header="">{String(props.payload.label ?? "")}</div>
+      <For each={props.payload.series}>
+        {(s) => (
+          <div data-pc-tooltip-row="">
+            <SeriesSwatch
+              color={s.color}
+              data-pc-tooltip-swatch=""
+              style={{ width: "8px", height: "8px", "border-radius": "9999px" }}
+            />
+            <span data-pc-tooltip-name="">{s.name}</span>
+            <span data-pc-tooltip-value="">
+              {s.value === undefined || s.value === null ? "—" : String(s.value)}
+            </span>
+          </div>
+        )}
+      </For>
+      {children()}
+    </>
+  );
+};
 
 export const resolveTooltipRenderer = resolveContentRenderer<TooltipPayload<any>>;
 

@@ -4,7 +4,7 @@ Composable, unstyled, headless charts for SolidJS.
 
 ## Docs & Examples
 
-[charts.peculiarnewbie.com](https://charts.peculiarnewbie.com)
+[charts.peculiarnewbie.com/docs](https://charts.peculiarnewbie.com/docs)
 
 ## Install
 

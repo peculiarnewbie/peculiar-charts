@@ -188,7 +188,7 @@ const getEasingFn = (easing: AnimationEasing): BezierFn => {
   return fn;
 };
 
-const getReducedMotion = (): Accessor<boolean> => {
+const createReducedMotion = (): Accessor<boolean> => {
   if (typeof window === "undefined") return () => false;
   const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
   const [reduced, setReduced] = createSignal(mql.matches);
@@ -198,13 +198,12 @@ const getReducedMotion = (): Accessor<boolean> => {
   return reduced;
 };
 
-const reducedMotion = getReducedMotion();
-
 export const createTweened = <T>(
   source: Accessor<T>,
   options: Accessor<ResolvedAnimationOptions>,
   interpolate: (a: T, b: T, t: number) => T,
 ): Accessor<T> => {
+  const reducedMotion = createReducedMotion();
   const initial = source();
   const [animated, setAnimated] = createSignal<T>(initial);
   const [target, setTarget] = createSignal<T>(initial);
@@ -280,6 +279,7 @@ export const createTweenedArray = <T>(
   onProgress?: (elapsed: number) => void,
   matchKeys?: Accessor<unknown[] | undefined>,
 ): Accessor<T[]> => {
+  const reducedMotion = createReducedMotion();
   const initial = source();
   const initialKeys = matchKeys?.();
   const [animated, setAnimated] = createSignal<T[]>(initial);
@@ -411,6 +411,7 @@ export const createPresence = <T>(
   enterValue: (target: T) => T,
   exitValue: (current: T) => T,
 ): Accessor<PresenceItem<T>[]> => {
+  const reducedMotion = createReducedMotion();
   const [items, setItems] = createSignal<InternalPresenceItem<T>[]>([]);
 
   let raf: number | undefined;

@@ -187,10 +187,10 @@ const Point = (props: PointProps) => {
         <For each={animatedCircles()}>
           {(item) => {
             const c = () => item.value;
-            const dataIndex = () =>
-              animatedCircles()
-                .filter((i) => i.mode !== "exit")
-                .indexOf(item);
+            // The source index travels with the animated item, including exits.
+            // This keeps per-frame marker work O(n), rather than scanning the
+            // complete animated list once per rendered circle.
+            const dataIndex = () => c().index;
             const valid = () =>
               pointDefined([c().cx, c().cy]) && (c().r > 0 || item.mode === "exit");
             return (

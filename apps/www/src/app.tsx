@@ -1,6 +1,7 @@
 import { For, Show, createMemo, createSignal } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { highlight } from "sugar-high";
+import DocsRoute from "./docs";
 
 import AnimatedArea from "./demos/animated-area";
 import animatedAreaCode from "./demos/animated-area?raw";
@@ -70,6 +71,8 @@ import HorizontalBars from "./demos/horizontal-bars";
 import horizontalBarsCode from "./demos/horizontal-bars?raw";
 import InverseScale from "./demos/inverse-scale";
 import inverseScaleCode from "./demos/inverse-scale?raw";
+import IntervalTimeline from "./demos/interval-timeline";
+import intervalTimelineCode from "./demos/interval-timeline?raw";
 import LabelLines from "./demos/label-lines";
 import labelLinesCode from "./demos/label-lines?raw";
 import LegendHover from "./demos/legend-hover";
@@ -273,6 +276,14 @@ const DEMOS: Demo[] = [
     desc: "A custom overlay uses `useInverseYScale` + `useSvgPointerPosition` to read the y-value under the pointer — the pixel→data companion to `projectScale`.",
     Comp: InverseScale,
     code: inverseScaleCode,
+  },
+  {
+    id: "interval-timeline",
+    group: "Custom series",
+    title: "Interval timeline",
+    desc: "A Gantt or trace-style timeline authored as a custom child: Rectangle marks each begin/end span using the chart scales.",
+    Comp: IntervalTimeline,
+    code: intervalTimelineCode,
   },
   {
     id: "grouped-bars",
@@ -716,6 +727,9 @@ function Landing() {
             <a href="#start" class="hover:text-zinc-900">
               Quick start
             </a>
+            <a href="/docs" class="hover:text-zinc-900">
+              Docs
+            </a>
           </nav>
         </div>
       </header>
@@ -934,9 +948,11 @@ function AllDemos() {
 
 export default function App() {
   const all = typeof location !== "undefined" && location.search.includes("all");
-  const featureParity = typeof location !== "undefined" && location.pathname === "/feature-parity";
+  const pathname = typeof location !== "undefined" ? location.pathname : "/";
+  const featureParity = pathname === "/feature-parity";
 
   if (featureParity) return <FeatureParityRoute />;
+  if (pathname === "/docs" || pathname.startsWith("/docs/")) return <DocsRoute path={pathname} />;
 
   return (
     <Show when={all} fallback={<Landing />}>

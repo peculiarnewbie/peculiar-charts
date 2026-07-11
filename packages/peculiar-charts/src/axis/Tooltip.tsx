@@ -5,6 +5,7 @@ import createClosestTick from "@src/lib/createClosestTick";
 import createSize from "@src/lib/dom/createSize";
 import { isNumeric } from "@src/lib/scale";
 import {
+  type TooltipContentProps,
   type TooltipPayload,
   type TooltipRenderer,
   buildTooltipPayload,
@@ -35,7 +36,7 @@ export type TooltipProps = OverrideProps<
   }
 >;
 
-export type { TooltipPayload, TooltipRenderer };
+export type { TooltipContentProps, TooltipPayload, TooltipRenderer };
 
 /** HTML tooltip positioned near the closest tick, portaled out of the svg.
  *

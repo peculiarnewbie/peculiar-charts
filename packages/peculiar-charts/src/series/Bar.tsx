@@ -28,7 +28,7 @@ import {
 export type BarProps = OverrideProps<
   Omit<ComponentProps<"rect">, "x" | "width" | "y" | "height">,
   {
-    /** Data key for the y-values. Omit for plain number arrays. */
+    /** Data key for the value-axis values. Omit for plain number arrays. */
     dataKey?: string;
     /** Per-series data array. Overrides chart-level `data` for this series. */
     data?: unknown[];
@@ -51,7 +51,7 @@ export type BarProps = OverrideProps<
   } & PointEvents
 >;
 
-type BarRect = { x: number; y: number; width: number; height: number };
+type BarRect = { x: number; y: number; width: number; height: number; index: number };
 
 /** Bar series.
  *
@@ -148,13 +148,15 @@ const Bar = (props: BarProps) => {
 
   const bars = (): BarRect[] => {
     const _points = points();
-    let _baseLine = baseLine();
-    if (!Array.isArray(_baseLine)) _baseLine = new Array(_points.length).fill(_baseLine);
+    const _baseLine = baseLine();
+    const baseLineValues = Array.isArray(_baseLine)
+      ? _baseLine
+      : Array.from({ length: _points.length }, () => _baseLine);
     const _bands = bands();
 
     return _points.map((point, i) => {
       const band = _bands[i]!;
-      const base = _baseLine[i]!;
+      const base = baseLineValues[i]!;
       if (horizontal()) {
         const xValue = point[0];
         return {
@@ -162,6 +164,7 @@ const Bar = (props: BarProps) => {
           y: band.y,
           width: xValue > base ? xValue - base : base - xValue,
           height: band.height,
+          index: i,
         };
       }
       const yValue = point[1];
@@ -170,6 +173,7 @@ const Bar = (props: BarProps) => {
         y: yValue > base ? base : yValue,
         width: band.width,
         height: yValue > base ? yValue - base : base - yValue,
+        index: i,
       };
     });
   };
@@ -181,15 +185,15 @@ const Bar = (props: BarProps) => {
     const _baseLine = baseLine();
     const bl = Array.isArray(_baseLine) ? _baseLine[0] : _baseLine;
     if (horizontal()) {
-      return { x: bl ?? 0, y: bar.y, width: 0, height: bar.height };
+      return { x: bl ?? 0, y: bar.y, width: 0, height: bar.height, index: bar.index };
     }
-    return { x: bar.x, y: bl ?? 0, width: bar.width, height: 0 };
+    return { x: bar.x, y: bl ?? 0, width: bar.width, height: 0, index: bar.index };
   };
   const exitBar = (bar: BarRect): BarRect => {
     if (horizontal()) {
-      return { x: bar.x, y: bar.y, width: 0, height: bar.height };
+      return { x: bar.x, y: bar.y, width: 0, height: bar.height, index: bar.index };
     }
-    return { x: bar.x, y: bar.y + bar.height, width: bar.width, height: 0 };
+    return { x: bar.x, y: bar.y + bar.height, width: bar.width, height: 0, index: bar.index };
   };
   const animatedBars = createPresence(
     bars,
@@ -199,12 +203,11 @@ const Bar = (props: BarProps) => {
       width: a.width + (b.width - a.width) * t,
       y: a.y + (b.y - a.y) * t,
       height: a.height + (b.height - a.height) * t,
+      index: b.index,
     }),
     enterBar,
     exitBar,
   );
-
-  const liveBars = () => animatedBars().filter((i) => i.mode !== "exit");
 
   return (
     <Show when={chartContext.isSeriesVisible(seriesId)}>
@@ -212,7 +215,7 @@ const Bar = (props: BarProps) => {
         <For each={animatedBars()}>
           {(item) => {
             const bar = () => item.value;
-            const idx = () => liveBars().indexOf(item);
+            const idx = () => bar().index;
             return (
               <BarShape
                 renderer={localProps.shape ?? true}

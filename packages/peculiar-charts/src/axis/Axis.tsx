@@ -1,10 +1,9 @@
-import { createWritableMemo } from "@solid-primitives/memo";
 import { AxisContext } from "@src/axis/context";
 import { useChartContext } from "@src/components/context";
 import createScale from "@src/lib/createScale";
 import createTicks from "@src/lib/createTicks";
 import type { ScaleType } from "@src/lib/scale";
-import { type JSX, createEffect, mergeProps, onCleanup } from "solid-js";
+import { type JSX, createEffect, createSignal, mergeProps, onCleanup } from "solid-js";
 
 export type AxisProps = {
   /** Key to read categorical/x values from the data. Omit for plain arrays. */
@@ -90,7 +89,10 @@ const Axis = (props: AxisProps) => {
     tickValues: () => defaultedProps.tickValues,
   });
 
-  const [labelTicks, setLabelTicks] = createWritableMemo(() => ticks());
+  // `<Label>` supplies a memo for collision-filtered ticks. Keeping that memo
+  // as an accessor avoids an effect that copies derived data into another signal.
+  const [labelTickSource, setLabelTickSource] = createSignal<(() => any[]) | undefined>();
+  const labelTicks = () => labelTickSource()?.() ?? ticks();
 
   return (
     <AxisContext.Provider
@@ -103,7 +105,7 @@ const Axis = (props: AxisProps) => {
         scale,
         ticks,
         labelTicks,
-        setLabelTicks,
+        setLabelTicks: (source) => setLabelTickSource(() => source),
       }}
     >
       {defaultedProps.children}

@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
-import { render } from "@solidjs/testing-library";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render } from "@solidjs/testing-library";
 import Chart from "@src/components/Chart";
 import Line from "@src/series/Line";
+import Area from "@src/series/Area";
 import Bar from "@src/series/Bar";
 import Point from "@src/series/Point";
 import Bubble from "@src/series/Bubble";
@@ -10,14 +11,19 @@ import Radar from "@src/series/Radar";
 import Axis from "@src/axis/Axis";
 import AxisLabel from "@src/axis/Label";
 import AxisMark from "@src/axis/Mark";
+import AxisGrid from "@src/axis/Grid";
 import AxisTooltip from "@src/axis/Tooltip";
 import PolarLayout from "@src/axis/polar/PolarLayout";
 import PolarAngleAxis from "@src/axis/polar/PolarAngleAxis";
 import PolarRadiusAxis from "@src/axis/polar/PolarRadiusAxis";
 import { useChartContext } from "@src/components/context";
+import { TooltipContent } from "@src/lib/tooltip";
+import { syncBus } from "@src/lib/sync";
 import { expectLines, expectBars, expectPieSectors } from "./helpers";
 import { cartesianData as data, bubbleData, pieData, radarData } from "./helpers/_data";
-import { createEffect } from "solid-js";
+import { createEffect, createSignal } from "solid-js";
+
+afterEach(() => vi.unstubAllGlobals());
 
 describe("Chart", () => {
   it("renders an SVG with data-pc-chart attribute", () => {
@@ -83,6 +89,37 @@ describe("Chart", () => {
     expect(domains).toContainEqual(["A", "B"]);
     expect(domains.every((values) => values.length === 2)).toBe(true);
   });
+
+  it("only emits sync events when the active datum changes", () => {
+    const emit = vi.spyOn(syncBus, "emit");
+    const clientWidth = vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(800);
+    const clientHeight = vi
+      .spyOn(HTMLElement.prototype, "clientHeight", "get")
+      .mockReturnValue(600);
+    const { container } = render(() => (
+      <Chart data={data} width={400} height={300} syncId="dedupe">
+        <Axis axis="x" position="bottom" dataKey="x" />
+        <Axis axis="y" position="left" />
+        <Line dataKey="y" />
+      </Chart>
+    ));
+    const svg = container.querySelector("svg")!;
+
+    fireEvent.pointerMove(svg, { clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(svg, { clientX: 110, clientY: 100 });
+    expect(emit).toHaveBeenCalledTimes(1);
+
+    fireEvent.pointerMove(svg, { clientX: 600, clientY: 100 });
+    expect(emit).toHaveBeenCalledTimes(2);
+
+    fireEvent.pointerLeave(svg);
+    fireEvent.pointerLeave(svg);
+    expect(emit).toHaveBeenCalledTimes(3);
+    expect(emit.mock.calls.at(-1)?.[1]).toMatchObject({ active: false, index: null });
+    emit.mockRestore();
+    clientWidth.mockRestore();
+    clientHeight.mockRestore();
+  });
 });
 
 describe("Axis", () => {
@@ -97,6 +134,26 @@ describe("Axis", () => {
 
     const mark = container.querySelector("[data-pc-axis-mark]");
     expect(Number(mark?.getAttribute("y2"))).toBeLessThan(Number(mark?.getAttribute("y1")));
+  });
+
+  it("shares reactively filtered label ticks with grids", () => {
+    const [interval, setInterval] = createSignal(0);
+    const { container } = render(() => (
+      <Chart data={data} width={400} height={300}>
+        <Axis axis="x" position="bottom" dataKey="x">
+          <AxisLabel interval={interval()} />
+          <AxisGrid />
+        </Axis>
+      </Chart>
+    ));
+
+    expect(container.querySelectorAll("[data-pc-axis-label]")).toHaveLength(3);
+    expect(container.querySelectorAll("[data-pc-axis-grid]")).toHaveLength(3);
+
+    setInterval(2);
+
+    expect(container.querySelectorAll("[data-pc-axis-label]")).toHaveLength(2);
+    expect(container.querySelectorAll("[data-pc-axis-grid]")).toHaveLength(2);
   });
 });
 
@@ -116,6 +173,25 @@ describe("Tooltip", () => {
     expect(tooltip).not.toBeNull();
     expect(tooltip?.textContent).toContain(String(data[1]!.x));
     expect(tooltip?.getAttribute("style")).toContain("opacity: 1");
+  });
+
+  it("appends function children to the default tooltip content", () => {
+    const payload = {
+      data: data[1]!,
+      index: 1,
+      label: data[1]!.x,
+      series: [],
+    };
+    const { container } = render(() => (
+      <TooltipContent payload={payload}>
+        {(active) => <p data-test-tooltip-extra="">sample {active.index + 1}</p>}
+      </TooltipContent>
+    ));
+
+    expect(container.querySelector("[data-pc-tooltip-header]")?.textContent).toBe(
+      String(data[1]!.x),
+    );
+    expect(container.querySelector("[data-test-tooltip-extra]")?.textContent).toBe("sample 2");
   });
 });
 
@@ -162,6 +238,57 @@ describe("Line", () => {
 
     const lineGroup = container.querySelector("[clip-path^='url(#']");
     expect(lineGroup).not.toBeNull();
+  });
+
+  it("reports entrance only during the initial custom-shape animation", () => {
+    let animationId = 0;
+    const callbacks = new Map<number, FrameRequestCallback>();
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+      const id = ++animationId;
+      callbacks.set(id, callback);
+      return id;
+    });
+    vi.stubGlobal("cancelAnimationFrame", (id: number) => callbacks.delete(id));
+
+    const lineEntrance: (boolean | undefined)[] = [];
+    const areaEntrance: (boolean | undefined)[] = [];
+    render(() => (
+      <Chart data={data} width={400} height={300}>
+        <Axis axis="x" position="bottom" dataKey="x" />
+        <Axis axis="y" position="left" />
+        <Line
+          dataKey="y"
+          animation={{ enabled: true, duration: 100 }}
+          shape={(shape) => {
+            lineEntrance.push(shape.isEntrance);
+            return <path data-test-custom-line="" />;
+          }}
+        />
+        <Area
+          dataKey="y"
+          animation={{ enabled: true, duration: 100 }}
+          shape={(shape) => {
+            areaEntrance.push(shape.isEntrance);
+            return <path data-test-custom-area="" />;
+          }}
+        />
+      </Chart>
+    ));
+
+    expect(lineEntrance).toContain(true);
+    expect(areaEntrance).toContain(true);
+
+    const runFrame = (time: number) => {
+      for (const [id, callback] of [...callbacks]) {
+        callbacks.delete(id);
+        callback(time);
+      }
+    };
+    runFrame(0);
+    runFrame(101);
+
+    expect(lineEntrance.at(-1)).toBe(false);
+    expect(areaEntrance.at(-1)).toBe(false);
   });
 });
 
@@ -226,6 +353,30 @@ describe("Bar", () => {
       expect(labelCenter).toBeCloseTo(barCenter, 6);
     }
   });
+
+  it("passes stable source indexes to custom shapes", () => {
+    const { container } = render(() => (
+      <Chart data={data} width={400} height={300}>
+        <Axis axis="x" position="bottom" dataKey="x" />
+        <Axis axis="y" position="left" />
+        <Bar
+          dataKey="y"
+          shape={(bar) => <rect data-test-bar-index={bar.index} data-test-bar-value={bar.value} />}
+        />
+      </Chart>
+    ));
+
+    expect(
+      [...container.querySelectorAll("[data-test-bar-index]")].map((bar) => ({
+        index: bar.getAttribute("data-test-bar-index"),
+        value: bar.getAttribute("data-test-bar-value"),
+      })),
+    ).toEqual([
+      { index: "0", value: "10" },
+      { index: "1", value: "20" },
+      { index: "2", value: "15" },
+    ]);
+  });
 });
 
 describe("Point", () => {
@@ -261,6 +412,33 @@ describe("Point", () => {
       const r = Number(circle.getAttribute("r"));
       expect(r).toBeGreaterThanOrEqual(0);
     }
+  });
+
+  it("passes source indexes to custom point renderers", () => {
+    const { container } = render(() => (
+      <Chart data={data} width={400} height={300}>
+        <Axis axis="x" position="bottom" dataKey="x" />
+        <Axis axis="y" position="left" />
+        <Point
+          dataKey="y"
+          animation={false}
+          children={(point) => (
+            <circle data-test-point-index={point.index} data-test-point-value={point.value} />
+          )}
+        />
+      </Chart>
+    ));
+
+    expect(
+      [...container.querySelectorAll("[data-test-point-index]")].map((point) => ({
+        index: point.getAttribute("data-test-point-index"),
+        value: point.getAttribute("data-test-point-value"),
+      })),
+    ).toEqual([
+      { index: "0", value: "10" },
+      { index: "1", value: "20" },
+      { index: "2", value: "15" },
+    ]);
   });
 });
 

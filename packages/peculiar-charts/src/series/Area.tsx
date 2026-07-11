@@ -227,8 +227,7 @@ const Area = (props: AreaProps) => {
 
   const [animElapsed, setAnimElapsed] = createSignal(1);
   const [isAnimating, setIsAnimating] = createSignal(false);
-  const [isEntrance, setIsEntrance] = createSignal(false);
-  let firstAnimation = true;
+  const [isEntrance, setIsEntrance] = createSignal(true);
 
   const animatedPoints = createTweenedArray(
     points,
@@ -241,7 +240,7 @@ const Area = (props: AreaProps) => {
         setIsAnimating(true);
       } else {
         setIsAnimating(false);
-        firstAnimation = false;
+        setIsEntrance(false);
       }
     },
     animationKeys,
@@ -282,17 +281,15 @@ const Area = (props: AreaProps) => {
     <Show when={chartContext.isSeriesVisible(seriesId)}>
       <g clip-path={clipPath()}>
         {hasShape() ? (
-          (() => {
-            if (firstAnimation && animOpts().enabled !== false) setIsEntrance(true);
-            return localProps.shape!({
+          (() =>
+            localProps.shape!({
               points: animatedPoints(),
               baseLine: resolvedAnimatedBaseLine(),
               animationElapsedTime: animElapsed(),
               isAnimating: isAnimating(),
-              isEntrance: isEntrance(),
+              isEntrance: isEntrance() && animOpts().enabled !== false,
               ...otherProps,
-            });
-          })()
+            }))()
         ) : (
           <Show
             when={fillByValue()}
