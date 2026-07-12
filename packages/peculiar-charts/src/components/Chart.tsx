@@ -320,7 +320,7 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
     }
 
     let agg: { min: number; max: number };
-    if (orientation === "x") {
+    if (orientation === "x" || orientation === "angle") {
       const data = displayedData();
       const raw = config.dataKey
         ? accessData<unknown>(data, config.dataKey)

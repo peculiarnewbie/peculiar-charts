@@ -4,14 +4,17 @@ import { useChartContext } from "@src/components/context";
 import { usePolarLayout } from "@src/lib/polar/context";
 import { createPolarAngleScale, polarScaleTicks } from "@src/lib/polar/scale";
 import { polarToCartesian } from "@src/lib/polar/utils";
-import type { OverrideProps } from "@src/lib/types";
 import { type JSX, createEffect, mergeProps, onCleanup } from "solid-js";
 
 export type PolarAngleAxisProps = {
-  /** Key to read category labels from the data. */
+  /** Key to read category or numeric angle values from the data. */
   dataKey?: string;
   /** Axis id series bind to. @defaultValue `'angle'` */
   axisId?: string;
+  /** Scale type. Use `'linear'` for radial bars / gauges. @defaultValue `'point'` */
+  type?: "point" | "linear";
+  /** Numeric domain override when `type="linear"`. @defaultValue `'auto'` */
+  axisRange?: "auto" | [number | "min", number | "max"];
   /** Target number of ticks. @defaultValue `5` */
   tickCount?: number;
   /** Force specific tick values. */
@@ -21,16 +24,19 @@ export type PolarAngleAxisProps = {
 
 /** Angular axis — evenly spaces categories around the polar frame. */
 const PolarAngleAxis = (props: PolarAngleAxisProps) => {
-  const defaultedProps = mergeProps({ axisId: "angle", tickCount: 5 }, props);
+  const defaultedProps = mergeProps(
+    { axisId: "angle", type: "point" as const, axisRange: "auto" as const, tickCount: 5 },
+    props,
+  );
   const chartContext = useChartContext();
   const layout = usePolarLayout();
 
   createEffect(() => {
     chartContext.registerAxisConfig(defaultedProps.axisId, {
       orientation: "angle",
-      type: "point",
+      type: defaultedProps.type,
       dataKey: defaultedProps.dataKey,
-      range: null,
+      range: defaultedProps.axisRange === "auto" ? null : defaultedProps.axisRange,
       reverse: false,
     });
     onCleanup(() => chartContext.unregisterAxisConfig(defaultedProps.axisId));

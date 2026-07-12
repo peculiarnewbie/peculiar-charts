@@ -132,16 +132,28 @@ import Area, {
   type AreaShapeProps,
   type AreaShapeRenderer,
 } from "@src/series/Area";
-import Bar, { type BarProps } from "@src/series/Bar";
+import Bar, { type BarBackgroundProps, type BarProps } from "@src/series/Bar";
 import Bubble, { type BubbleDatum, type BubbleProps } from "@src/series/Bubble";
 import Line, {
   type LineProps,
   type LineShapeProps,
   type LineShapeRenderer,
 } from "@src/series/Line";
-import Pie, { type PieProps } from "@src/series/Pie";
+import Pie, {
+  type PieLabelDatum,
+  type PieLabelRenderer,
+  type PieProps,
+  type PieSliceDatum,
+  type PieSliceEventHandler,
+} from "@src/series/Pie";
 import Point, { type PointDatum, type PointProps } from "@src/series/Point";
 import Radar, { type RadarProps } from "@src/series/Radar";
+import RadialBar, {
+  type RadialBarDatum,
+  type RadialBarLabelDatum,
+  type RadialBarLabelRenderer,
+  type RadialBarProps,
+} from "@src/series/RadialBar";
 import SeriesLabel, { type SeriesLabelDatum, type SeriesLabelProps } from "@src/series/SeriesLabel";
 import Curve from "@src/shapes/Curve";
 import type { CurveProps } from "@src/shapes/Curve";
@@ -182,6 +194,7 @@ export type {
   AreaShapeProps,
   AreaShapeRenderer,
   BarProps,
+  BarBackgroundProps,
   BarLayout,
   BubbleProps,
   BubbleDatum,
@@ -189,7 +202,15 @@ export type {
   LineShapeProps,
   LineShapeRenderer,
   PieProps,
+  PieSliceDatum,
+  PieLabelDatum,
+  PieLabelRenderer,
+  PieSliceEventHandler,
   RadarProps,
+  RadialBarProps,
+  RadialBarDatum,
+  RadialBarLabelDatum,
+  RadialBarLabelRenderer,
   PointProps,
   PointDatum,
   SeriesLabelProps,
@@ -266,6 +287,7 @@ export {
   Line,
   Pie,
   Radar,
+  RadialBar,
   Point,
   SeriesLabel,
   // Polar

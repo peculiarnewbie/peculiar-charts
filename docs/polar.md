@@ -1,11 +1,11 @@
-# Polar charts (radar)
+# Polar charts (radar & radial bars)
 
 **Naming:** **Radar** is the chart type users ask for (`<Radar>` series, "radar chart" in
 demos). **Polar** is the coordinate-system prefix for layout and axes (`PolarLayout`,
 `PolarGrid`, `PolarTooltip`, …) — the same split Recharts uses internally.
 
 peculiar-charts supports radar / spider charts through a small layout + axis layer and a
-`Radar` series. Polar components compose like cartesian ones: wrap them in `<Chart>`,
+`Radar` and `RadialBar` series. Polar components compose like cartesian ones: wrap them in `<Chart>`,
 frame the drawable area with `<PolarLayout>`, register axes, then draw series.
 
 Playground: **Radar** group in [charts.peculiarnewbie.com](https://charts.peculiarnewbie.com).
@@ -86,7 +86,8 @@ Styling is headless: pass Tailwind `class` + `currentColor`, or any SVG attribut
 Scales are built with d3 (`scalePoint` for categories, `scaleLinear` for values). Domain
 resolution reuses the cartesian chart context:
 
-- **Angle axis** — categorical domain from the axis `dataKey` (same as an `x` point scale).
+- **Angle axis** — categorical `point` domain from `dataKey`, or a numeric `linear` domain for
+  radial bars and gauges.
 - **Radius axis** — numeric domain from registered series extents (same as `y`), with
   optional `axisRange` override on `<PolarRadiusAxis>`.
 
@@ -106,7 +107,7 @@ the angle and radius scales, then render with **`PolarPolygon`** (closed `d3` li
 | Component          | Role                                                                                             |
 | ------------------ | ------------------------------------------------------------------------------------------------ |
 | `PolarLayout`      | Provides `usePolarLayout()` — `cx`, `cy`, `innerRadius`, `outerRadius`, `startAngle`, `endAngle` |
-| `PolarAngleAxis`   | Registers `orientation: 'angle'`, exposes polar axis context to children                         |
+| `PolarAngleAxis`   | Categorical spokes or a numeric angular-value scale; exposes polar axis context to children      |
 | `PolarAngleLabel`  | Category labels outside `outerRadius`                                                            |
 | `PolarRadiusAxis`  | Registers `orientation: 'radius'`; `angle` sets which spoke tick labels use                      |
 | `PolarRadiusLabel` | Numeric tick labels along the radius axis spoke                                                  |
@@ -114,6 +115,7 @@ the angle and radius scales, then render with **`PolarPolygon`** (closed `d3` li
 | `PolarCrosshair`   | Radial guide line at the category spoke nearest the pointer                                      |
 | `PolarTooltip`     | HTML tooltip (portaled) — default body or `content` render-prop                                  |
 | `Radar`            | Filled/stroked closed polygon; `angleAxisId` / `radiusAxisId` bind axes                          |
+| `RadialBar`        | Concentric progress rings; values map to a numeric angle axis                                    |
 | `PolarPolygon`     | Low-level closed path from `[x, y][]` — for custom polar series                                  |
 
 ### `PolarLayout` props
@@ -135,8 +137,33 @@ the angle and radius scales, then render with **`PolarPolygon`** (closed `d3` li
 | `angleAxisId`  | `'angle'`  | Bound angle axis                                    |
 | `radiusAxisId` | `'radius'` | Bound radius axis                                   |
 | `fillOpacity`  | `0.35`     | Polygon fill opacity                                |
+| `animation`    | —          | Tween polygon point geometry on data updates        |
 
 `data-pc-radar-group` and `data-pc-radar` attributes are emitted for testing and styling.
+
+### `RadialBar`
+
+`<RadialBar>` renders one concentric ring per data row. Its `dataKey` maps to an angular span,
+so pair it with a numeric angle axis and set a stable domain for gauge-like progress charts:
+
+```tsx
+<PolarLayout innerRadius="20%" outerRadius="85%">
+  <PolarAngleAxis type="linear" axisRange={[0, 100]} />
+  <RadialBar dataKey="value" background cornerRadius={4} />
+</PolarLayout>
+```
+
+- `barGap` / `barSize` control radial spacing and thickness in pixels.
+- `minAngle` ensures non-zero values remain visible (radians).
+- `background` draws a full track for every ring; pass `true` or SVG path props.
+- `label` accepts `true`, SVG text props, or a render function with the resolved bar and label
+  geometry. `labelPosition="outside"` uses `labelOffset` and exposes `labelPoint` / `textAnchor`.
+- `animation` tweens angular spans; entering and exiting bars grow from / shrink to the baseline.
+- `onPointClick`, `onPointEnter`, and `onPointLeave` receive the value, source index, and
+  centre point of the ring segment.
+
+Use `data-pc-radial-bar-group`, `data-pc-radial-bar`, and `data-pc-radial-bar-background`
+for testing or styling.
 
 ---
 
@@ -212,11 +239,9 @@ Playground: **Radar → Radar chart** and **Custom tooltip**.
 
 ## Limitations (current)
 
-- **No `animation` on `Radar`** — geometry tweening is cartesian-series only today; see
-  `docs/animation.md` future work.
 - **Single value axis** — typical radar layout; biaxial polar is not implemented.
-- **Recharts parity** — see `references/recharts/src/polar/` for radial bar, polar brush, and
-  richer tick customisation we have not ported yet.
+- **Recharts parity** — radial bars are supported; polar brush and richer tick customisation are
+  still open. See `references/recharts/src/polar/` for comparison.
 
 ---
 

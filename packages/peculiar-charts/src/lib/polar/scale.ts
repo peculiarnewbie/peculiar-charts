@@ -3,10 +3,17 @@ import type { PolarLayout } from "@src/lib/polar/context";
 import { type Accessor, createMemo } from "solid-js";
 import { scaleLinear, scalePoint } from "d3-scale";
 
-export type PolarAngleScale = {
-  type: "angle";
-  scale: ReturnType<typeof scalePoint<string>>;
-};
+export type PolarAngleScale =
+  | {
+      type: "angle";
+      kind: "point";
+      scale: ReturnType<typeof scalePoint<string>>;
+    }
+  | {
+      type: "angle";
+      kind: "linear";
+      scale: ReturnType<typeof scaleLinear<number, number>>;
+    };
 
 export type PolarRadiusScale = {
   type: "radius";
@@ -22,9 +29,16 @@ export const createPolarAngleScale = (props: {
 }): Accessor<PolarAngleScale> =>
   createMemo(() => {
     const domain = props.chartContext.getDomain(props.axisId(), "angle");
-    const values = domain.kind === "categorical" ? domain.values.map(String) : [];
     const start = props.layout.startAngle();
     const end = props.layout.endAngle();
+
+    if (domain.kind === "numeric") {
+      const scale = scaleLinear([domain.min, domain.max], [start, end]);
+      if (!domain.userDefined) scale.nice();
+      return { type: "angle" as const, kind: "linear" as const, scale };
+    }
+
+    const values = domain.values.map(String);
     const range = end - start;
     // When the angular range is a full circle, the last point would overlap
     // the first if placed at endAngle. Shrink the range so the step becomes
@@ -34,6 +48,7 @@ export const createPolarAngleScale = (props: {
       fullCircle && values.length > 1 ? start + (range * (values.length - 1)) / values.length : end;
     return {
       type: "angle" as const,
+      kind: "point" as const,
       scale: scalePoint<string>(values, [start, adjustedEnd]),
     };
   });
@@ -56,7 +71,7 @@ export const createPolarRadiusScale = (props: {
   });
 
 export const projectAngleScale = (scale: PolarAngleScale, value: any): number => {
-  const angle = scale.scale(String(value));
+  const angle = scale.kind === "linear" ? scale.scale(Number(value)) : scale.scale(String(value));
   return angle === undefined ? Number.NaN : angle;
 };
 
@@ -68,7 +83,7 @@ export const projectRadiusScale = (scale: PolarRadiusScale, value: number): numb
 export const polarScaleTicks = (scale: PolarAxisScale, count: number): any[] => {
   switch (scale.type) {
     case "angle":
-      return scale.scale.domain();
+      return scale.kind === "linear" ? scale.scale.ticks(count) : scale.scale.domain();
     case "radius":
       return scale.scale.ticks(count);
   }

@@ -8,6 +8,7 @@ import Point from "@src/series/Point";
 import Bubble from "@src/series/Bubble";
 import Pie from "@src/series/Pie";
 import Radar from "@src/series/Radar";
+import RadialBar from "@src/series/RadialBar";
 import Axis from "@src/axis/Axis";
 import AxisLabel from "@src/axis/Label";
 import AxisMark from "@src/axis/Mark";
@@ -284,8 +285,9 @@ describe("Line", () => {
         callback(time);
       }
     };
-    runFrame(0);
-    runFrame(101);
+    const initialStart = performance.now();
+    runFrame(initialStart);
+    runFrame(initialStart + 101);
 
     expect(lineEntrance.at(-1)).toBe(false);
     expect(areaEntrance.at(-1)).toBe(false);
@@ -376,6 +378,36 @@ describe("Bar", () => {
       { index: "1", value: "20" },
       { index: "2", value: "15" },
     ]);
+  });
+
+  it("keeps non-zero bars visible with minPointSize", () => {
+    const tiny = [{ x: "A", y: 0.1 }];
+    const { container } = render(() => (
+      <Chart data={tiny} width={400} height={300}>
+        <Axis axis="x" position="bottom" dataKey="x" />
+        <Axis axis="y" position="left" axisRange={[0, 100]} />
+        <Bar dataKey="y" minPointSize={12} />
+      </Chart>
+    ));
+
+    expect(Number(container.querySelector("[data-pc-bar]")?.getAttribute("height"))).toBe(12);
+  });
+
+  it("renders a full plot-slot background for every bar", () => {
+    const { container } = render(() => (
+      <Chart data={data} width={400} height={300}>
+        <Axis axis="x" position="bottom" dataKey="x" />
+        <Axis axis="y" position="left" />
+        <Bar dataKey="y" background={{ fill: "#eee" }} />
+      </Chart>
+    ));
+
+    const backgrounds = container.querySelectorAll("[data-pc-bar-background]");
+    expect(backgrounds).toHaveLength(3);
+    expect(backgrounds[0]?.getAttribute("fill")).toBe("#eee");
+    expect(Number(backgrounds[0]?.getAttribute("height"))).toBeGreaterThan(
+      Number(container.querySelector("[data-pc-bar]")?.getAttribute("height")),
+    );
   });
 });
 
@@ -569,6 +601,74 @@ describe("Pie", () => {
 
     expectPieSectors(container, [{ fill: "#ff0000" }, { fill: "#00ff00" }, { fill: "#0000ff" }]);
   });
+
+  it("uses per-series data instead of chart data", () => {
+    const pieSeriesData = [
+      { category: "Coffee", amount: 7 },
+      { category: "Tea", amount: 3 },
+    ];
+    const { container } = render(() => (
+      <Chart data={pieData} width={400} height={400}>
+        <Pie data={pieSeriesData} dataKey="amount" nameKey="category" />
+      </Chart>
+    ));
+
+    expectPieSectors(container, [
+      { key: "Coffee", index: 0 },
+      { key: "Tea", index: 1 },
+    ]);
+  });
+
+  it("renders default slice labels", () => {
+    const { container } = render(() => (
+      <Chart data={pieData} width={400} height={400}>
+        <Pie dataKey="value" nameKey="name" label />
+      </Chart>
+    ));
+
+    const labels = container.querySelectorAll("[data-pc-pie-label]");
+    expect(labels).toHaveLength(3);
+    expect(labels[0]?.textContent).toBe("A");
+  });
+
+  it("renders custom slice labels with percentages", () => {
+    const { container } = render(() => (
+      <Chart data={pieData} width={400} height={400}>
+        <Pie
+          dataKey="value"
+          nameKey="name"
+          label={(slice) => (
+            <text data-test-pie-label="">{`${slice.name}: ${Math.round(slice.percent * 100)}%`}</text>
+          )}
+        />
+      </Chart>
+    ));
+
+    const labels = container.querySelectorAll("[data-test-pie-label]");
+    expect(labels).toHaveLength(3);
+    expect(labels[0]?.textContent).toBe("A: 30%");
+    expect(labels[1]?.textContent).toBe("B: 50%");
+  });
+
+  it("reports the source slice for slice interactions", () => {
+    const onSliceClick = vi.fn();
+    const { container } = render(() => (
+      <Chart data={pieData} width={400} height={400}>
+        <Pie dataKey="value" nameKey="name" onSliceClick={onSliceClick} />
+      </Chart>
+    ));
+
+    fireEvent.click(container.querySelectorAll("[data-pc-pie-slice]")[1]!);
+
+    expect(onSliceClick).toHaveBeenCalledOnce();
+    expect(onSliceClick.mock.calls[0]?.[0]).toMatchObject({
+      name: "B",
+      value: 50,
+      key: "B",
+      index: 1,
+      percent: 0.5,
+    });
+  });
 });
 
 describe("Radar", () => {
@@ -605,5 +705,139 @@ describe("Radar", () => {
 
     const polygon = container.querySelector("[data-pc-radar]");
     expect(polygon?.getAttribute("fill-opacity")).toBe("0.5");
+  });
+
+  it("tweens polygon geometry when data changes", () => {
+    let animationId = 0;
+    const callbacks = new Map<number, FrameRequestCallback>();
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+      const id = ++animationId;
+      callbacks.set(id, callback);
+      return id;
+    });
+    vi.stubGlobal("cancelAnimationFrame", (id: number) => callbacks.delete(id));
+
+    const [values, setValues] = createSignal(radarData);
+    const { container } = render(() => (
+      <Chart data={values()} width={400} height={400}>
+        <PolarLayout>
+          <PolarAngleAxis dataKey="cat" />
+          <PolarRadiusAxis />
+          <Radar dataKey="val" animation={{ enabled: true, duration: 100 }} />
+        </PolarLayout>
+      </Chart>
+    ));
+
+    const path = container.querySelector("[data-pc-radar]")!;
+    const before = path.getAttribute("d");
+    setValues(radarData.map((datum) => ({ ...datum, val: datum.val / 2 })));
+
+    for (const [id, callback] of Array.from(callbacks)) {
+      callbacks.delete(id);
+      callback(0);
+    }
+    for (const [id, callback] of Array.from(callbacks)) {
+      callbacks.delete(id);
+      callback(101);
+    }
+
+    expect(container.querySelector("[data-pc-radar]")?.getAttribute("d")).not.toBe(before);
+  });
+});
+
+describe("RadialBar", () => {
+  it("renders one sector per datum using a numeric angle axis", () => {
+    const { container } = render(() => (
+      <Chart data={pieData} width={400} height={400}>
+        <PolarLayout innerRadius="20%" outerRadius="80%">
+          <PolarAngleAxis type="linear" axisRange={[0, 100]} />
+          <RadialBar dataKey="value" />
+        </PolarLayout>
+      </Chart>
+    ));
+
+    const bars = container.querySelectorAll("[data-pc-radial-bar]");
+    expect(bars).toHaveLength(3);
+    expect(bars[0]?.tagName).toBe("path");
+    expect(bars[0]?.getAttribute("d")).toBeTruthy();
+  });
+
+  it("renders background tracks and reports per-bar events", () => {
+    const onPointClick = vi.fn();
+    const { container } = render(() => (
+      <Chart data={pieData} width={400} height={400}>
+        <PolarLayout>
+          <PolarAngleAxis type="linear" axisRange={[0, 100]} />
+          <RadialBar dataKey="value" background onPointClick={onPointClick} />
+        </PolarLayout>
+      </Chart>
+    ));
+
+    expect(container.querySelectorAll("[data-pc-radial-bar-background]")).toHaveLength(3);
+    fireEvent.click(container.querySelectorAll("[data-pc-radial-bar]")[1]!);
+    expect(onPointClick).toHaveBeenCalledWith(
+      expect.objectContaining({ value: 50, index: 1, point: expect.any(Array) }),
+      expect.any(MouseEvent),
+    );
+  });
+
+  it("renders custom labels", () => {
+    const { container } = render(() => (
+      <Chart data={pieData} width={400} height={400}>
+        <PolarLayout>
+          <PolarAngleAxis type="linear" axisRange={[0, 100]} />
+          <RadialBar
+            dataKey="value"
+            label={(bar) => <text data-test-radial-label="">{`${bar.value}%`}</text>}
+          />
+        </PolarLayout>
+      </Chart>
+    ));
+
+    const labels = container.querySelectorAll("[data-test-radial-label]");
+    expect(labels).toHaveLength(3);
+    expect(labels[1]?.textContent).toBe("50%");
+  });
+
+  it("tweens angular spans when values change", () => {
+    let animationId = 0;
+    const callbacks = new Map<number, FrameRequestCallback>();
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+      const id = ++animationId;
+      callbacks.set(id, callback);
+      return id;
+    });
+    vi.stubGlobal("cancelAnimationFrame", (id: number) => callbacks.delete(id));
+
+    const [values, setValues] = createSignal(pieData);
+    const { container } = render(() => (
+      <Chart data={values()} width={400} height={400}>
+        <PolarLayout>
+          <PolarAngleAxis type="linear" axisRange={[0, 100]} />
+          <RadialBar dataKey="value" animation={{ enabled: true, duration: 100 }} />
+        </PolarLayout>
+      </Chart>
+    ));
+
+    const runFrame = (time: number) => {
+      for (const [id, callback] of Array.from(callbacks)) {
+        callbacks.delete(id);
+        callback(time);
+      }
+    };
+    const initialStart = performance.now();
+    runFrame(initialStart);
+    runFrame(initialStart + 101);
+
+    const path = container.querySelectorAll("[data-pc-radial-bar]")[0]!;
+    const before = path.getAttribute("d");
+    setValues(pieData.map((datum) => ({ ...datum, value: datum.value / 2 })));
+    const updateStart = performance.now();
+    runFrame(updateStart);
+    runFrame(updateStart + 101);
+
+    expect(container.querySelectorAll("[data-pc-radial-bar]")[0]?.getAttribute("d")).not.toBe(
+      before,
+    );
   });
 });

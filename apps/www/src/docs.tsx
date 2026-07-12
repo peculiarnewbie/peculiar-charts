@@ -313,6 +313,11 @@ const Bars = () => (
       <code>layout="horizontal"</code>, categories move to Y and values move to X. Grouping,
       stacking, and axis IDs work the same way in both orientations.
     </p>
+    <p class="mt-3">
+      Use <code>minPointSize</code> to keep non-zero values visible at small scales. Set{" "}
+      <code>background</code> to <code>true</code> or SVG rect props to draw a full value-axis track
+      behind each bar.
+    </p>
   </DocsPage>
 );
 

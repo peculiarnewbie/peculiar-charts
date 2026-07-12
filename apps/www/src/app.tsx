@@ -15,6 +15,8 @@ import AnimatedPhaseBars from "./demos/animated-phase-bars";
 import animatedPhaseBarsCode from "./demos/animated-phase-bars?raw";
 import AnimatedPie from "./demos/animated-pie";
 import animatedPieCode from "./demos/animated-pie?raw";
+import AnimatedRadarDemo from "./demos/animated-radar";
+import animatedRadarCode from "./demos/animated-radar?raw";
 import Annotations from "./demos/annotations";
 import annotationsCode from "./demos/annotations?raw";
 import AxisDomainExpression from "./demos/axis-domain-expression";
@@ -23,6 +25,8 @@ import AxisFormatting from "./demos/axis-formatting";
 import axisFormattingCode from "./demos/axis-formatting?raw";
 import AxisPadding from "./demos/axis-padding";
 import axisPaddingCode from "./demos/axis-padding?raw";
+import BarBackgroundDemo from "./demos/bar-background";
+import barBackgroundCode from "./demos/bar-background?raw";
 import Basic from "./demos/basic";
 import basicCode from "./demos/basic?raw";
 import Biaxial from "./demos/biaxial";
@@ -85,10 +89,14 @@ import PercentArea from "./demos/percent-area";
 import percentAreaCode from "./demos/percent-area?raw";
 import PieDemo from "./demos/pie";
 import pieCode from "./demos/pie?raw";
+import PieLabelsDemo from "./demos/pie-labels";
+import pieLabelsCode from "./demos/pie-labels?raw";
 import RadarDemo from "./demos/radar";
 import RadarCustomTooltipDemo from "./demos/radar-custom-tooltip";
 import radarCustomTooltipCode from "./demos/radar-custom-tooltip?raw";
 import radarCode from "./demos/radar?raw";
+import RadialBarDemo from "./demos/radial-bar";
+import radialBarCode from "./demos/radial-bar?raw";
 import RangedArea from "./demos/ranged-area";
 import rangedAreaCode from "./demos/ranged-area?raw";
 import ReferenceLineSegment from "./demos/reference-line-segment";
@@ -318,12 +326,28 @@ const DEMOS: Demo[] = [
     code: customBarShapesCode,
   },
   {
+    id: "bar-background",
+    group: "Bar",
+    title: "Minimum bars + backgrounds",
+    desc: "`minPointSize` keeps non-zero values visible, while `background` draws a full plot-slot track behind every bar — useful for low-volume and progress-style comparisons.",
+    Comp: BarBackgroundDemo,
+    code: barBackgroundCode,
+  },
+  {
     id: "pie",
     group: "Pie",
     title: "Pie",
     desc: "Self-contained — no axes needed. Each slice registers into the legend and can be toggled.",
     Comp: PieDemo,
     code: pieCode,
+  },
+  {
+    id: "pie-labels",
+    group: "Pie",
+    title: "Pie labels",
+    desc: '`label` supports a built-in name, SVG text props, or a render function with slice geometry, value, name, colour, and percent. Set `labelPosition="outside"` to move them beyond the ring.',
+    Comp: PieLabelsDemo,
+    code: pieLabelsCode,
   },
   {
     id: "donut",
@@ -348,6 +372,14 @@ const DEMOS: Demo[] = [
     desc: "`<PolarTooltip content={(p) => …}>` — same `TooltipPayload` as `<AxisTooltip>`. Tooltip anchors on the active spoke, not the raw pointer.",
     Comp: RadarCustomTooltipDemo,
     code: radarCustomTooltipCode,
+  },
+  {
+    id: "radial-bar",
+    group: "Radar",
+    title: "Radial bars",
+    desc: "`<RadialBar>` maps values to angular progress around concentric rings. Add a numeric `<PolarAngleAxis>` to set the value domain and `background` for full tracks.",
+    Comp: RadialBarDemo,
+    code: radialBarCode,
   },
   {
     id: "animated-bars",
@@ -380,6 +412,14 @@ const DEMOS: Demo[] = [
     desc: "Pie series with `animation` — toggle between 7 and 4 slices; exiting slices shrink to zero angular span.",
     Comp: AnimatedPie,
     code: animatedPieCode,
+  },
+  {
+    id: "animated-radar",
+    group: "Animation",
+    title: "Animated radar",
+    desc: "Radar polygons now tween their projected points on data updates. Toggle the score profile to see the shape transition without imperative DOM updates.",
+    Comp: AnimatedRadarDemo,
+    code: animatedRadarCode,
   },
   {
     id: "animated-bubble",

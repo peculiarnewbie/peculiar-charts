@@ -1,4 +1,11 @@
 import { useChartContext } from "@src/components/context";
+import {
+  type AnimationOptions,
+  type ResolvedAnimationOptions,
+  createTweenedArray,
+  interpolatePoint,
+  resolveAnimation,
+} from "@src/lib/animation";
 import createPolarPoints from "@src/lib/polar/createPolarPoints";
 import { usePolarLayout } from "@src/lib/polar/context";
 import createSeries from "@src/lib/createSeries";
@@ -29,6 +36,8 @@ export type RadarProps = OverrideProps<
     fillOpacity?: number;
     /** Explicit colour for legend / tooltip swatches. */
     color?: string;
+    /** Animation configuration. */
+    animation?: AnimationOptions;
   }
 >;
 
@@ -56,6 +65,7 @@ const Radar = (props: RadarProps) => {
     "radiusAxisId",
     "fillOpacity",
     "color",
+    "animation",
   ]);
   const chartContext = useChartContext();
   const layout = usePolarLayout();
@@ -84,11 +94,33 @@ const Radar = (props: RadarProps) => {
     chartContext,
   });
 
+  const animOpts = createMemo<ResolvedAnimationOptions>(() =>
+    resolveAnimation(localProps.animation),
+  );
+  const animationKeys = createMemo<unknown[] | undefined>(() => {
+    const matchBy = animOpts().matchBy;
+    if (!matchBy || matchBy === "index") return undefined;
+    const raw = chartContext.data() as unknown[];
+    if (typeof matchBy === "string") return accessData<unknown>(raw, matchBy);
+    return raw.map((datum, index) => matchBy(datum, index, raw));
+  });
+  const animatedPoints = createTweenedArray(
+    points,
+    animOpts,
+    (a, b, t) => animOpts().interpolate?.(a, b, t) ?? interpolatePoint(a, b, t),
+    (target) =>
+      Number.isNaN(target[0])
+        ? ([Number.NaN, Number.NaN] as [number, number])
+        : ([layout.cx(), layout.cy()] as [number, number]),
+    undefined,
+    animationKeys,
+  );
+
   return (
     <Show when={chartContext.isSeriesVisible(seriesId)}>
       <g data-pc-radar-group="">
         <PolarPolygon
-          points={points()}
+          points={animatedPoints()}
           fill-opacity={localProps.fillOpacity}
           data-pc-radar=""
           {...otherProps}

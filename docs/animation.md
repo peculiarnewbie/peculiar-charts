@@ -8,7 +8,8 @@ no external animation library.
 
 ## Public API
 
-Every series (`Bar`, `Line`, `Area`, `Pie`, `Point`, `Bubble`) accepts an `animation` prop:
+Every series (`Bar`, `Line`, `Area`, `Pie`, `Point`, `Bubble`, `Radar`, `RadialBar`) accepts an
+`animation` prop:
 
 ```ts
 type AnimationEasing =
@@ -91,15 +92,16 @@ Each series computes final SVG geometry through reactive memos, then passes it t
 data → geometry memo → createTweenedArray/createPresence → <svg elements>
 ```
 
-| Series | Animated properties         | Enter animation                 | Exit animation              |
-| ------ | --------------------------- | ------------------------------- | --------------------------- |
-| Bar    | `x`, `y`, `width`, `height` | Grow from baseline (h=0)        | Shrink to baseline (h=0)    |
-| Point  | `cx`, `cy`, `r`             | Scale from r=0                  | Scale to r=0                |
-| Bubble | `cx`, `cy`, `r`             | Scale from r=0                  | Scale to r=0                |
-| Pie    | `startAngle`, `endAngle`    | Grow from zero angular span     | Shrink to zero angular span |
-| Line   | `[x, y]` point coordinates  | Points appear at final position | N/A (path snaps)            |
-| Area   | `[x, y]` points + baseline  | Points appear at final position | N/A (path snaps)            |
-| Radar  | —                           | —                               | Not yet supported           |
+| Series    | Animated properties         | Enter animation                        | Exit animation               |
+| --------- | --------------------------- | -------------------------------------- | ---------------------------- |
+| Bar       | `x`, `y`, `width`, `height` | Grow from baseline (h=0)               | Shrink to baseline (h=0)     |
+| Point     | `cx`, `cy`, `r`             | Scale from r=0                         | Scale to r=0                 |
+| Bubble    | `cx`, `cy`, `r`             | Scale from r=0                         | Scale to r=0                 |
+| Pie       | `startAngle`, `endAngle`    | Grow from zero angular span            | Shrink to zero angular span  |
+| Line      | `[x, y]` point coordinates  | Points appear at final position        | N/A (path snaps)             |
+| Area      | `[x, y]` points + baseline  | Points appear at final position        | N/A (path snaps)             |
+| Radar     | `[x, y]` polygon points     | New points collapse to chart centre    | N/A (path snaps)             |
+| RadialBar | sector angles               | Each arc grows from its baseline angle | Shrink to its baseline angle |
 
 Line and Area do not support per-point exit animations because the path would distort during the
 transition. Use the `animation` prop for enter/update tweening only.

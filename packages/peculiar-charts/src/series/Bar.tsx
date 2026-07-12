@@ -10,7 +10,12 @@ import createBands from "@src/lib/createBands";
 import createBaseLine from "@src/lib/createBaseLine";
 import createPoints from "@src/lib/createPoints";
 import createSeries from "@src/lib/createSeries";
-import { BarShape, type BarShapeRenderer, type PointEvents } from "@src/lib/markers";
+import {
+  BarShape,
+  type BarShapeProps,
+  type BarShapeRenderer,
+  type PointEvents,
+} from "@src/lib/markers";
 import type { OverrideProps } from "@src/lib/types";
 import { accessData } from "@src/lib/utils";
 import {
@@ -44,6 +49,10 @@ export type BarProps = OverrideProps<
     layout?: BarLayout;
     /** Custom bar rendering — bool, props-object, or function. @defaultValue `true` */
     shape?: BarShapeRenderer;
+    /** Minimum px size for non-zero bars. Useful when values are visually tiny. */
+    minPointSize?: number;
+    /** Full-slot bar backgrounds — `true` or SVG rect props. */
+    background?: boolean | BarBackgroundProps;
     /** Explicit colour for legend / tooltip swatches. */
     color?: string;
     /** Animation configuration. */
@@ -52,6 +61,9 @@ export type BarProps = OverrideProps<
 >;
 
 type BarRect = { x: number; y: number; width: number; height: number; index: number };
+
+/** Props for a bar's optional full-slot background rectangle. */
+export type BarBackgroundProps = BarShapeProps;
 
 /** Bar series.
  *
@@ -81,6 +93,8 @@ const Bar = (props: BarProps) => {
       "stackId",
       "layout",
       "shape",
+      "minPointSize",
+      "background",
       "color",
       "animation",
     ],
@@ -159,23 +173,51 @@ const Bar = (props: BarProps) => {
       const base = baseLineValues[i]!;
       if (horizontal()) {
         const xValue = point[0];
+        const width = Math.abs(xValue - base);
+        const minSize = width > 0 ? Math.max(0, localProps.minPointSize ?? 0) : 0;
+        const resolvedWidth = Math.max(width, minSize);
         return {
-          x: xValue > base ? base : xValue,
+          x: xValue >= base ? base : base - resolvedWidth,
           y: band.y,
-          width: xValue > base ? xValue - base : base - xValue,
+          width: resolvedWidth,
           height: band.height,
           index: i,
         };
       }
       const yValue = point[1];
+      const height = Math.abs(yValue - base);
+      const minSize = height > 0 ? Math.max(0, localProps.minPointSize ?? 0) : 0;
+      const resolvedHeight = Math.max(height, minSize);
       return {
         x: band.x,
-        y: yValue > base ? base : yValue,
+        y: yValue >= base ? base : base - resolvedHeight,
         width: band.width,
-        height: yValue > base ? yValue - base : base - yValue,
+        height: resolvedHeight,
         index: i,
       };
     });
+  };
+
+  const backgroundBars = (): BarRect[] => {
+    const _bands = bands();
+    const left = chartContext.getInset("left");
+    const right = chartContext.width() - chartContext.getInset("right");
+    const top = chartContext.getInset("top");
+    const bottom = chartContext.height() - chartContext.getInset("bottom");
+    return _bands.map((band, index) =>
+      horizontal()
+        ? { x: left, y: band.y, width: right - left, height: band.height, index }
+        : { x: band.x, y: top, width: band.width, height: bottom - top, index },
+    );
+  };
+
+  const backgroundProps = () => {
+    const background = localProps.background;
+    if (!background) return undefined;
+    return mergeProps(
+      { fill: "currentColor", "fill-opacity": 0.12, stroke: "none" } as BarBackgroundProps,
+      background === true ? {} : background,
+    );
   };
 
   const animOpts = createMemo<ResolvedAnimationOptions>(() =>
@@ -212,6 +254,20 @@ const Bar = (props: BarProps) => {
   return (
     <Show when={chartContext.isSeriesVisible(seriesId)}>
       <g data-pc-bar-group="">
+        <Show when={backgroundProps()}>
+          <For each={backgroundBars()}>
+            {(bar) => (
+              <rect
+                x={bar.x}
+                y={bar.y}
+                width={bar.width}
+                height={bar.height}
+                data-pc-bar-background=""
+                {...backgroundProps()}
+              />
+            )}
+          </For>
+        </Show>
         <For each={animatedBars()}>
           {(item) => {
             const bar = () => item.value;
