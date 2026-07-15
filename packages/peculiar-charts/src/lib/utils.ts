@@ -84,7 +84,7 @@ export const getBarPadding = (chartContext: BarPaddingContext) => {
   const bandGap = gapToPadding(barConfig.bandGap, chartWidth / dataLength);
 
   const bandScale = scaleBand()
-    .domain(Array(dataLength).keys().map(String).toArray())
+    .domain(Array.from({ length: dataLength }, (_, index) => String(index)))
     .range([left, right])
     .paddingInner(bandGap)
     .paddingOuter(bandGap / 2);

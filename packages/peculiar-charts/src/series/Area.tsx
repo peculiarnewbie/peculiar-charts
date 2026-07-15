@@ -156,6 +156,7 @@ const Area = (props: AreaProps) => {
     seriesId,
     name: () => localProps.name ?? localProps.dataKey ?? "series",
     type: "area",
+    layout: () => localProps.layout,
     xAxisId: () => localProps.xAxisId,
     yAxisId: () => localProps.yAxisId,
     valueAxisId,
@@ -184,6 +185,7 @@ const Area = (props: AreaProps) => {
   });
 
   const points = createPoints({
+    seriesId,
     layout: () => localProps.layout,
     xAxisId: () => localProps.xAxisId,
     yAxisId: () => localProps.yAxisId,
@@ -195,6 +197,7 @@ const Area = (props: AreaProps) => {
   });
 
   const stackedBaseLine = createBaseLine({
+    seriesId,
     layout: () => localProps.layout,
     xAxisId: () => localProps.xAxisId,
     yAxisId: () => localProps.yAxisId,

@@ -1,4 +1,10 @@
-import { type AxisOrientation, ChartContext, type ChartContextType } from "@src/components/context";
+import {
+  type AxisOrientation,
+  type BarRegistry,
+  ChartContext,
+  type ChartContextType,
+  type ScopedStack,
+} from "@src/components/context";
 import { resolveAxisDomain } from "@src/lib/resolveAxisDomain";
 import { type Accessor, type JSX, createSignal } from "solid-js";
 
@@ -32,8 +38,8 @@ export const BrushContextProvider = (props: {
 
   const noop = () => {};
   const noopInset = () => 0;
-  const emptySet = () => new Set<string>();
-  const emptyMap = () => new Map<string, Map<string, any>>();
+  const emptyBars = () => new Map<string, Map<string, Set<string>>>() as BarRegistry;
+  const emptyStacks = () => new Map<string, ScopedStack>();
 
   const value: ChartContextType<any> = {
     data: props.data,
@@ -73,12 +79,12 @@ export const BrushContextProvider = (props: {
       }),
     getDomain,
 
-    stacks: emptyMap,
+    stacks: emptyStacks,
     stackOffset: ctx.stackOffset,
     registerStack: noop,
     unregisterStack: noop,
 
-    bars: emptySet,
+    bars: emptyBars,
     registerBar: noop,
     unregisterBar: noop,
     barConfig: ctx.barConfig,

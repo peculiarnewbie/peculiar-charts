@@ -54,7 +54,20 @@ export type SeriesMeta = {
   order: number;
 };
 
-export type StackEntry = { seriesIds: Set<string>; values: number[] };
+export type SeriesLayout = "vertical" | "horizontal";
+export type StackScope = {
+  layout: SeriesLayout;
+  categoryAxisId: string;
+  valueAxisId: string;
+  stackId: string;
+};
+export type StackEntry = {
+  seriesId: string;
+  dataKey: string | undefined;
+  values: number[];
+};
+export type ScopedStack = { scope: StackScope; entries: Map<string, StackEntry> };
+export type BarRegistry = Map<string, Map<string, Set<string>>>;
 export type StackOffset = "none" | "expand" | "silhouette" | "sign";
 
 export type BrushRange = { startIndex: number; endIndex: number };
@@ -88,8 +101,8 @@ export type ChartContextType<TData extends unknown[] = unknown[]> = {
   unregisterInset: (edge: Edge, key: string) => void;
 
   // --- axis configuration -------------------------------------------------
-  registerAxisConfig: (axisId: string, config: AxisConfig) => void;
-  unregisterAxisConfig: (axisId: string) => void;
+  registerAxisConfig: (axisId: string, ownerId: string, config: AxisConfig) => void;
+  unregisterAxisConfig: (axisId: string, ownerId: string) => void;
   /**
    * Returns the registered config for `axisId`, or a default derived from
    * `orientation` (`point` for x, `linear` for y) when none is registered.
@@ -103,14 +116,14 @@ export type ChartContextType<TData extends unknown[] = unknown[]> = {
 
   // --- stacks -------------------------------------------------------------
   stackOffset: Accessor<StackOffset | undefined>;
-  stacks: Accessor<Map<string, Map<string, StackEntry>>>;
-  registerStack: (stackId: string, dataKey: string, seriesId: string, values: number[]) => void;
-  unregisterStack: (stackId: string, dataKey: string, seriesId: string) => void;
+  stacks: Accessor<Map<string, ScopedStack>>;
+  registerStack: (scope: StackScope, entry: StackEntry) => void;
+  unregisterStack: (scope: StackScope, seriesId: string) => void;
 
   // --- bars ---------------------------------------------------------------
-  bars: Accessor<Set<string>>;
-  registerBar: (key: string) => void;
-  unregisterBar: (key: string) => void;
+  bars: Accessor<BarRegistry>;
+  registerBar: (scopeKey: string, slotKey: string, seriesId: string) => void;
+  unregisterBar: (scopeKey: string, slotKey: string, seriesId: string) => void;
   barConfig: Accessor<BarConfig>;
 
   // --- series identity ----------------------------------------------------

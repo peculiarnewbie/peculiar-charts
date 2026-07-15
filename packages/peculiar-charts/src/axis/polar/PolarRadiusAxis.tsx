@@ -3,7 +3,7 @@ import { PolarAxisContext } from "@src/axis/polar/context";
 import { useChartContext } from "@src/components/context";
 import { usePolarLayout } from "@src/lib/polar/context";
 import { createPolarRadiusScale, polarScaleTicks } from "@src/lib/polar/scale";
-import { type JSX, createEffect, mergeProps, onCleanup } from "solid-js";
+import { type JSX, createEffect, createUniqueId, mergeProps, onCleanup } from "solid-js";
 
 export type PolarRadiusAxisProps = {
   /** Axis id series bind to. @defaultValue `'radius'` */
@@ -32,15 +32,16 @@ const PolarRadiusAxis = (props: PolarRadiusAxisProps) => {
   );
   const chartContext = useChartContext();
   const layout = usePolarLayout();
+  const ownerId = createUniqueId();
 
   createEffect(() => {
-    chartContext.registerAxisConfig(defaultedProps.axisId, {
+    chartContext.registerAxisConfig(defaultedProps.axisId, ownerId, {
       orientation: "radius",
       type: "linear",
       range: defaultedProps.axisRange === "auto" ? null : defaultedProps.axisRange,
       reverse: false,
     });
-    onCleanup(() => chartContext.unregisterAxisConfig(defaultedProps.axisId));
+    onCleanup(() => chartContext.unregisterAxisConfig(defaultedProps.axisId, ownerId));
   });
 
   const scale = createPolarRadiusScale({

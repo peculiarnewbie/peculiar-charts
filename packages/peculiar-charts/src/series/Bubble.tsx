@@ -134,6 +134,7 @@ const Bubble = (props: BubbleProps) => {
   });
 
   const points = createPoints({
+    seriesId,
     xAxisId: () => localProps.xAxisId,
     yAxisId: () => localProps.yAxisId,
     dataKey: () => localProps.dataKey,

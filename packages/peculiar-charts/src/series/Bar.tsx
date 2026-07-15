@@ -5,8 +5,7 @@ import {
   createPresence,
   resolveAnimation,
 } from "@src/lib/animation";
-import type { BarLayout } from "@src/lib/createBands";
-import createBands from "@src/lib/createBands";
+import createBands, { barScopeKey, type BarLayout } from "@src/lib/createBands";
 import createBaseLine from "@src/lib/createBaseLine";
 import createPoints from "@src/lib/createPoints";
 import createSeries from "@src/lib/createSeries";
@@ -106,9 +105,13 @@ const Bar = (props: BarProps) => {
   // Reserve a slot in the grouped-bar layout while visible.
   createEffect(() => {
     if (!chartContext.isSeriesVisible(seriesId)) return;
-    const key = localProps.stackId ?? seriesId;
-    chartContext.registerBar(key);
-    onCleanup(() => chartContext.unregisterBar(key));
+    const scopeKey = barScopeKey(
+      localProps.layout,
+      horizontal() ? localProps.yAxisId : localProps.xAxisId,
+    );
+    const slotKey = localProps.stackId ?? seriesId;
+    chartContext.registerBar(scopeKey, slotKey, seriesId);
+    onCleanup(() => chartContext.unregisterBar(scopeKey, slotKey, seriesId));
   });
 
   const seriesRawData = () => localProps.data;
@@ -121,6 +124,7 @@ const Bar = (props: BarProps) => {
     seriesId,
     name: () => localProps.name ?? localProps.dataKey ?? "series",
     type: "bar",
+    layout: () => localProps.layout,
     xAxisId: () => localProps.xAxisId,
     yAxisId: () => localProps.yAxisId,
     valueAxisId: () => (horizontal() ? localProps.xAxisId : localProps.yAxisId),
@@ -132,6 +136,7 @@ const Bar = (props: BarProps) => {
   });
 
   const points = createPoints({
+    seriesId,
     layout: () => localProps.layout,
     xAxisId: () => localProps.xAxisId,
     yAxisId: () => localProps.yAxisId,
@@ -143,6 +148,7 @@ const Bar = (props: BarProps) => {
   });
 
   const baseLine = createBaseLine({
+    seriesId,
     layout: () => localProps.layout,
     xAxisId: () => localProps.xAxisId,
     yAxisId: () => localProps.yAxisId,
@@ -154,6 +160,8 @@ const Bar = (props: BarProps) => {
 
   const bands = createBands({
     seriesId,
+    xAxisId: () => localProps.xAxisId,
+    yAxisId: () => localProps.yAxisId,
     stackId: () => localProps.stackId,
     layout: () => localProps.layout,
     data,

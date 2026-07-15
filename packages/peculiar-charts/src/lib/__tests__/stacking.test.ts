@@ -1,16 +1,47 @@
 import type { Stack } from "@src/lib/stacking";
 import { describe, expect, it } from "vitest";
-import { stackBaseValue, stackExtent, stackKeys, stackTopValue } from "../stacking";
+import {
+  createStackScope,
+  stackBaseValue,
+  stackExtent,
+  stackKeys,
+  stackScopeKey,
+  stackTopValue,
+} from "../stacking";
 
 const stack = (values: Record<string, number[]>): Stack =>
   new Map(
     Object.entries(values).map(([key, seriesValues]) => [
       key,
-      { seriesIds: new Set([key]), values: seriesValues },
+      { seriesId: key, dataKey: key, values: seriesValues },
     ]),
   );
 
 describe("stacking", () => {
+  it("scopes stack identity by layout and both bound axes", () => {
+    const vertical = createStackScope({
+      layout: "vertical",
+      xAxisId: "category",
+      yAxisId: "value-a",
+      stackId: "shared",
+    });
+    const otherValueAxis = createStackScope({
+      layout: "vertical",
+      xAxisId: "category",
+      yAxisId: "value-b",
+      stackId: "shared",
+    });
+    const horizontal = createStackScope({
+      layout: "horizontal",
+      xAxisId: "category",
+      yAxisId: "value-a",
+      stackId: "shared",
+    });
+
+    expect(stackScopeKey(vertical)).not.toBe(stackScopeKey(otherValueAxis));
+    expect(stackScopeKey(vertical)).not.toBe(stackScopeKey(horizontal));
+  });
+
   it("stacks cumulatively with offset none", () => {
     const s = stack({
       a: [10],
@@ -20,10 +51,10 @@ describe("stacking", () => {
     const keys = stackKeys(s);
 
     expect(
-      stackBaseValue({ stack: s, keys, dataKey: "c", index: 0, value: 6, offset: "none" }),
+      stackBaseValue({ stack: s, keys, seriesId: "c", index: 0, value: 6, offset: "none" }),
     ).toBe(6);
     expect(
-      stackTopValue({ stack: s, keys, dataKey: "c", index: 0, value: 6, offset: "none" }),
+      stackTopValue({ stack: s, keys, seriesId: "c", index: 0, value: 6, offset: "none" }),
     ).toBe(12);
     expect(stackExtent(s, "none")).toEqual({ min: 0, max: 12 });
   });
@@ -38,16 +69,16 @@ describe("stacking", () => {
     const keys = stackKeys(s);
 
     expect(
-      stackBaseValue({ stack: s, keys, dataKey: "c", index: 0, value: 6, offset: "sign" }),
+      stackBaseValue({ stack: s, keys, seriesId: "c", index: 0, value: 6, offset: "sign" }),
     ).toBe(10);
     expect(
-      stackTopValue({ stack: s, keys, dataKey: "c", index: 0, value: 6, offset: "sign" }),
+      stackTopValue({ stack: s, keys, seriesId: "c", index: 0, value: 6, offset: "sign" }),
     ).toBe(16);
     expect(
-      stackBaseValue({ stack: s, keys, dataKey: "d", index: 0, value: -3, offset: "sign" }),
+      stackBaseValue({ stack: s, keys, seriesId: "d", index: 0, value: -3, offset: "sign" }),
     ).toBe(-4);
     expect(
-      stackTopValue({ stack: s, keys, dataKey: "d", index: 0, value: -3, offset: "sign" }),
+      stackTopValue({ stack: s, keys, seriesId: "d", index: 0, value: -3, offset: "sign" }),
     ).toBe(-7);
     expect(stackExtent(s, "sign")).toEqual({ min: -7, max: 16 });
   });
@@ -61,10 +92,10 @@ describe("stacking", () => {
     const keys = stackKeys(s);
 
     expect(
-      stackBaseValue({ stack: s, keys, dataKey: "c", index: 0, value: 60, offset: "expand" }),
+      stackBaseValue({ stack: s, keys, seriesId: "c", index: 0, value: 60, offset: "expand" }),
     ).toBe(0.4);
     expect(
-      stackTopValue({ stack: s, keys, dataKey: "c", index: 0, value: 60, offset: "expand" }),
+      stackTopValue({ stack: s, keys, seriesId: "c", index: 0, value: 60, offset: "expand" }),
     ).toBe(1);
     expect(stackExtent(s, "expand")).toEqual({ min: 0, max: 1 });
   });
@@ -78,10 +109,10 @@ describe("stacking", () => {
     const keys = stackKeys(s);
 
     expect(
-      stackBaseValue({ stack: s, keys, dataKey: "a", index: 0, value: 10, offset: "silhouette" }),
+      stackBaseValue({ stack: s, keys, seriesId: "a", index: 0, value: 10, offset: "silhouette" }),
     ).toBe(-50);
     expect(
-      stackTopValue({ stack: s, keys, dataKey: "c", index: 0, value: 60, offset: "silhouette" }),
+      stackTopValue({ stack: s, keys, seriesId: "c", index: 0, value: 60, offset: "silhouette" }),
     ).toBe(50);
     expect(stackExtent(s, "silhouette")).toEqual({ min: -50, max: 50 });
   });

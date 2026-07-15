@@ -109,6 +109,7 @@ const Point = (props: PointProps) => {
     seriesId,
     name: () => localProps.name ?? localProps.dataKey ?? "series",
     type: "point",
+    layout: () => localProps.layout,
     xAxisId: () => localProps.xAxisId,
     yAxisId: () => localProps.yAxisId,
     valueAxisId: () => (horizontal() ? localProps.xAxisId : localProps.yAxisId),
@@ -120,6 +121,7 @@ const Point = (props: PointProps) => {
   });
 
   const points = createPoints({
+    seriesId,
     layout: () => localProps.layout,
     xAxisId: () => localProps.xAxisId,
     yAxisId: () => localProps.yAxisId,

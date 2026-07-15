@@ -2,7 +2,7 @@ import type { ChartContextType } from "@src/components/context";
 import type { BarLayout } from "@src/lib/createBands";
 import createScale from "@src/lib/createScale";
 import { projectScale } from "@src/lib/scale";
-import { stackKeys, stackTopValue } from "@src/lib/stacking";
+import { createStackScope, getScopedStack, stackKeys, stackTopValue } from "@src/lib/stacking";
 import { axisValues } from "@src/lib/utils";
 import { type Accessor, createMemo } from "solid-js";
 
@@ -14,6 +14,7 @@ import { type Accessor, createMemo } from "solid-js";
  * Non-finite values become `NaN` on the value axis so the shape layer can break.
  */
 const createPoints = (props: {
+  seriesId?: string;
   layout?: Accessor<BarLayout>;
   xAxisId: Accessor<string>;
   yAxisId: Accessor<string>;
@@ -55,16 +56,28 @@ const createPoints = (props: {
     const valueScale = horizontal ? _xScale : _yScale;
 
     const stackId = props.stackId();
-    const stack = stackId !== undefined && ctx.stacks().get(stackId);
+    const scope =
+      stackId !== undefined
+        ? createStackScope({
+            layout: layout(),
+            xAxisId: props.xAxisId(),
+            yAxisId: props.yAxisId(),
+            stackId,
+          })
+        : undefined;
+    const stack = scope && getScopedStack(ctx.stacks(), scope);
     const keys = stack ? stackKeys(stack) : [];
+    const seriesId =
+      props.seriesId ??
+      (stack ? keys.find((key) => stack.get(key)?.dataKey === props.dataKey()) : undefined);
 
     return data.map((value, i) => {
       let stacked = value;
-      if (stack) {
+      if (stack && seriesId) {
         stacked = stackTopValue({
           stack,
           keys,
-          dataKey: props.dataKey(),
+          seriesId,
           index: i,
           value,
           offset: ctx.stackOffset?.(),

@@ -51,6 +51,7 @@ export type BrushProps = Omit<ComponentProps<"g">, "children"> & {
  */
 const Brush = (props: BrushProps) => {
   const clipId = createUniqueId();
+  const insetKey = `${BRUSH_INSET_KEY}.${clipId}`;
   const defaulted = mergeProps(
     {
       height: BRUSH_HEIGHT,
@@ -118,8 +119,8 @@ const Brush = (props: BrushProps) => {
   const innerH = () => local.height - pad * 2;
 
   onMount(() => {
-    ctx.registerInset("bottom", BRUSH_INSET_KEY, insetTotal);
-    onCleanup(() => ctx.unregisterInset("bottom", BRUSH_INSET_KEY));
+    ctx.registerInset("bottom", insetKey, insetTotal);
+    onCleanup(() => ctx.unregisterInset("bottom", insetKey));
   });
 
   const chartW = () => ctx.width();

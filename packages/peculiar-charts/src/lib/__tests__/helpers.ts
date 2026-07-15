@@ -1,4 +1,9 @@
-import type { ChartContextType, SyncInteraction } from "@src/components/context";
+import type {
+  BarRegistry,
+  ChartContextType,
+  ScopedStack,
+  SyncInteraction,
+} from "@src/components/context";
 import { createSignal } from "solid-js";
 
 export const createMockChartContext = (overrides?: Partial<ChartContextType>): ChartContextType => {
@@ -7,8 +12,8 @@ export const createMockChartContext = (overrides?: Partial<ChartContextType>): C
   const [height] = createSignal(400);
   const [seriesMeta] = createSignal<any[]>([]);
   const [hiddenSeries, setHiddenSeries] = createSignal(new Set<string>());
-  const [stacks] = createSignal(new Map());
-  const [bars, setBars] = createSignal(new Set<string>());
+  const [stacks] = createSignal(new Map<string, ScopedStack>());
+  const [bars, setBars] = createSignal<BarRegistry>(new Map());
   const [pointerPosition] = createSignal(null);
   const [syncInteraction, setSyncInteraction] = createSignal<SyncInteraction | null>(null);
   const [brushRange, setBrushRange] = createSignal(null);
@@ -27,7 +32,7 @@ export const createMockChartContext = (overrides?: Partial<ChartContextType>): C
     getInset: () => 0,
     registerInset: () => {},
     unregisterInset: () => {},
-    registerAxisConfig: (axisId, config) => axisConfigs.set(axisId, config),
+    registerAxisConfig: (axisId, _ownerId, config) => axisConfigs.set(axisId, config),
     unregisterAxisConfig: (axisId) => axisConfigs.delete(axisId),
     getAxisConfig: (axisId, orientation) =>
       axisConfigs.get(axisId) ?? {
@@ -59,11 +64,24 @@ export const createMockChartContext = (overrides?: Partial<ChartContextType>): C
     registerStack: () => {},
     unregisterStack: () => {},
     bars,
-    registerBar: (key: string) => setBars((prev) => new Set(prev).add(key)),
-    unregisterBar: (key: string) =>
+    registerBar: (scopeKey, slotKey, seriesId) =>
       setBars((prev) => {
-        const next = new Set(prev);
-        next.delete(key);
+        const next = new Map(prev);
+        const slots = new Map(next.get(scopeKey) ?? []);
+        slots.set(slotKey, new Set(slots.get(slotKey) ?? []).add(seriesId));
+        next.set(scopeKey, slots);
+        return next;
+      }),
+    unregisterBar: (scopeKey, slotKey, seriesId) =>
+      setBars((prev) => {
+        const next = new Map(prev);
+        const slots = new Map(next.get(scopeKey) ?? []);
+        const owners = new Set(slots.get(slotKey) ?? []);
+        owners.delete(seriesId);
+        if (owners.size) slots.set(slotKey, owners);
+        else slots.delete(slotKey);
+        if (slots.size) next.set(scopeKey, slots);
+        else next.delete(scopeKey);
         return next;
       }),
     barConfig: () => ({ bandGap: "10%" as const, barGap: "10%" as const }),

@@ -1,6 +1,32 @@
-import type { StackEntry, StackOffset } from "@src/components/context";
+import type {
+  ScopedStack,
+  SeriesLayout,
+  StackEntry,
+  StackOffset,
+  StackScope,
+} from "@src/components/context";
 
 export type Stack = Map<string, StackEntry>;
+
+export const createStackScope = (props: {
+  layout: SeriesLayout;
+  xAxisId: string;
+  yAxisId: string;
+  stackId: string;
+}): StackScope => ({
+  layout: props.layout,
+  categoryAxisId: props.layout === "horizontal" ? props.yAxisId : props.xAxisId,
+  valueAxisId: props.layout === "horizontal" ? props.xAxisId : props.yAxisId,
+  stackId: props.stackId,
+});
+
+export const stackScopeKey = (scope: StackScope): string =>
+  JSON.stringify([scope.layout, scope.categoryAxisId, scope.valueAxisId, scope.stackId]);
+
+export const getScopedStack = (
+  registry: Map<string, ScopedStack>,
+  scope: StackScope,
+): Stack | undefined => registry.get(stackScopeKey(scope))?.entries;
 
 export const resolveStackOffset = (offset: StackOffset | undefined): StackOffset =>
   offset ?? "none";
@@ -53,12 +79,12 @@ const previousSignedCumulative = (
 export const stackBaseValue = (props: {
   stack: Stack;
   keys: string[];
-  dataKey: string | undefined;
+  seriesId: string;
   index: number;
   value: number;
   offset: StackOffset | undefined;
 }): number => {
-  const currentIndex = props.keys.indexOf(props.dataKey ?? "");
+  const currentIndex = props.keys.indexOf(props.seriesId);
   if (currentIndex <= 0 && resolveStackOffset(props.offset) !== "silhouette") return 0;
 
   const offset = resolveStackOffset(props.offset);
@@ -90,7 +116,7 @@ export const stackBaseValue = (props: {
 export const stackTopValue = (props: {
   stack: Stack;
   keys: string[];
-  dataKey: string | undefined;
+  seriesId: string;
   index: number;
   value: number;
   offset: StackOffset | undefined;
@@ -128,8 +154,8 @@ export const stackExtent = (
   for (let index = 0; index < length; index++) {
     for (const key of keys) {
       const value = stackColumnValue(stack, key, index);
-      const base = stackBaseValue({ stack, keys, dataKey: key, index, value, offset });
-      const top = stackTopValue({ stack, keys, dataKey: key, index, value, offset });
+      const base = stackBaseValue({ stack, keys, seriesId: key, index, value, offset });
+      const top = stackTopValue({ stack, keys, seriesId: key, index, value, offset });
       min = Math.min(min, base, top);
       max = Math.max(max, base, top);
     }

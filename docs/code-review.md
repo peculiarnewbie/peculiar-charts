@@ -35,6 +35,23 @@ Phase 2 is in progress. The shared domain/scale foundation was completed on 2026
   source axis ID.
 - Finding 20: main charts and brush previews now use one pure domain pipeline for categorical
   duplication, finite contributions, explicit/expression ranges, and empty-domain behavior.
+- Finding 12: axis labels and brushes register insets under stable per-owner keys, so multiple
+  contributions accumulate and dynamic cleanup removes only the owning contribution.
+- Finding 17: axis configurations are stored per owner; compatible duplicate axes compose safely,
+  while incompatible owners of one axis ID throw a descriptive development error.
+- Finding 43: series metadata cleanup also removes its visibility state.
+- Finding 7: stack scope now contains layout, category axis, value axis, and stack ID; members are
+  keyed by unique series ID with `dataKey` retained as metadata, and incompatible lengths throw in
+  development.
+- Finding 18: grouped bar slots are scoped by layout and category axis, with owner-aware stack slots.
+- Finding 42: axis, inset, extent, stack, bar, series, and visibility registry updates now clone
+  every mutated collection level.
+- Finding 30: Iterator Helper calls in bar layout were replaced with `Array.from`, preserving the
+  existing browser baseline.
+- Finding 40 (in progress): `createAxisController`, `createSeriesController`, and
+  `createStackBarController` now own their state, validation, and mutations independently. `Chart`
+  composes their capabilities and has been reduced from 824 to 625 lines; layout, interaction,
+  sync, and brush extraction remain.
 
 Regression coverage: `resolveAxisDomain.test.ts`, `resolveCartesianScale.test.ts`,
 `components.test.tsx`, and `sync.test.ts`.
@@ -77,7 +94,7 @@ accessibility and performance, followed by public API stabilization and release 
 - Object-parameter APIs are used consistently in low-level helpers.
 - SVG attributes and render props provide meaningful headless customization.
 - The package builds successfully into Solid and compiled ESM outputs.
-- The current suite passes 219 unit/component/image tests and 8 Playwright tests.
+- The current suite passes 232 unit/component/image tests and 8 Playwright tests.
 
 ## Critical and high-severity findings
 
@@ -175,6 +192,8 @@ Required change:
 
 ### 7. Stack identity is underspecified
 
+Status: resolved 2026-07-15.
+
 Stacks are keyed by `stackId` and then `dataKey` in `Chart.tsx:678-700`. They are not scoped by
 layout, category axis, value axis, or unique series identity.
 
@@ -245,6 +264,8 @@ Required change:
 
 ### 12. Multiple axis labels overwrite the same inset
 
+Status: resolved 2026-07-15.
+
 Every `AxisLabel` registers its size under the constant key `"axis.label"` in `Label.tsx:117-127`.
 Multiple labels on one edge do not accumulate space; cleanup of either can remove the inset used by
 the other.
@@ -290,6 +311,8 @@ Require or derive unique slice identity independently from display name and colo
 
 ### 17. Axis registry ownership is lossy
 
+Status: resolved 2026-07-15.
+
 Axis configuration is stored as one `Map<axisId, config>`. Multiple mounted axes sharing an ID use
 last-writer-wins, while cleanup of either removes the shared configuration (`Axis.tsx:66-78`).
 
@@ -297,6 +320,8 @@ Use owner-aware registration and either compose compatible duplicate axes or rej
 configurations with a development error.
 
 ### 18. Bar grouping is not scoped by axis or layout
+
+Status: resolved 2026-07-15.
 
 All visible bars contribute to one global set used by `createBands.ts:46-53`. Bars on unrelated
 category axes still reserve grouping slots beside one another.
@@ -392,6 +417,8 @@ Repeated `Math.min(...values)` and `Math.max(...values)` calls allocate argument
 
 ### 30. Iterator Helpers leak into the browser baseline
 
+Status: resolved 2026-07-15.
+
 `createBands.ts:40-42` and `utils.ts:87` rely on iterator `.map().toArray()`. The package targets
 `esnext`, so this is not transpiled for browsers without Iterator Helpers.
 
@@ -477,9 +504,11 @@ Define API stability tiers and consider subpaths:
 
 ### 40. `Chart.tsx` is a god component
 
-At 777 lines, Chart owns sizing, layout, insets, axis configuration, extents, stacks, bars, series
-metadata, visibility, brush state, sync, pointer events, schema validation, palette ordering, and SVG
-rendering.
+Status: in progress as of 2026-07-15.
+
+At 625 lines, Chart still owns sizing, layout, insets, brush state, sync, pointer events, schema
+validation, and SVG rendering. Axis/domain, series, and stack/bar state have moved into focused
+controllers, but the decomposition is not yet complete.
 
 Split it into internal controllers:
 
@@ -501,11 +530,15 @@ aggregate context.
 
 ### 42. Collection ownership and mutation are inconsistent
 
+Status: resolved 2026-07-15.
+
 Some registry operations clone before mutation, while stack registration mutates nested maps and
 sets before cloning only the outer map (`Chart.tsx:678-700`). Establish one immutable-update policy
 or encapsulate all mutation inside controller-owned stores.
 
 ### 43. Hidden-series state is not cleaned up on unregistration
+
+Status: resolved 2026-07-15.
 
 Removing series metadata does not remove the ID from `hiddenSeries`. Dynamic mount/toggle/unmount
 cycles can accumulate unreachable IDs. Series-controller cleanup should remove every piece of state
@@ -581,7 +614,7 @@ Status: resolved 2026-07-15.
 
 - Typecheck passes.
 - Library build passes.
-- 219 Vitest tests pass.
+- 232 Vitest tests pass.
 - 8 Playwright tests pass.
 - Lint passes without warnings.
 - Format check passes.

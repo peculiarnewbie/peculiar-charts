@@ -1,6 +1,12 @@
 import type { ChartContextType } from "@src/components/context";
+import type { BarLayout } from "@src/lib/createBands";
 import { finiteExtent } from "@src/lib/extent";
-import { resolveStackOffset, stackExtent } from "@src/lib/stacking";
+import {
+  createStackScope,
+  getScopedStack,
+  resolveStackOffset,
+  stackExtent,
+} from "@src/lib/stacking";
 import { type Accessor, createEffect, onCleanup } from "solid-js";
 
 /**
@@ -13,6 +19,7 @@ const createSeries = (props: {
   seriesId: string;
   name: Accessor<string>;
   type: string;
+  layout?: Accessor<BarLayout>;
   xAxisId?: Accessor<string>;
   yAxisId: Accessor<string>;
   /** Axis that receives the value extent. @defaultValue `yAxisId` */
@@ -26,6 +33,13 @@ const createSeries = (props: {
 }) => {
   const ctx = props.chartContext;
   const valueAxisId = () => props.valueAxisId?.() ?? props.yAxisId();
+  const stackScope = (stackId: string) =>
+    createStackScope({
+      layout: props.layout?.() ?? "vertical",
+      xAxisId: props.xAxisId?.() ?? "x",
+      yAxisId: props.yAxisId(),
+      stackId,
+    });
 
   // identity
   createEffect(() => {
@@ -42,8 +56,13 @@ const createSeries = (props: {
   createEffect(() => {
     const stackId = props.stackId();
     if (!stackId || !ctx.isSeriesVisible(props.seriesId)) return;
-    ctx.registerStack(stackId, props.dataKey() ?? "", props.seriesId, props.data());
-    onCleanup(() => ctx.unregisterStack(stackId, props.dataKey() ?? "", props.seriesId));
+    const scope = stackScope(stackId);
+    ctx.registerStack(scope, {
+      seriesId: props.seriesId,
+      dataKey: props.dataKey(),
+      values: props.data(),
+    });
+    onCleanup(() => ctx.unregisterStack(scope, props.seriesId));
   });
 
   // value extent on the value axis (stack-aware)
@@ -51,7 +70,7 @@ const createSeries = (props: {
     if (!ctx.isSeriesVisible(props.seriesId)) return;
 
     const stackId = props.stackId();
-    const stack = stackId !== undefined && ctx.stacks().get(stackId);
+    const stack = stackId !== undefined && getScopedStack(ctx.stacks(), stackScope(stackId));
     const data = props.data();
 
     if (stack) {

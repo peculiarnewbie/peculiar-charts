@@ -2,7 +2,7 @@ import type { ChartContextType } from "@src/components/context";
 import type { BarLayout } from "@src/lib/createBands";
 import createScale from "@src/lib/createScale";
 import { projectScale } from "@src/lib/scale";
-import { stackBaseValue, stackKeys } from "@src/lib/stacking";
+import { createStackScope, getScopedStack, stackBaseValue, stackKeys } from "@src/lib/stacking";
 import { type Accessor, createMemo } from "solid-js";
 
 /**
@@ -10,6 +10,7 @@ import { type Accessor, createMemo } from "solid-js";
  * line; a stacked series sits on top of the series below it in the stack.
  */
 const createBaseLine = (props: {
+  seriesId: string;
   layout: Accessor<BarLayout>;
   xAxisId: Accessor<string>;
   yAxisId: Accessor<string>;
@@ -30,7 +31,17 @@ const createBaseLine = (props: {
     const zero = projectScale(_scale, 0);
 
     const stackId = props.stackId();
-    const stack = stackId !== undefined && ctx.stacks().get(stackId);
+    const stack =
+      stackId !== undefined &&
+      getScopedStack(
+        ctx.stacks(),
+        createStackScope({
+          layout: props.layout(),
+          xAxisId: props.xAxisId(),
+          yAxisId: props.yAxisId(),
+          stackId,
+        }),
+      );
     if (!stack) return zero;
 
     const keys = stackKeys(stack);
@@ -39,7 +50,7 @@ const createBaseLine = (props: {
       const baseLine = stackBaseValue({
         stack,
         keys,
-        dataKey: props.dataKey(),
+        seriesId: props.seriesId,
         index: i,
         value: props.data()[i] ?? 0,
         offset: ctx.stackOffset?.(),

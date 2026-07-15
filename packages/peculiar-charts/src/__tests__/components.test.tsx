@@ -23,7 +23,7 @@ import { TooltipContent } from "@src/lib/tooltip";
 import { syncBus } from "@src/lib/sync";
 import { expectLines, expectBars, expectPieSectors } from "./helpers";
 import { cartesianData as data, bubbleData, pieData, radarData } from "./helpers/_data";
-import { createEffect, createSignal } from "solid-js";
+import { Show, createEffect, createSignal } from "solid-js";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -285,6 +285,73 @@ describe("Axis", () => {
     expect(container.querySelectorAll("[data-pc-axis-label]")).toHaveLength(2);
     expect(container.querySelectorAll("[data-pc-axis-grid]")).toHaveLength(2);
   });
+
+  it("retains a compatible axis configuration when another owner unmounts", () => {
+    const [showSecond, setShowSecond] = createSignal(true);
+    let chartContext!: ReturnType<typeof useChartContext>;
+    const Probe = () => {
+      chartContext = useChartContext();
+      return null;
+    };
+    render(() => (
+      <Chart data={data} width={400} height={300}>
+        <Axis axis="x" axisId="shared" position="bottom" dataKey="x" type="linear" />
+        <Show when={showSecond()}>
+          <Axis axis="x" axisId="shared" position="top" dataKey="x" type="linear" />
+        </Show>
+        <Probe />
+      </Chart>
+    ));
+
+    expect(chartContext.getAxisConfig("shared", "x").type).toBe("linear");
+    setShowSecond(false);
+    expect(chartContext.getAxisConfig("shared", "x").type).toBe("linear");
+  });
+
+  it("rejects incompatible owners of the same axis ID", () => {
+    expect(() =>
+      render(() => (
+        <Chart data={data} width={400} height={300}>
+          <Axis axis="x" axisId="shared" position="bottom" dataKey="x" type="point" />
+          <Axis axis="x" axisId="shared" position="top" dataKey="x" type="linear" />
+        </Chart>
+      )),
+    ).toThrow(/Axis ID "shared" is registered with incompatible configurations/);
+  });
+
+  it("tracks each label inset independently through dynamic unmounting", () => {
+    const clientWidth = vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(800);
+    const clientHeight = vi
+      .spyOn(HTMLElement.prototype, "clientHeight", "get")
+      .mockReturnValue(600);
+    const [showSecond, setShowSecond] = createSignal(true);
+    let chartContext!: ReturnType<typeof useChartContext>;
+    const Probe = () => {
+      chartContext = useChartContext();
+      return null;
+    };
+    render(() => (
+      <Chart data={data} width={400} height={300}>
+        <Axis axis="x" axisId="shared" position="bottom" dataKey="x">
+          <AxisLabel interval={0} />
+        </Axis>
+        <Show when={showSecond()}>
+          <Axis axis="x" axisId="shared" position="bottom" dataKey="x">
+            <AxisLabel interval={0} />
+          </Axis>
+        </Show>
+        <Probe />
+      </Chart>
+    ));
+    const twoLabelsInset = chartContext.getInset("bottom");
+
+    setShowSecond(false);
+    const oneLabelInset = chartContext.getInset("bottom");
+    expect(twoLabelsInset).toBeGreaterThan(oneLabelInset);
+    expect(oneLabelInset).toBeGreaterThan(8);
+    clientWidth.mockRestore();
+    clientHeight.mockRestore();
+  });
 });
 
 describe("Tooltip", () => {
@@ -348,6 +415,29 @@ describe("Line", () => {
     ));
 
     expectLines(container, [{ stroke: "red" }]);
+  });
+
+  it("removes hidden-series state when its owning series unmounts", () => {
+    const [show, setShow] = createSignal(true);
+    let chartContext!: ReturnType<typeof useChartContext>;
+    const Probe = () => {
+      chartContext = useChartContext();
+      return null;
+    };
+    render(() => (
+      <Chart data={data} width={400} height={300}>
+        <Show when={show()}>
+          <Line dataKey="y" />
+        </Show>
+        <Probe />
+      </Chart>
+    ));
+    const seriesId = chartContext.seriesMeta()[0]!.id;
+
+    chartContext.toggleSeries(seriesId);
+    expect(chartContext.isSeriesVisible(seriesId)).toBe(false);
+    setShow(false);
+    expect(chartContext.isSeriesVisible(seriesId)).toBe(true);
   });
 
   it("clips to the plot area when a bound axis allows data overflow", () => {
@@ -597,6 +687,93 @@ describe("Bar", () => {
       expect(w).toBeGreaterThan(0);
       expect(h).toBeGreaterThan(0);
     }
+  });
+
+  it("keeps stacked series with duplicate data keys as distinct layers", () => {
+    const { container } = render(() => (
+      <Chart data={data} width={400} height={300}>
+        <Axis axis="x" position="bottom" dataKey="x" />
+        <Axis axis="y" position="left" />
+        <Bar dataKey="y" stackId="shared" animation={false} />
+        <Bar dataKey="y" stackId="shared" animation={false} />
+      </Chart>
+    ));
+    const groups = container.querySelectorAll("[data-pc-bar-group]");
+    const first = groups[0]?.querySelector("[data-pc-bar]");
+    const second = groups[1]?.querySelector("[data-pc-bar]");
+
+    expect(first?.getAttribute("x")).toBe(second?.getAttribute("x"));
+    expect(Number(second?.getAttribute("y"))).toBeLessThan(Number(first?.getAttribute("y")));
+    expect(Number(second?.getAttribute("height"))).toBeCloseTo(
+      Number(first?.getAttribute("height")),
+    );
+  });
+
+  it("isolates equal stack IDs bound to different value axes", () => {
+    const { container } = render(() => (
+      <Chart data={data} width={400} height={300}>
+        <Axis axis="x" position="bottom" dataKey="x" />
+        <Axis axis="y" axisId="value-a" position="left" axisRange={[0, 40]} />
+        <Axis axis="y" axisId="value-b" position="right" axisRange={[0, 40]} />
+        <Bar dataKey="y" yAxisId="value-a" stackId="shared" animation={false} />
+        <Bar dataKey="y" yAxisId="value-b" stackId="shared" animation={false} />
+      </Chart>
+    ));
+    const groups = container.querySelectorAll("[data-pc-bar-group]");
+    const first = groups[0]?.querySelector("[data-pc-bar]");
+    const second = groups[1]?.querySelector("[data-pc-bar]");
+
+    expect(first?.getAttribute("y")).toBe(second?.getAttribute("y"));
+    expect(first?.getAttribute("height")).toBe(second?.getAttribute("height"));
+  });
+
+  it("scopes grouped bar slots to their category axes", () => {
+    const { container } = render(() => (
+      <Chart data={data} width={400} height={300}>
+        <Axis axis="x" axisId="category-a" position="bottom" dataKey="x" />
+        <Axis axis="x" axisId="category-b" position="top" dataKey="x" />
+        <Axis axis="y" position="left" />
+        <Bar dataKey="y" xAxisId="category-a" animation={false} />
+        <Bar dataKey="y" xAxisId="category-b" animation={false} />
+      </Chart>
+    ));
+    const firstBars = container
+      .querySelectorAll("[data-pc-bar-group]")[0]
+      ?.querySelectorAll("[data-pc-bar]");
+    const secondBars = container
+      .querySelectorAll("[data-pc-bar-group]")[1]
+      ?.querySelectorAll("[data-pc-bar]");
+
+    expect(Number(firstBars?.[0]?.getAttribute("width"))).toBeGreaterThan(90);
+    expect(firstBars?.[0]?.getAttribute("width")).toBe(secondBars?.[0]?.getAttribute("width"));
+  });
+
+  it("retains a shared stack slot while one owning bar remains mounted", () => {
+    const [showSecond, setShowSecond] = createSignal(true);
+    const { container } = render(() => (
+      <Chart data={data} width={400} height={300}>
+        <Bar dataKey="y" stackId="shared" animation={false} />
+        <Show when={showSecond()}>
+          <Bar dataKey="y" stackId="shared" animation={false} />
+        </Show>
+      </Chart>
+    ));
+
+    setShowSecond(false);
+    expect(Number(container.querySelector("[data-pc-bar]")?.getAttribute("width"))).toBeGreaterThan(
+      0,
+    );
+  });
+
+  it("rejects incompatible data lengths within one stack scope", () => {
+    expect(() =>
+      render(() => (
+        <Chart data={[]} width={400} height={300}>
+          <Bar data={[{ y: 1 }, { y: 2 }]} dataKey="y" stackId="shared" />
+          <Bar data={[{ y: 1 }]} dataKey="y" stackId="shared" />
+        </Chart>
+      )),
+    ).toThrow(/Stack "shared" members must have compatible data lengths/);
   });
 
   it("aligns band-axis custom labels with bar centers", () => {

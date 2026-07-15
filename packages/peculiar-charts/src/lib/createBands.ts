@@ -7,6 +7,9 @@ export type BarLayout = "vertical" | "horizontal";
 
 export type BarBand = { x: number; y: number; width: number; height: number };
 
+export const barScopeKey = (layout: BarLayout, categoryAxisId: string): string =>
+  JSON.stringify([layout, categoryAxisId]);
+
 /**
  * Per-datum bar slot rectangles. Bars own their band layout (independent of
  * the axis scale): an outer band scale splits the plot into one slot per
@@ -15,6 +18,8 @@ export type BarBand = { x: number; y: number; width: number; height: number };
  */
 const createBands = (props: {
   seriesId: string;
+  xAxisId: Accessor<string>;
+  yAxisId: Accessor<string>;
   stackId: Accessor<string | undefined>;
   data: Accessor<number[]>;
   layout: Accessor<BarLayout>;
@@ -24,6 +29,7 @@ const createBands = (props: {
   return createMemo((): BarBand[] => {
     const data = props.data();
     const horizontal = props.layout() === "horizontal";
+    const scopeKey = barScopeKey(props.layout(), horizontal ? props.yAxisId() : props.xAxisId());
 
     const left = ctx.getInset("left");
     const right = ctx.width() - ctx.getInset("right");
@@ -38,14 +44,14 @@ const createBands = (props: {
     const barGap = gapToPadding(barConfig.barGap, plotSpan / data.length);
 
     const bandScale = scaleBand()
-      .domain(Array(data.length).keys().map(String).toArray())
+      .domain(Array.from({ length: data.length }, (_, index) => String(index)))
       .range(horizontal ? [top, bottom] : [left, right])
       .paddingInner(bandGap)
       .paddingOuter(bandGap / 2);
 
-    const bars = ctx.bars();
+    const bars = ctx.bars().get(scopeKey);
     const barGroupScale = scaleBand()
-      .domain([...bars.values()])
+      .domain(bars ? [...bars.keys()] : [])
       .range([0, bandScale.bandwidth()])
       .paddingInner(barGap);
 

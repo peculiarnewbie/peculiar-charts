@@ -4,7 +4,7 @@ import { useChartContext } from "@src/components/context";
 import { usePolarLayout } from "@src/lib/polar/context";
 import { createPolarAngleScale, polarScaleTicks } from "@src/lib/polar/scale";
 import { polarToCartesian } from "@src/lib/polar/utils";
-import { type JSX, createEffect, mergeProps, onCleanup } from "solid-js";
+import { type JSX, createEffect, createUniqueId, mergeProps, onCleanup } from "solid-js";
 
 export type PolarAngleAxisProps = {
   /** Key to read category or numeric angle values from the data. */
@@ -30,16 +30,17 @@ const PolarAngleAxis = (props: PolarAngleAxisProps) => {
   );
   const chartContext = useChartContext();
   const layout = usePolarLayout();
+  const ownerId = createUniqueId();
 
   createEffect(() => {
-    chartContext.registerAxisConfig(defaultedProps.axisId, {
+    chartContext.registerAxisConfig(defaultedProps.axisId, ownerId, {
       orientation: "angle",
       type: defaultedProps.type,
       dataKey: defaultedProps.dataKey,
       range: defaultedProps.axisRange === "auto" ? null : defaultedProps.axisRange,
       reverse: false,
     });
-    onCleanup(() => chartContext.unregisterAxisConfig(defaultedProps.axisId));
+    onCleanup(() => chartContext.unregisterAxisConfig(defaultedProps.axisId, ownerId));
   });
 
   const scale = createPolarAngleScale({

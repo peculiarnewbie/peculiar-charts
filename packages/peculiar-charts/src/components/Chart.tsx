@@ -2,21 +2,19 @@ import { combineStyle } from "@corvu/utils/dom";
 import { mergeRefs } from "@corvu/utils/reactivity";
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 import {
-  type AxisConfig,
-  type AxisOrientation,
   type BarConfig,
   ChartContext,
   type Edge,
   type SeriesMeta,
-  type StackEntry,
   type StackOffset,
   type SyncInteraction,
 } from "@src/components/context";
+import { createAxisController } from "@src/components/controllers/createAxisController";
+import { createSeriesController } from "@src/components/controllers/createSeriesController";
+import { createStackBarController } from "@src/components/controllers/createStackBarController";
 import createSize from "@src/lib/dom/createSize";
 import { resolveBarConfig } from "@src/lib/barConfig";
-import { resolveAxisDomain } from "@src/lib/resolveAxisDomain";
 import { resolveCartesianScale } from "@src/lib/resolveCartesianScale";
-import { paletteColor } from "@src/lib/palette";
 import { type Scale, projectScale } from "@src/lib/scale";
 import { type SyncMethod, type SyncPayload, syncBus } from "@src/lib/sync";
 import type { OverrideProps } from "@src/lib/types";
@@ -179,27 +177,8 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
     left: new Map(),
   });
 
-  // --- registries ---------------------------------------------------------
-  const [axisConfigs, setAxisConfigs] = createSignal(new Map<string, AxisConfig>());
-  const [extents, setExtents] = createSignal(
-    new Map<string, Map<string, { min: number; max: number }>>(),
-  );
-  const [stacks, setStacks] = createSignal(new Map<string, Map<string, StackEntry>>());
-  const [bars, setBars] = createSignal(new Set<string>());
-  const [series, setSeries] = createSignal(
-    new Map<
-      string,
-      {
-        name: string;
-        type: string;
-        dataKey?: string;
-        order: number;
-        color?: string;
-      }
-    >(),
-  );
-  const [hiddenSeries, setHiddenSeries] = createSignal(new Set<string>());
-  let seriesOrder = 0;
+  const stackBarController = createStackBarController();
+  const seriesController = createSeriesController();
 
   // --- brush ---------------------------------------------------------------
   const [brushRange, setBrushRange] = createSignal<{
@@ -213,6 +192,7 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
     if (!range) return d;
     return d.slice(range.startIndex, range.endIndex + 1);
   });
+  const axisController = createAxisController(() => displayedData());
 
   const [pointerPosition, setPointerPosition] = createSignal<{
     x: number;
@@ -303,39 +283,9 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
     return x >= left && x <= right && y >= top && y <= bottom;
   });
 
-  // --- axis config + domain ----------------------------------------------
-  const defaultAxisConfig = (orientation: AxisOrientation): AxisConfig => ({
-    orientation,
-    type: orientation === "x" || orientation === "angle" ? "point" : "linear",
-    range: null,
-    reverse: false,
-  });
-
-  const getAxisConfig = (axisId: string, orientation: AxisOrientation) =>
-    axisConfigs().get(axisId) ?? defaultAxisConfig(orientation);
-
-  const getDomain = (axisId: string, orientation: AxisOrientation) => {
-    const config = getAxisConfig(axisId, orientation);
-    return resolveAxisDomain({
-      config,
-      orientation,
-      data: displayedData(),
-      extents: extents().get(axisId)?.values(),
-    });
-  };
-
-  const seriesMeta = createMemo<SeriesMeta[]>(() =>
-    [...series().entries()]
-      .map(([id, meta]) => ({
-        id,
-        name: meta.name,
-        type: meta.type,
-        dataKey: meta.dataKey,
-        order: meta.order,
-        color: meta.color ?? paletteColor(meta.order),
-      }))
-      .sort((a, b) => a.order - b.order),
-  );
+  const { getAxisConfig, getDomain } = axisController;
+  const { seriesMeta, isSeriesVisible } = seriesController;
+  const { bars } = stackBarController;
 
   // --- interaction-axis scale (for chart events + sync) -------------------
   const interactionScale = createMemo(() => {
@@ -535,7 +485,7 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
     const idx = ticks.length ? findClosestTickIndex(interactionScale(), ticks, svgX) : null;
 
     const visibleSeries = seriesMeta()
-      .filter((s) => !hiddenSeries().has(s.id))
+      .filter((series) => isSeriesVisible(series.id))
       .map((s) => ({
         ...s,
         value:
@@ -611,98 +561,21 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
         getInset,
         registerInset: (edge, key, value) =>
           setInset((prev) => {
-            prev[edge].set(key, value);
-            return { ...prev };
+            const contributions = new Map(prev[edge]);
+            contributions.set(key, value);
+            return { ...prev, [edge]: contributions };
           }),
         unregisterInset: (edge, key) =>
           setInset((prev) => {
-            prev[edge].delete(key);
-            return { ...prev };
+            const contributions = new Map(prev[edge]);
+            contributions.delete(key);
+            return { ...prev, [edge]: contributions };
           }),
-        registerAxisConfig: (axisId, config) =>
-          setAxisConfigs((prev) => new Map(prev).set(axisId, config)),
-        unregisterAxisConfig: (axisId) =>
-          setAxisConfigs((prev) => {
-            const next = new Map(prev);
-            next.delete(axisId);
-            return next;
-          }),
-        getAxisConfig,
-        registerExtent: (axisId, seriesId, extent) =>
-          setExtents((prev) => {
-            const next = new Map(prev);
-            const axis = new Map(next.get(axisId) ?? []);
-            axis.set(seriesId, extent);
-            next.set(axisId, axis);
-            return next;
-          }),
-        unregisterExtent: (axisId, seriesId) =>
-          setExtents((prev) => {
-            const axis = prev.get(axisId);
-            if (!axis) return prev;
-            const next = new Map(prev);
-            const nextAxis = new Map(axis);
-            nextAxis.delete(seriesId);
-            if (nextAxis.size === 0) next.delete(axisId);
-            else next.set(axisId, nextAxis);
-            return next;
-          }),
-        getDomain,
-        stacks,
+        ...axisController,
+        ...stackBarController,
         stackOffset: () => localProps.stackOffset,
-        registerStack: (stackId, dataKey, seriesId, values) =>
-          setStacks((prev) => {
-            const stack = prev.get(stackId) ?? new Map<string, StackEntry>();
-            const entry = stack.get(dataKey) ?? {
-              seriesIds: new Set<string>(),
-              values,
-            };
-            entry.seriesIds.add(seriesId);
-            stack.set(dataKey, entry);
-            prev.set(stackId, stack);
-            return new Map(prev);
-          }),
-        unregisterStack: (stackId, dataKey, seriesId) =>
-          setStacks((prev) => {
-            const stack = prev.get(stackId);
-            if (!stack) return prev;
-            const entry = stack.get(dataKey);
-            if (!entry) return prev;
-            entry.seriesIds.delete(seriesId);
-            if (entry.seriesIds.size === 0) stack.delete(dataKey);
-            if (stack.size === 0) prev.delete(stackId);
-            return new Map(prev);
-          }),
-        bars,
-        registerBar: (key) => setBars((prev) => new Set(prev).add(key)),
-        unregisterBar: (key) =>
-          setBars((prev) => {
-            const next = new Set(prev);
-            next.delete(key);
-            return next;
-          }),
         barConfig,
-        seriesMeta,
-        registerSeriesMeta: (id, meta) =>
-          setSeries((prev) => {
-            const existing = prev.get(id);
-            const order = existing?.order ?? seriesOrder++;
-            return new Map(prev).set(id, { ...meta, order });
-          }),
-        unregisterSeriesMeta: (id) =>
-          setSeries((prev) => {
-            const next = new Map(prev);
-            next.delete(id);
-            return next;
-          }),
-        isSeriesVisible: (id) => !hiddenSeries().has(id),
-        toggleSeries: (id) =>
-          setHiddenSeries((prev) => {
-            const next = new Set(prev);
-            if (next.has(id)) next.delete(id);
-            else next.add(id);
-            return next;
-          }),
+        ...seriesController,
         syncId: () => localProps.syncId,
         syncMethod: () => localProps.syncMethod,
         syncInteraction,

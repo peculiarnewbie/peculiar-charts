@@ -124,6 +124,7 @@ const Line = (props: LineProps) => {
     seriesId,
     name: () => localProps.name ?? localProps.dataKey ?? "series",
     type: "line",
+    layout: () => localProps.layout,
     xAxisId: () => localProps.xAxisId,
     yAxisId: () => localProps.yAxisId,
     valueAxisId: () => (horizontal() ? localProps.xAxisId : localProps.yAxisId),
@@ -135,6 +136,7 @@ const Line = (props: LineProps) => {
   });
 
   const points = createPoints({
+    seriesId,
     layout: () => localProps.layout,
     xAxisId: () => localProps.xAxisId,
     yAxisId: () => localProps.yAxisId,

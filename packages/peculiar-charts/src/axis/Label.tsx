@@ -113,6 +113,7 @@ const Label = (props: LabelProps) => {
   ]);
 
   const [labelGroupRef, setLabelGroupRef] = createSignal<SVGGElement | null>(null);
+  const insetKey = `axis.label.${createUniqueId()}`;
 
   createSvgSize({
     element: labelGroupRef,
@@ -120,10 +121,10 @@ const Label = (props: LabelProps) => {
     onSizeChange: (size: number) =>
       chartContext.registerInset(
         axisContext.position(),
-        "axis.label",
+        insetKey,
         chartContext.toSvgPosition(size, axisContext.axis() === "x" ? "height" : "width"),
       ),
-    onCleanup: () => chartContext.unregisterInset(axisContext.position(), "axis.label"),
+    onCleanup: () => chartContext.unregisterInset(axisContext.position(), insetKey),
   });
 
   const labelAxisId = createUniqueId();
@@ -186,13 +187,11 @@ const Label = (props: LabelProps) => {
     const offset = localProps.tickMargin + staggerOffset(visibleIndex);
     switch (axisContext.position()) {
       case "top":
-        return (
-          chartContext.getInset("top", "axis.label") + (axisContext.mirror() ? offset : -offset)
-        );
+        return chartContext.getInset("top", insetKey) + (axisContext.mirror() ? offset : -offset);
       case "bottom":
         return (
           chartContext.height() -
-          chartContext.getInset("bottom", "axis.label") +
+          chartContext.getInset("bottom", insetKey) +
           (axisContext.mirror() ? -offset : offset)
         );
       case "left":
