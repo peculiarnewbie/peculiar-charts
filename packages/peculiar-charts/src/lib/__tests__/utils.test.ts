@@ -86,6 +86,7 @@ describe("gapToPadding", () => {
   it("converts percentage string to ratio", () => {
     expect(gapToPadding("50%", 100)).toBe(0.5);
     expect(gapToPadding("10%", 200)).toBe(0.1);
+    expect(gapToPadding("10.5%", 200)).toBe(0.105);
   });
 });
 

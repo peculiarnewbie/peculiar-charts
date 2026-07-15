@@ -3,6 +3,7 @@ import { createRoot, createSignal } from "solid-js";
 import {
   createTweened,
   createTweenedArrayStart,
+  createPresence,
   interpolateNumber,
   interpolatePoint,
   resolveAnimation,
@@ -33,6 +34,118 @@ describe("animation lifecycle", () => {
     expect(addEventListener).toHaveBeenCalledWith("change", expect.any(Function));
     dispose();
     expect(removeEventListener).toHaveBeenCalledWith("change", expect.any(Function));
+  });
+});
+
+describe("animation delays", () => {
+  const frameHarness = () => {
+    let id = 0;
+    const callbacks = new Map<number, FrameRequestCallback>();
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+      callbacks.set(++id, callback);
+      return id;
+    });
+    vi.stubGlobal("cancelAnimationFrame", (frameId: number) => callbacks.delete(frameId));
+    const step = (now: number) => {
+      for (const [frameId, callback] of Array.from(callbacks)) {
+        callbacks.delete(frameId);
+        callback(now);
+      }
+    };
+    return { step };
+  };
+
+  it("holds a tween at its start value until the top-level delay elapses", () => {
+    const { step } = frameHarness();
+    const [source, setSource] = createSignal(0);
+    let value!: () => number;
+    let dispose!: () => void;
+    createRoot((cleanup) => {
+      dispose = cleanup;
+      value = createTweened(
+        source,
+        () => resolveAnimation({ enabled: true, duration: 100, easing: "linear", delay: 50 }),
+        interpolateNumber,
+      );
+    });
+    setSource(10);
+    step(100);
+    step(149);
+    expect(value()).toBe(0);
+    step(150);
+    expect(value()).toBe(0);
+    step(200);
+    expect(value()).toBe(5);
+    dispose();
+  });
+
+  it("holds entering items until the enter delay elapses", () => {
+    const { step } = frameHarness();
+    vi.spyOn(performance, "now").mockReturnValue(100);
+    let dispose!: () => void;
+    let items!: ReturnType<typeof createPresence<number>>;
+    createRoot((cleanup) => {
+      dispose = cleanup;
+      items = createPresence(
+        () => [10],
+        () =>
+          resolveAnimation({
+            enabled: true,
+            duration: 100,
+            easing: "linear",
+            enter: { delay: 50 },
+          }),
+        interpolateNumber,
+        () => 0,
+        () => 0,
+      );
+    });
+    step(100);
+    step(149);
+    expect(items()[0]?.value).toBe(0);
+    step(150);
+    expect(items()[0]?.value).toBe(0);
+    step(200);
+    expect(items()[0]?.value).toBe(5);
+    dispose();
+  });
+
+  it("holds exiting items until the exit delay elapses", () => {
+    const { step } = frameHarness();
+    const now = vi.spyOn(performance, "now").mockReturnValue(100);
+    const [source, setSource] = createSignal([10]);
+    let dispose!: () => void;
+    let items!: ReturnType<typeof createPresence<number>>;
+    createRoot((cleanup) => {
+      dispose = cleanup;
+      items = createPresence(
+        source,
+        () =>
+          resolveAnimation({
+            enabled: true,
+            duration: 100,
+            easing: "linear",
+            enter: { duration: 1 },
+            exit: { delay: 40 },
+          }),
+        interpolateNumber,
+        () => 0,
+        () => 0,
+      );
+    });
+    step(100);
+    step(102);
+    expect(items()[0]?.value).toBe(10);
+    now.mockReturnValue(200);
+    setSource([]);
+    step(200);
+    step(239);
+    expect(items()[0]?.value).toBe(10);
+    step(240);
+    expect(items()[0]?.value).toBe(10);
+    step(290);
+    expect(items()[0]?.value).toBe(5);
+    dispose();
   });
 });
 

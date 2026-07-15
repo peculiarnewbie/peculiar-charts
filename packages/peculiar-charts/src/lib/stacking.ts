@@ -8,7 +8,7 @@ export const resolveStackOffset = (offset: StackOffset | undefined): StackOffset
 export const stackKeys = (stack: Stack): string[] => [...stack.keys()];
 
 const stackColumnValue = (stack: Stack, key: string, index: number): number =>
-  stack.get(key)?.values[index] ?? 0;
+  Number.isFinite(stack.get(key)?.values[index]) ? stack.get(key)!.values[index]! : 0;
 
 const stackColumnTotal = (stack: Stack, keys: string[], index: number): number => {
   let total = 0;

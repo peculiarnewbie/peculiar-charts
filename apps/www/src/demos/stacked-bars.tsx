@@ -8,7 +8,6 @@ import {
   Bar,
   Chart,
   Legend,
-  Line,
 } from "peculiar-charts";
 import { TOOLTIP_SHELL } from "../demoStyles";
 import { sales } from "../data";

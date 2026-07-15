@@ -35,7 +35,7 @@ export function toMatchImageSnapshot(
   received: string,
   options: MatchImageSnapshotOptions = {},
 ) {
-  const { testPath, currentTestName, snapshotState } = this;
+  const { testPath, currentTestName } = this;
   const opts = { ...DEFAULTS, ...options };
 
   if (!testPath || !currentTestName) {
@@ -61,7 +61,6 @@ export function toMatchImageSnapshot(
   const expectedPng = PNG.sync.read(expectedBuffer);
 
   if (expectedPng.width !== width || expectedPng.height !== height) {
-    const diffPath = snapshotPath.replace("-snap.png", "-diff.png");
     const receivedPath = snapshotPath.replace("-snap.png", "-received.png");
     fs.writeFileSync(receivedPath, PNG.sync.write(actualPng));
 

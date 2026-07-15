@@ -62,6 +62,7 @@ export type BrushRange = { startIndex: number; endIndex: number };
 export type SyncInteraction = {
   active: boolean;
   index: number | null;
+  axisId: string;
   label: string | undefined;
   dataKey: string | undefined;
   sourceViewBox: SyncPayload["sourceViewBox"];

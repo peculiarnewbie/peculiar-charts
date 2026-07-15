@@ -224,8 +224,8 @@ export const createTweened = <T>(
     cancelAnim();
     const run = () => {
       raf = requestAnimationFrame((now) => {
-        if (startTime === undefined) startTime = now - delay;
-        const elapsed = now - startTime;
+        if (startTime === undefined) startTime = now;
+        const elapsed = now - startTime - delay;
         if (elapsed < 0) {
           raf = undefined;
           run();
@@ -429,7 +429,7 @@ export const createPresence = <T>(
     const next: InternalPresenceItem<T>[] = [];
 
     for (const item of current) {
-      const elapsed = now - item.startTime + item.delay;
+      const elapsed = now - item.startTime - item.delay;
       if (elapsed < 0) {
         next.push(item);
         hasActive = true;

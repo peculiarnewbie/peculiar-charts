@@ -2,14 +2,14 @@ import type { ChartContextType, SyncInteraction } from "@src/components/context"
 import { createSignal } from "solid-js";
 
 export const createMockChartContext = (overrides?: Partial<ChartContextType>): ChartContextType => {
-  const [data, setData] = createSignal<any[]>([]);
-  const [width, setWidth] = createSignal(800);
-  const [height, setHeight] = createSignal(400);
-  const [seriesMeta, setSeriesMeta] = createSignal<any[]>([]);
+  const [data] = createSignal<any[]>([]);
+  const [width] = createSignal(800);
+  const [height] = createSignal(400);
+  const [seriesMeta] = createSignal<any[]>([]);
   const [hiddenSeries, setHiddenSeries] = createSignal(new Set<string>());
-  const [stacks, setStacks] = createSignal(new Map());
+  const [stacks] = createSignal(new Map());
   const [bars, setBars] = createSignal(new Set<string>());
-  const [pointerPosition, setPointerPosition] = createSignal(null);
+  const [pointerPosition] = createSignal(null);
   const [syncInteraction, setSyncInteraction] = createSignal<SyncInteraction | null>(null);
   const [brushRange, setBrushRange] = createSignal(null);
 
@@ -47,7 +47,7 @@ export const createMockChartContext = (overrides?: Partial<ChartContextType>): C
     unregisterExtent: (axisId, seriesId) => {
       extents.get(axisId)?.delete(seriesId);
     },
-    getDomain: (axisId, orientation) => {
+    getDomain: (axisId, _orientation) => {
       const config = axisConfigs.get(axisId);
       if (config?.type === "band" || config?.type === "point") {
         return { kind: "categorical" as const, values: [] };

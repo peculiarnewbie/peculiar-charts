@@ -12,6 +12,8 @@ export type SyncHandlerParam = {
 export type SyncPayload = {
   active: boolean;
   index: number | null;
+  /** Category axis used by the source chart interaction. */
+  axisId: string;
   coordinate: { x: number; y: number } | undefined;
   label: string | undefined;
   dataKey: string | undefined;

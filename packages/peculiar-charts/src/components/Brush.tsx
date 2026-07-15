@@ -141,13 +141,11 @@ const Brush = (props: BrushProps) => {
   };
 
   // --- drag ----------------------------------------------------------------
-  const [dragging, setDragging] = createSignal<null | "start" | "end" | "slide">(null);
   const [dragStartIdx, setDragStartIdx] = createSignal(0);
   const [dragEndIdx, setDragEndIdx] = createSignal(0);
 
   const handlePointerDown = (which: "start" | "end" | "slide", e: MouseEvent) => {
     e.preventDefault();
-    setDragging(which);
     setDragStartIdx(clampedStart());
     setDragEndIdx(clampedEnd());
 
@@ -186,7 +184,6 @@ const Brush = (props: BrushProps) => {
     };
 
     const onUp = () => {
-      setDragging(null);
       cleanup();
       local.onDragEnd?.({ startIndex: clampedStart(), endIndex: clampedEnd() });
     };

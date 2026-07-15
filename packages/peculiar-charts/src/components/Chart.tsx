@@ -13,12 +13,14 @@ import {
   type SyncInteraction,
 } from "@src/components/context";
 import createSize from "@src/lib/dom/createSize";
+import { resolveBarConfig } from "@src/lib/barConfig";
+import { resolveAxisDomain } from "@src/lib/resolveAxisDomain";
+import { resolveCartesianScale } from "@src/lib/resolveCartesianScale";
 import { paletteColor } from "@src/lib/palette";
-import { resolveRangeValue } from "@src/lib/parseAxisRange";
-import { type Scale, buildScale, projectScale } from "@src/lib/scale";
+import { type Scale, projectScale } from "@src/lib/scale";
 import { type SyncMethod, type SyncPayload, syncBus } from "@src/lib/sync";
 import type { OverrideProps } from "@src/lib/types";
-import { accessData, axisValues, toNumeric, uniqueInOrder } from "@src/lib/utils";
+import { accessData, axisValues, getBarPadding } from "@src/lib/utils";
 import {
   type ComponentProps,
   type JSX,
@@ -89,6 +91,11 @@ export type ChartProps<TData extends unknown[] = unknown[]> = OverrideProps<
      * - `function`: custom callback receiving (ticks, handlerParam) → index
      */
     syncMethod?: SyncMethod;
+    /**
+     * Category-axis ID used for chart-level events and cross-chart sync.
+     * Charts with multiple x axes must select one explicitly. @defaultValue `'x'`
+     */
+    interactionAxisId?: string;
     /** Fired when the pointer is clicked on the chart. */
     onChartClick?: (payload: ChartEventPayload<TData>) => void;
     /** Fired when the pointer moves over the chart. */
@@ -131,7 +138,7 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
       width: "responsive" as const,
       height: "responsive" as const,
       inset: DEFAULT_INSET,
-      barConfig: { bandGap: "10%", barGap: "10%" },
+      interactionAxisId: "x",
     },
     props,
   );
@@ -148,6 +155,7 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
     "style",
     "syncId",
     "syncMethod",
+    "interactionAxisId",
     "onChartClick",
     "onChartPointerMove",
     "onChartPointerLeave",
@@ -157,6 +165,7 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
 
   // Keep a typed reference to the data — mergeProps/splitProps widen generics.
   const data = () => props.data;
+  const barConfig = createMemo(() => resolveBarConfig(localProps.barConfig));
   const clipId = createUniqueId();
 
   // --- emitter symbol (self-guard for sync; one per chart instance) --------
@@ -307,66 +316,12 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
 
   const getDomain = (axisId: string, orientation: AxisOrientation) => {
     const config = getAxisConfig(axisId, orientation);
-
-    if (config.type === "band" || config.type === "point") {
-      const data = displayedData();
-      const rawValues = config.dataKey
-        ? accessData(data, config.dataKey)
-        : Array.from({ length: data.length }, (_, i) => i);
-      return {
-        kind: "categorical" as const,
-        values: config.allowDuplicatedCategory ? rawValues : uniqueInOrder(rawValues),
-      };
-    }
-
-    let agg: { min: number; max: number };
-    if (orientation === "x" || orientation === "angle") {
-      const data = displayedData();
-      const raw = config.dataKey
-        ? accessData<unknown>(data, config.dataKey)
-        : data.map((_, i) => i);
-      const nums = raw.map(toNumeric).filter((n): n is number => n !== null);
-      agg = nums.length ? { min: Math.min(...nums), max: Math.max(...nums) } : { min: 0, max: 0 };
-
-      // Also factor in registered series extents (horizontal bars, mixed charts, etc.)
-      const axisExtents = extents().get(axisId);
-      if (axisExtents) {
-        const extentAgg = [...axisExtents.values()].reduce(
-          (acc, e) => ({
-            min: Math.min(acc.min, e.min),
-            max: Math.max(acc.max, e.max),
-          }),
-          { min: Number.POSITIVE_INFINITY, max: Number.NEGATIVE_INFINITY },
-        );
-        agg.min = Math.min(agg.min, extentAgg.min);
-        agg.max = Math.max(agg.max, extentAgg.max);
-      }
-    } else {
-      // value axes (y / radius) aggregate registered series extents
-      const axisExtents = extents().get(axisId);
-      agg = axisExtents
-        ? [...axisExtents.values()].reduce(
-            (acc, e) => ({
-              min: Math.min(acc.min, e.min),
-              max: Math.max(acc.max, e.max),
-            }),
-            { min: Number.POSITIVE_INFINITY, max: Number.NEGATIVE_INFINITY },
-          )
-        : { min: 0, max: 0 };
-    }
-
-    const userMin = config.range?.[0];
-    const userMax = config.range?.[1];
-    const resolvedMin =
-      userMin !== undefined ? resolveRangeValue(userMin, agg.min, agg.max) : undefined;
-    const resolvedMax =
-      userMax !== undefined ? resolveRangeValue(userMax, agg.min, agg.max) : undefined;
-    return {
-      kind: "numeric" as const,
-      min: resolvedMin ?? agg.min,
-      max: resolvedMax ?? agg.max,
-      userDefined: config.range !== null,
-    };
+    return resolveAxisDomain({
+      config,
+      orientation,
+      data: displayedData(),
+      extents: extents().get(axisId)?.values(),
+    });
   };
 
   const seriesMeta = createMemo<SeriesMeta[]>(() =>
@@ -382,20 +337,35 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
       .sort((a, b) => a.order - b.order),
   );
 
-  // --- x-axis scale (for sync emission + listener) ------------------------
-  const xScale = createMemo(() => {
-    const config = getAxisConfig("x", "x");
-    const domain = getDomain("x", "x");
-    const left = getInset("left");
-    const right = svgSize()[0] - getInset("right");
-
-    if (domain.kind === "categorical") {
-      return buildScale(config.type, domain.values, [left, right]);
-    }
-    return buildScale(config.type, [domain.min, domain.max], [left, right]);
+  // --- interaction-axis scale (for chart events + sync) -------------------
+  const interactionScale = createMemo(() => {
+    const axisId = localProps.interactionAxisId;
+    const config = getAxisConfig(axisId, "x");
+    return resolveCartesianScale({
+      config,
+      domain: getDomain(axisId, "x"),
+      orientation: "x",
+      width: svgSize()[0],
+      height: svgSize()[1],
+      insets: {
+        top: getInset("top"),
+        right: getInset("right"),
+        bottom: getInset("bottom"),
+        left: getInset("left"),
+      },
+      barPadding: getBarPadding({
+        bars,
+        getInset,
+        width: () => svgSize()[0],
+        displayedData,
+        barConfig,
+      }),
+    });
   });
 
-  const xAxisValues = createMemo(() => axisValues({ getAxisConfig, displayedData }, "x", "x"));
+  const interactionAxisValues = createMemo(() =>
+    axisValues({ getAxisConfig, displayedData }, localProps.interactionAxisId, "x"),
+  );
 
   // --- sync emission helpers ----------------------------------------------
   const findClosestTickIndex = (scale: Scale, values: any[], svgX: number): number => {
@@ -428,7 +398,7 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
     if (isReceivingSync()) return;
     const syncId = localProps.syncId;
     if (syncId == null) return;
-    const state = `${String(syncId)}:${active}:${index ?? ""}:${label ?? ""}`;
+    const state = `${String(syncId)}:${localProps.interactionAxisId}:${active}:${index ?? ""}:${label ?? ""}`;
     if (state === lastEmittedSyncState) return;
     lastEmittedSyncState = state;
     const coord: SyncPayload["coordinate"] = active
@@ -443,6 +413,7 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
       {
         active,
         index,
+        axisId: localProps.interactionAxisId,
         coordinate: coord,
         label,
         dataKey: undefined,
@@ -472,6 +443,7 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
         setSyncInteraction({
           active: false,
           index: null,
+          axisId: payload.axisId,
           label: undefined,
           dataKey: undefined,
           sourceViewBox: undefined,
@@ -480,13 +452,14 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
       }
 
       const syncMethod = localProps.syncMethod ?? "index";
-      const ticks = xAxisValues();
+      const ticks = interactionAxisValues();
       let activeIndex: number | null = null;
 
       if (payload.index == null) {
         setSyncInteraction({
           active: false,
           index: null,
+          axisId: payload.axisId,
           label: undefined,
           dataKey: undefined,
           sourceViewBox: payload.sourceViewBox,
@@ -515,6 +488,7 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
         setSyncInteraction({
           active: false,
           index: null,
+          axisId: payload.axisId,
           label: undefined,
           dataKey: undefined,
           sourceViewBox: payload.sourceViewBox,
@@ -525,6 +499,7 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
       setSyncInteraction({
         active: true,
         index: activeIndex,
+        axisId: payload.axisId,
         label: payload.label,
         dataKey: payload.dataKey,
         sourceViewBox: payload.sourceViewBox,
@@ -556,8 +531,8 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
     }
 
     const data = displayedData();
-    const ticks = xAxisValues();
-    const idx = ticks.length ? findClosestTickIndex(xScale(), ticks, svgX) : null;
+    const ticks = interactionAxisValues();
+    const idx = ticks.length ? findClosestTickIndex(interactionScale(), ticks, svgX) : null;
 
     const visibleSeries = seriesMeta()
       .filter((s) => !hiddenSeries().has(s.id))
@@ -595,8 +570,8 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
       const top = getInset("top");
       const bottom = svgSize()[1] - getInset("bottom");
       if (svgX >= left && svgX <= right && svgY >= top && svgY <= bottom) {
-        const idx = findClosestTickIndex(xScale(), xAxisValues(), svgX);
-        const label = String(xAxisValues()[idx] ?? "");
+        const idx = findClosestTickIndex(interactionScale(), interactionAxisValues(), svgX);
+        const label = String(interactionAxisValues()[idx] ?? "");
         emitSync(true, idx, label);
       } else {
         emitSync(false, null, undefined);
@@ -706,7 +681,7 @@ const Chart = <TData extends unknown[]>(props: ChartProps<TData>) => {
             next.delete(key);
             return next;
           }),
-        barConfig: () => localProps.barConfig as BarConfig,
+        barConfig,
         seriesMeta,
         registerSeriesMeta: (id, meta) =>
           setSeries((prev) => {

@@ -1,6 +1,6 @@
 import type { OverrideProps } from "@src/lib/types";
 import { pointDefined } from "@src/lib/utils";
-import { type Area, type CurveFactory, type Line, area, curveLinear, line } from "d3-shape";
+import { area, type CurveFactory, curveLinear, line } from "d3-shape";
 import { type ComponentProps, createMemo, mergeProps, splitProps } from "solid-js";
 
 export type CurveProps = OverrideProps<
@@ -49,52 +49,65 @@ const getPath = (
   connectNulls: boolean,
   layout: "vertical" | "horizontal",
 ) => {
+  const data = points.map((point, index) => ({
+    point,
+    baseLine: Array.isArray(baseLine) ? (baseLine[index] ?? Number.NaN) : baseLine,
+  }));
+  const datumDefined = (datum: CurveDatum) =>
+    pointDefined(datum.point) && (datum.baseLine === null || Number.isFinite(datum.baseLine));
+
   if (connectNulls) {
-    return createPathSegment(curve, points.filter(pointDefined), baseLine, layout);
+    return createPathSegment(curve, data.filter(datumDefined), baseLine !== null, layout);
   }
 
-  const segments: [number, number][][] = [];
-  let current: [number, number][] = [];
-  for (const point of points) {
-    if (!pointDefined(point)) {
+  const segments: CurveDatum[][] = [];
+  let current: CurveDatum[] = [];
+  for (const datum of data) {
+    if (!datumDefined(datum)) {
       if (current.length > 0) {
         segments.push(current);
         current = [];
       }
     } else {
-      current.push(point);
+      current.push(datum);
     }
   }
   if (current.length > 0) segments.push(current);
 
-  return segments.map((segment) => createPathSegment(curve, segment, baseLine, layout)).join(" ");
+  return segments
+    .map((segment) => createPathSegment(curve, segment, baseLine !== null, layout))
+    .join(" ");
+};
+
+type CurveDatum = {
+  point: [number, number];
+  baseLine: number | null;
 };
 
 const createPathSegment = (
   curve: CurveFactory,
-  points: [number, number][],
-  baseLine: number | number[] | null,
+  data: CurveDatum[],
+  hasBaseLine: boolean,
   layout: "vertical" | "horizontal",
 ) => {
-  let fn: Line<[number, number]> | Area<[number, number]>;
-  if (baseLine === null) {
-    fn = line().curve(curve);
-  } else if (Array.isArray(baseLine)) {
-    fn = area().curve(curve);
-    if (layout === "horizontal") {
-      fn = (fn as Area<[number, number]>).x0((_, i) => baseLine[i] ?? 0);
-    } else {
-      fn = (fn as Area<[number, number]>).y0((_, i) => baseLine[i] ?? 0);
-    }
-  } else {
-    fn = area().curve(curve);
-    if (layout === "horizontal") {
-      fn = (fn as Area<[number, number]>).x0(baseLine);
-    } else {
-      fn = (fn as Area<[number, number]>).y0(baseLine);
-    }
+  if (!hasBaseLine) {
+    return line<CurveDatum>()
+      .curve(curve)
+      .x((datum) => datum.point[0])
+      .y((datum) => datum.point[1])(data);
   }
-  return fn(points);
+
+  const fn = area<CurveDatum>().curve(curve);
+  if (layout === "horizontal") {
+    return fn
+      .x0((datum) => datum.baseLine!)
+      .x1((datum) => datum.point[0])
+      .y((datum) => datum.point[1])(data);
+  }
+  return fn
+    .x((datum) => datum.point[0])
+    .y0((datum) => datum.baseLine!)
+    .y1((datum) => datum.point[1])(data);
 };
 
 export default Curve;

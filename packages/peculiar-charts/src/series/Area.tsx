@@ -12,6 +12,7 @@ import createBaseLine from "@src/lib/createBaseLine";
 import createPoints from "@src/lib/createPoints";
 import createScale from "@src/lib/createScale";
 import createSeries from "@src/lib/createSeries";
+import { finiteExtent } from "@src/lib/extent";
 import type { DotRenderer, PointEvents } from "@src/lib/markers";
 import { clipPathForAxes } from "@src/lib/overflow";
 import { projectScale } from "@src/lib/scale";
@@ -168,10 +169,7 @@ const Area = (props: AreaProps) => {
   const rangeExtent = createMemo(() => {
     if (!isRange()) return null;
     const raw = rawData() as [number, number][];
-    return {
-      min: Math.min(...raw.map((pair) => pair[0])),
-      max: Math.max(...raw.map((pair) => pair[1])),
-    };
+    return finiteExtent(raw.flatMap((pair) => pair ?? [])) ?? null;
   });
   const valueScale = createScale({
     axisId: valueAxisId,
@@ -331,7 +329,7 @@ const Area = (props: AreaProps) => {
             </defs>
             <Curve
               points={animatedPoints()}
-              baseLine={zeroPos()}
+              baseLine={resolvedAnimatedBaseLine()}
               layout={localProps.layout}
               data-pc-area=""
               {...otherProps}
@@ -340,7 +338,7 @@ const Area = (props: AreaProps) => {
             />
             <Curve
               points={animatedPoints()}
-              baseLine={zeroPos()}
+              baseLine={resolvedAnimatedBaseLine()}
               layout={localProps.layout}
               data-pc-area=""
               {...otherProps}

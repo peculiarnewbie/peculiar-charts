@@ -17,6 +17,7 @@ describe("SyncBus", () => {
         {
           active: true,
           index: 2,
+          axisId: "x",
           coordinate: undefined,
           label: "b",
           dataKey: undefined,
@@ -46,6 +47,7 @@ describe("SyncBus", () => {
         {
           active: true,
           index: 0,
+          axisId: "x",
           coordinate: undefined,
           label: undefined,
           dataKey: undefined,

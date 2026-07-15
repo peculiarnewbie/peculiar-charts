@@ -325,6 +325,7 @@ and exposes five chart-level callbacks that fire with a `ChartEventPayload`:
 // Peculiar-charts
 <Chart
   data={data}
+  interactionAxisId="category"
   onChartPointerMove={(p) => { /* p.x, p.y, p.index, p.datum, p.series */ }}
   onChartClick={(p) => { /* same payload */ }}
   onChartPointerDown={(p) => { /* ... */ }}
@@ -335,6 +336,9 @@ and exposes five chart-level callbacks that fire with a `ChartEventPayload`:
 
 `ChartEventPayload` includes: `event` (PointerEvent), `x`/`y` (SVG viewBox coords),
 `index` (closest datum), `datum` (data row), `series` (visible series with values).
+`interactionAxisId` selects the x-axis used for nearest-datum hit-testing and sync when series use
+a non-default or multiple category axes; it defaults to `"x"`. Synchronized payloads carry the
+source axis ID.
 
 **Affects:** Highlight And Zoom, Compare Two Lines, Custom Events, Prevent Right Click.
 

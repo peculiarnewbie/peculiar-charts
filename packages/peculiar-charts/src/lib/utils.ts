@@ -61,7 +61,7 @@ export const uniqueInOrder = <T>(values: T[]): T[] => {
 /** Converts a gap expressed in px or `%` into a d3 padding ratio. */
 export const gapToPadding = (gap: number | `${number}%`, bandwidth: number) => {
   if (typeof gap === "number") return gap / bandwidth;
-  return Number.parseInt(gap.slice(0, -1)) / 100;
+  return Number.parseFloat(gap.slice(0, -1)) / 100;
 };
 
 /** Narrow view of the chart context used by {@link getBarPadding}. */

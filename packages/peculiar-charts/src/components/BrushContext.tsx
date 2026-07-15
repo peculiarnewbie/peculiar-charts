@@ -1,10 +1,5 @@
-import {
-  type AxisOrientation,
-  ChartContext,
-  type ChartContextType,
-  type Domain,
-} from "@src/components/context";
-import { toNumeric } from "@src/lib/utils";
+import { type AxisOrientation, ChartContext, type ChartContextType } from "@src/components/context";
+import { resolveAxisDomain } from "@src/lib/resolveAxisDomain";
 import { type Accessor, type JSX, createSignal } from "solid-js";
 
 /**
@@ -25,50 +20,14 @@ export const BrushContextProvider = (props: {
 
   const ctx = props.mainContext;
 
-  const getDomain = (axisId: string, orientation: AxisOrientation): Domain => {
+  const getDomain = (axisId: string, orientation: AxisOrientation) => {
     const config = ctx.getAxisConfig(axisId, orientation);
-
-    if (config.type === "band" || config.type === "point") {
-      const values = config.dataKey
-        ? [...new Set(accessData(props.data(), config.dataKey))]
-        : Array.from({ length: props.data().length }, (_, i) => i);
-      return { kind: "categorical", values };
-    }
-
-    const axisExtents = extents().get(axisId);
-    if (axisExtents && axisExtents.size > 0) {
-      const agg = [...axisExtents.values()].reduce(
-        (acc, e) => ({
-          min: Math.min(acc.min, e.min),
-          max: Math.max(acc.max, e.max),
-        }),
-        { min: Number.POSITIVE_INFINITY, max: Number.NEGATIVE_INFINITY },
-      );
-      return {
-        kind: "numeric",
-        min: Math.min(agg.min, 0),
-        max: agg.max,
-        userDefined: false,
-      };
-    }
-
-    // For numeric x-axis (e.g. time), derive domain from data values
-    if (orientation === "x") {
-      const raw = config.dataKey
-        ? accessData<unknown>(props.data(), config.dataKey)
-        : props.data().map((_, i) => i);
-      const nums = raw.map(toNumeric).filter((n): n is number => n !== null);
-      if (nums.length) {
-        return {
-          kind: "numeric",
-          min: Math.min(...nums),
-          max: Math.max(...nums),
-          userDefined: false,
-        };
-      }
-    }
-
-    return { kind: "numeric", min: 0, max: 1, userDefined: false };
+    return resolveAxisDomain({
+      config,
+      orientation,
+      data: props.data(),
+      extents: extents().get(axisId)?.values(),
+    });
   };
 
   const noop = () => {};
@@ -150,11 +109,3 @@ export const BrushContextProvider = (props: {
 
   return <ChartContext.Provider value={value}>{props.children}</ChartContext.Provider>;
 };
-
-function accessData<T>(data: unknown, dataKey: string | undefined): T[] {
-  if (!dataKey) return data as T[];
-  const keys = dataKey.split(".");
-  return (data as Record<string, any>[]).map((entry) =>
-    keys.reduce((acc, key) => acc?.[key], entry),
-  ) as T[];
-}

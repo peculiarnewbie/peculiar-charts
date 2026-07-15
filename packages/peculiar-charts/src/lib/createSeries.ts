@@ -1,4 +1,5 @@
 import type { ChartContextType } from "@src/components/context";
+import { finiteExtent } from "@src/lib/extent";
 import { resolveStackOffset, stackExtent } from "@src/lib/stacking";
 import { type Accessor, createEffect, onCleanup } from "solid-js";
 
@@ -63,10 +64,9 @@ const createSeries = (props: {
       return;
     }
 
-    ctx.registerExtent(valueAxisId(), props.seriesId, {
-      min: Math.min(...data),
-      max: Math.max(...data),
-    });
+    const extent = finiteExtent(data);
+    if (!extent) return;
+    ctx.registerExtent(valueAxisId(), props.seriesId, extent);
     onCleanup(() => ctx.unregisterExtent(valueAxisId(), props.seriesId));
   });
 };

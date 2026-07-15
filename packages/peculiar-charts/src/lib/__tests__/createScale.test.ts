@@ -128,4 +128,77 @@ describe("createScale", () => {
       }
       dispose();
     }));
+
+  it("keeps automatic positive log domains away from zero", () =>
+    createRoot((dispose) => {
+      const ctx = createMockChartContext({
+        getDomain: () => ({ kind: "numeric", min: 1, max: 100, userDefined: false }),
+        getAxisConfig: () => ({
+          orientation: "y",
+          type: "log",
+          range: null,
+          reverse: false,
+        }),
+      });
+      const scale = createScale({
+        axisId: () => "y",
+        orientation: () => "y",
+        chartContext: ctx,
+      })();
+
+      expect(scale.type).toBe("log");
+      if (scale.type === "log") {
+        expect(scale.scale.domain()).toEqual([1, 100]);
+        expect(Number.isFinite(scale.scale(10))).toBe(true);
+      }
+      dispose();
+    }));
+
+  it("supports automatic negative log domains", () =>
+    createRoot((dispose) => {
+      const ctx = createMockChartContext({
+        getDomain: () => ({ kind: "numeric", min: -100, max: -1, userDefined: false }),
+        getAxisConfig: () => ({
+          orientation: "y",
+          type: "log",
+          range: null,
+          reverse: false,
+        }),
+      });
+      const scale = createScale({
+        axisId: () => "y",
+        orientation: () => "y",
+        chartContext: ctx,
+      })();
+
+      expect(scale.type).toBe("log");
+      if (scale.type === "log") expect(Number.isFinite(scale.scale(-10))).toBe(true);
+      dispose();
+    }));
+
+  it.each([
+    [0, 100],
+    [-1, 100],
+    [Number.NaN, 100],
+  ])("rejects an invalid log domain [%s, %s]", (min, max) => {
+    expect(() =>
+      createRoot((dispose) => {
+        const scale = createScale({
+          axisId: () => "y",
+          orientation: () => "y",
+          chartContext: createMockChartContext({
+            getDomain: () => ({ kind: "numeric", min, max, userDefined: false }),
+            getAxisConfig: () => ({
+              orientation: "y",
+              type: "log",
+              range: null,
+              reverse: false,
+            }),
+          }),
+        });
+        scale();
+        dispose();
+      }),
+    ).toThrow(/Log scale domain bounds/);
+  });
 });

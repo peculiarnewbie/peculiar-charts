@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render } from "@solidjs/testing-library";
 import Chart from "@src/components/Chart";
+import Brush from "@src/components/Brush";
 import Line from "@src/series/Line";
 import Area from "@src/series/Area";
 import Bar from "@src/series/Bar";
@@ -54,6 +55,35 @@ describe("Chart", () => {
 
     const svg = container.querySelector("svg");
     expect(svg?.getAttribute("viewBox")).toBe("0 0 500 250");
+  });
+
+  it("deep-merges a partial bar configuration", () => {
+    expect(() =>
+      render(() => (
+        <Chart data={data} width={400} height={300} barConfig={{ barGap: 4 }}>
+          <Bar dataKey="y" />
+        </Chart>
+      )),
+    ).not.toThrow();
+  });
+
+  it("ignores missing and invalid values when inferring a series domain", () => {
+    const sparseData = [{ y: undefined }, { y: 8 }, { y: Number.NaN }, { y: -3 }];
+    let observedDomain: unknown;
+    const Probe = () => {
+      const ctx = useChartContext();
+      createEffect(() => (observedDomain = ctx.getDomain("y", "y")));
+      return null;
+    };
+
+    render(() => (
+      <Chart data={sparseData} width={400} height={300}>
+        <Line dataKey="y" />
+        <Probe />
+      </Chart>
+    ));
+
+    expect(observedDomain).toEqual({ kind: "numeric", min: -3, max: 8, userDefined: false });
   });
 
   it("deduplicates categorical domains by default and when explicitly disabled", () => {
@@ -117,6 +147,105 @@ describe("Chart", () => {
     fireEvent.pointerLeave(svg);
     expect(emit).toHaveBeenCalledTimes(3);
     expect(emit.mock.calls.at(-1)?.[1]).toMatchObject({ active: false, index: null });
+    emit.mockRestore();
+    clientWidth.mockRestore();
+    clientHeight.mockRestore();
+  });
+
+  it("hit-tests the rendered positions on a reversed, padded, bar-combined custom axis", () => {
+    const onChartPointerMove = vi.fn();
+    const clientWidth = vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(800);
+    const clientHeight = vi
+      .spyOn(HTMLElement.prototype, "clientHeight", "get")
+      .mockReturnValue(600);
+    const { container } = render(() => (
+      <Chart
+        data={data}
+        width={400}
+        height={300}
+        interactionAxisId="category"
+        onChartPointerMove={onChartPointerMove}
+      >
+        <Axis
+          axis="x"
+          axisId="category"
+          position="bottom"
+          dataKey="x"
+          reverse
+          padding={{ left: 17, right: 29 }}
+        />
+        <Axis axis="y" position="left" />
+        <Bar dataKey="y" xAxisId="category" />
+        <Line dataKey="y" xAxisId="category" dot />
+      </Chart>
+    ));
+    const svg = container.querySelector("svg")!;
+    const dots = container.querySelectorAll("[data-pc-dot]");
+
+    for (let index = 0; index < dots.length; index++) {
+      fireEvent.pointerMove(svg, {
+        clientX: Number(dots[index]?.getAttribute("cx")) * 2,
+        clientY: 300,
+      });
+      expect(onChartPointerMove.mock.calls.at(-1)?.[0].index).toBe(index);
+    }
+    clientWidth.mockRestore();
+    clientHeight.mockRestore();
+  });
+
+  it.each([
+    { type: "linear" as const, values: [0, 10, 100] },
+    {
+      type: "time" as const,
+      values: [new Date("2020-01-01"), new Date("2020-01-02"), new Date("2020-02-01")],
+    },
+  ])("hit-tests irregular $type values at their rendered positions", ({ type, values }) => {
+    const numericData = values.map((x, index) => ({ x, y: index + 1 }));
+    const onChartPointerMove = vi.fn();
+    const clientWidth = vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(800);
+    const clientHeight = vi
+      .spyOn(HTMLElement.prototype, "clientHeight", "get")
+      .mockReturnValue(600);
+    const { container } = render(() => (
+      <Chart data={numericData} width={400} height={300} onChartPointerMove={onChartPointerMove}>
+        <Axis axis="x" position="bottom" dataKey="x" type={type} />
+        <Axis axis="y" position="left" />
+        <Line dataKey="y" dot />
+      </Chart>
+    ));
+    const svg = container.querySelector("svg")!;
+    const dots = container.querySelectorAll("[data-pc-dot]");
+
+    for (let index = 0; index < dots.length; index++) {
+      fireEvent.pointerMove(svg, {
+        clientX: Number(dots[index]?.getAttribute("cx")) * 2,
+        clientY: 300,
+      });
+      expect(onChartPointerMove.mock.calls.at(-1)?.[0].index).toBe(index);
+    }
+    clientWidth.mockRestore();
+    clientHeight.mockRestore();
+  });
+
+  it("includes the configured interaction axis in sync payloads", () => {
+    const emit = vi.spyOn(syncBus, "emit");
+    const clientWidth = vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(800);
+    const clientHeight = vi
+      .spyOn(HTMLElement.prototype, "clientHeight", "get")
+      .mockReturnValue(600);
+    const { container } = render(() => (
+      <Chart data={data} width={400} height={300} syncId="axis-aware" interactionAxisId="category">
+        <Axis axis="x" axisId="category" position="bottom" dataKey="x" />
+        <Line dataKey="y" xAxisId="category" />
+      </Chart>
+    ));
+
+    fireEvent.pointerMove(container.querySelector("svg")!, { clientX: 100, clientY: 100 });
+    expect(emit).toHaveBeenCalledWith(
+      "axis-aware",
+      expect.objectContaining({ axisId: "category" }),
+      expect.any(Symbol),
+    );
     emit.mockRestore();
     clientWidth.mockRestore();
     clientHeight.mockRestore();
@@ -280,7 +409,7 @@ describe("Line", () => {
     expect(areaEntrance).toContain(true);
 
     const runFrame = (time: number) => {
-      for (const [id, callback] of [...callbacks]) {
+      for (const [id, callback] of Array.from(callbacks)) {
         callbacks.delete(id);
         callback(time);
       }
@@ -291,6 +420,148 @@ describe("Line", () => {
 
     expect(lineEntrance.at(-1)).toBe(false);
     expect(areaEntrance.at(-1)).toBe(false);
+  });
+});
+
+describe("Area", () => {
+  const axes = () => (
+    <>
+      <Axis axis="x" position="bottom" dataKey="x" />
+      <Axis axis="y" position="left" axisRange={[0, 10]} />
+    </>
+  );
+
+  it.each([0, 1, 3])("aligns stacked baselines across a gap at index %i", (gapIndex) => {
+    const base = [1, 2, 3, 4];
+    const stackedData = base.map((lower, index) => ({
+      x: String.fromCharCode(65 + index),
+      lower,
+      upper: index === gapIndex ? Number.NaN : 2,
+    }));
+    const rangedData = base.map((lower, index) => ({
+      x: String.fromCharCode(65 + index),
+      range:
+        index === gapIndex
+          ? ([Number.NaN, Number.NaN] as [number, number])
+          : ([lower, lower + 2] as [number, number]),
+    }));
+
+    const stacked = render(() => (
+      <Chart data={stackedData} width={400} height={300}>
+        {axes()}
+        <Area dataKey="lower" stackId="stack" animation={false} />
+        <Area dataKey="upper" stackId="stack" animation={false} />
+      </Chart>
+    ));
+    const ranged = render(() => (
+      <Chart data={rangedData} width={400} height={300}>
+        {axes()}
+        <Area dataKey="range" animation={false} />
+      </Chart>
+    ));
+
+    expect(stacked.container.querySelectorAll("[data-pc-area]")[1]?.getAttribute("d")).toBe(
+      ranged.container.querySelector("[data-pc-area]")?.getAttribute("d"),
+    );
+    stacked.unmount();
+    ranged.unmount();
+  });
+
+  it("preserves a ranged baseline for positive and negative fills", () => {
+    const rangedData = [
+      { x: "A", range: [2, 5] as [number, number] },
+      { x: "B", range: [3, 6] as [number, number] },
+      { x: "C", range: [1, 4] as [number, number] },
+    ];
+    const reference = render(() => (
+      <Chart data={rangedData} width={400} height={300}>
+        {axes()}
+        <Area dataKey="range" animation={false} />
+      </Chart>
+    ));
+    const split = render(() => (
+      <Chart data={rangedData} width={400} height={300}>
+        {axes()}
+        <Area dataKey="range" positiveFill="red" negativeFill="blue" animation={false} />
+      </Chart>
+    ));
+    const expected = reference.container.querySelector("[data-pc-area]")?.getAttribute("d");
+    const paths = split.container.querySelectorAll("[data-pc-area]");
+
+    expect(paths).toHaveLength(2);
+    expect(paths[0]?.getAttribute("d")).toBe(expected);
+    expect(paths[1]?.getAttribute("d")).toBe(expected);
+    reference.unmount();
+    split.unmount();
+  });
+
+  it("preserves a stacked baseline for positive and negative fills", () => {
+    const stackedData = [
+      { x: "A", lower: 2, upper: 3 },
+      { x: "B", lower: 3, upper: 2 },
+      { x: "C", lower: 1, upper: 4 },
+    ];
+    const reference = render(() => (
+      <Chart data={stackedData} width={400} height={300}>
+        {axes()}
+        <Area dataKey="lower" stackId="stack" animation={false} />
+        <Area dataKey="upper" stackId="stack" animation={false} />
+      </Chart>
+    ));
+    const split = render(() => (
+      <Chart data={stackedData} width={400} height={300}>
+        {axes()}
+        <Area dataKey="lower" stackId="stack" animation={false} />
+        <Area
+          dataKey="upper"
+          stackId="stack"
+          positiveFill="red"
+          negativeFill="blue"
+          animation={false}
+        />
+      </Chart>
+    ));
+    const expected = reference.container.querySelectorAll("[data-pc-area]")[1]?.getAttribute("d");
+    const paths = split.container.querySelectorAll("[data-pc-area]");
+
+    expect(paths).toHaveLength(3);
+    expect(paths[1]?.getAttribute("d")).toBe(expected);
+    expect(paths[2]?.getAttribute("d")).toBe(expected);
+    reference.unmount();
+    split.unmount();
+  });
+});
+
+describe("Brush", () => {
+  it("uses the main axis domain policy with preview dimensions and full data", () => {
+    const brushData = [
+      { x: 10, y: 2 },
+      { x: 20, y: 4 },
+    ];
+    const { container } = render(() => (
+      <Chart data={brushData} width={400} height={300}>
+        <Axis axis="x" position="bottom" dataKey="x" type="linear" axisRange={[0, 100]} />
+        <Axis axis="y" position="left" axisRange={[0, 10]} />
+        <Brush>
+          <Line
+            dataKey="y"
+            animation={false}
+            shape={(shape) => (
+              <path data-test-brush-points={JSON.stringify(shape.points)} data-test-brush-line="" />
+            )}
+          />
+        </Brush>
+      </Chart>
+    ));
+    const points = JSON.parse(
+      container.querySelector("[data-test-brush-line]")?.getAttribute("data-test-brush-points") ??
+        "[]",
+    ) as [number, number][];
+
+    // Preview width is 398px. With the explicit [0, 100] domain, x=10/20
+    // project to 10%/20% rather than being independently stretched to its edges.
+    expect(points[0]?.[0]).toBeCloseTo(39.8);
+    expect(points[1]?.[0]).toBeCloseTo(79.6);
   });
 });
 

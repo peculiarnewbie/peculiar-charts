@@ -1,67 +1,67 @@
 {
-    "name": "peculiar-charts",
-    "version": "0.5.0",
-    "private": false,
-    "description": "Composable, unstyled, headless charts for SolidJS",
-    "keywords": [
-        "charts",
-        "d3",
-        "headless",
-        "solid",
-        "solidjs",
-        "svg"
-    ],
-    "homepage": "https://charts.peculiarnewbie.com",
-    "license": "MIT",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/peculiarnewbie/peculiar-charts.git",
-        "directory": "packages/peculiar-charts"
+  "name": "peculiar-charts",
+  "version": "0.5.0",
+  "private": false,
+  "description": "Composable, unstyled, headless charts for SolidJS",
+  "keywords": [
+    "charts",
+    "d3",
+    "headless",
+    "solid",
+    "solidjs",
+    "svg"
+  ],
+  "homepage": "https://charts.peculiarnewbie.com",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/peculiarnewbie/peculiar-charts.git",
+    "directory": "packages/peculiar-charts"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "solid": "./dist/index.jsx",
+      "default": "./dist/index.js"
     },
-    "files": [
-        "dist",
-        "README.md",
-        "LICENSE"
-    ],
-    "type": "module",
-    "sideEffects": false,
-    "main": "./dist/index.js",
-    "types": "./dist/index.d.ts",
-    "exports": {
-        ".": {
-            "types": "./dist/index.d.ts",
-            "solid": "./dist/index.jsx",
-            "default": "./dist/index.js"
-        },
-        "./curves": {
-            "types": "./dist/curves.d.ts",
-            "solid": "./dist/curves.jsx",
-            "default": "./dist/curves.js"
-        }
-    },
-    "scripts": {
-        "build": "tsgo --noEmit && tsdown",
-        "dev": "tsdown --watch",
-        "typecheck": "tsgo --noEmit",
-        "clean": "rm -rf dist node_modules",
-        "prepublishOnly": "pnpm run build",
-        "release": "npm publish --access public"
-    },
-    "dependencies": {
-        "@corvu/utils": "^0.4.2",
-        "@solid-primitives/memo": "^1.4.2",
-        "@standard-schema/spec": "^1.1.0",
-        "d3-scale": "^4.0.2",
-        "d3-shape": "^3.2.0"
-    },
-    "devDependencies": {
-        "@types/d3-scale": "^4.0.9",
-        "@types/d3-shape": "^3.1.7",
-        "rolldown-plugin-solid": "^0.2.1",
-        "solid-js": "^1.9.6",
-        "tsdown": "^0.22.2"
-    },
-    "peerDependencies": {
-        "solid-js": "^1.8"
+    "./curves": {
+      "types": "./dist/curves.d.ts",
+      "solid": "./dist/curves.jsx",
+      "default": "./dist/curves.js"
     }
+  },
+  "scripts": {
+    "build": "tsgo --noEmit && tsdown",
+    "dev": "tsdown --watch",
+    "typecheck": "tsgo --noEmit",
+    "clean": "rm -rf dist node_modules",
+    "prepublishOnly": "pnpm run build",
+    "release": "npm publish --access public"
+  },
+  "dependencies": {
+    "@corvu/utils": "^0.4.2",
+    "@solid-primitives/memo": "^1.4.2",
+    "@standard-schema/spec": "^1.1.0",
+    "d3-scale": "^4.0.2",
+    "d3-shape": "^3.2.0"
+  },
+  "devDependencies": {
+    "@types/d3-scale": "^4.0.9",
+    "@types/d3-shape": "^3.1.7",
+    "rolldown-plugin-solid": "^0.2.1",
+    "solid-js": "^1.9.6",
+    "tsdown": "^0.22.2"
+  },
+  "peerDependencies": {
+    "solid-js": "^1.8"
+  }
 }
